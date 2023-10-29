@@ -1,0 +1,6 @@
+package hello
+from std.io import printLine
+
+func main() {
+    printLine("Hello, world!")
+}
