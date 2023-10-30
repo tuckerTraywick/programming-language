@@ -2,5 +2,8 @@ package hello
 from std.io import printLine
 
 func main() {
-    printLine("Hello, world!")
+    var a, b int = 1, 2;
+    var c int = a + b*b;
+    'a'
+    printLine("Hello, world!");
 }

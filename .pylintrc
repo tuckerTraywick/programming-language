@@ -4,4 +4,6 @@ disable=missing-docstring,
 		line-too-long,
 		trailing-whitespace,
 		too-many-public-methods,
-		too-many-instance-attributes
+		too-many-instance-attributes,
+		too-many-boolean-expressions,
+		too-many-branches
