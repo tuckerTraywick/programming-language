@@ -29,6 +29,7 @@ class TokenType(Enum):
     SWITCH = auto()
     CASE = auto()
     DEFAULT = auto()
+    FALLTHROUGH = auto()
     FOR = auto()
     IN = auto()
     FROM = auto()
@@ -129,6 +130,7 @@ def lex(text: str) -> list[Token]:
         "switch": TokenType.SWITCH,
         "case": TokenType.CASE,
         "default": TokenType.DEFAULT,
+        "fallthrough": TokenType.FALLTHROUGH,
         "for": TokenType.FOR,
         "in": TokenType.IN,
         "from": TokenType.FROM,
@@ -277,12 +279,45 @@ def lexFile(path: str) -> list[Token]:
     return lex(text)
 
 
+# Represents a node in a parse tree. Has a type and zero or more children.
+@dataclass
+class Node:
+    head: Token # The token that represents the type of the node.
+    children: list["Node" | Token] # The node's children. Can be empty.
+
+
+# Parses a list of tokens into a syntax tree representing an expression.
+def parseExpression(tokens: list[Token], i: int=0) -> Node:
+    assert all(token.type != TokenType.INVALID for token in tokens)
+    # The precedence of each operator.
+    precedence = {
+        TokenType.PLUS: 10,
+        TokenType.TIMES: 20,
+    }
+
+    while i < len(tokens):
+        result, i = parseTerm(tokens, i)
+        
+
+
+# Parses a term of the lowest precedence in an expression.
+def parseTerm(tokens: list[Token], i: int) -> tuple[Node, int]:
+    if tokens[i].type == TokenType.NUMBER:
+        return (tokens[i], i + 1)
+
+
 def main():
     path = "source/example.txt"
     text = readFile(path)
+    
     tokens = lex(text)
+    print("--- TOKENS ---")
     for i, token in enumerate(tokens):
-        print(f"{i:<3} {token} '{text[token.start:token.end]}'")
+        print(f"{i:<3} '{text[token.start:token.end]}' {token}")
+    
+    # tree = parse(tokens)
+    # print("--- SYNTAX TREE ---")
+    # print(tree)
 
 
 if __name__ == "__main__":

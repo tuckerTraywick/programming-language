@@ -1,9 +1,9 @@
-package hello
-from std.io import printLine
+package hello;
+from std.io import printLine;
 
 func main() {
-    var a, b int = 1, 2;
-    var c int = a + b*b;
-    'a'
     printLine("Hello, world!");
 }
+
+1 + 2 * 3 - 4
+-(+(1, *(2, 3)), 4)

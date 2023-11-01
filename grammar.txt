@@ -1,0 +1,191 @@
+lineComment = "#"
+
+keyword
+    = "package" | "import"
+    | "pub" | "var" | "func" | "impl" | "struct" | "cases" | "abstracts"
+    | "pass" | "return" | "yield" | "break" | "continue" | "fallthrough"
+    | "if" | "else" | "switch" | "match" | "case" | "default"
+    | "do" | "while" | "for" | "from" | "to" | "thru" | "by"
+    | "as" | "is" | "in" | "and" | "or" | "xor" | "not"
+    | "true" | "false" | "this"
+
+operator
+    = "+" | "++" | "+="
+    | "-" | "--" | "-=" | "->"
+    | "*" | "*="
+    | "/" | "/="
+    | "%" | "%="
+    | "&" | "&="
+    | "|" | "|="
+    | "^" | "^="
+    | "~" | "~="
+    | "=" | "==" | "=>"
+    | ">" | ">>" | ">>=" | ">="
+    | "<" | "<<" | "<<=" | "<="
+    | "!="
+    | "." 
+    | "," | ";" | ":"
+    | "(" | ")" | "[" | "]" | "{" | "}"
+
+identifier
+    = [a-zA-Z_] *[a-zA-Z_0-9]
+
+character
+    = "'" (!'\\' | '\\' number | '\\' _) "'"
+
+string
+    = '"' *(!'\\' | '\\' number | '\\' _) '"'
+
+number
+    = +[0-9]
+
+
+program
+    = ?packageStatement *programStatement
+
+packageStatement
+    = ?"pub" "package" packageName
+
+definition
+    = variableDefinition
+    | functionDefinition
+    | structDefinition
+
+variableDefinition
+    = "var" identifierList ?type ?("=" expressionList)
+
+functionDefinition
+    = "func" identifier ?typeParameters functionParameters ?(block | "=>" expression)
+
+structDefinition
+    = "struct" identifier ?typeParameters ?("{" *structAttribute "}")
+      ?("cases" "{" *structCase "}")
+
+structAttribute
+    = ("extend" | "abstract") typeList
+    | ?"pub" identifierList ?type ?("=" expressionList)
+    | ?"pub" identifier ?typeParameters ?functionParameters ?type
+
+structCase
+    = ?"default" identifierList ?("=" expression)
+    | ?"default" structDefinition
+    | ?"default" "struct" identifierList
+
+typeParameters
+    = "[" functionParameterList "]"
+
+typeArguments
+    = "[" *(typeArgument ",") ?typeArgument "]"
+
+typeArgument
+    = ?(identifier "=") type
+
+functionParameters
+    = "(" functionParameterList ")"
+
+functionParameterList
+    = *(functionParameter ",") ?functionParameter
+
+functionParameter
+    = (identifier ?type | type) ?("=" expression)
+
+functionArguments
+    = "(" functionArgumentsList ")"
+
+functionArgumentList
+    = *(?functionArgument ",") ?functionArgument
+
+functionArgument
+    = ?(identifier "=") expression
+
+programStatement
+    = importStatement
+    | ?("external" | "static") variableDefinition
+    | ?"static" functionDefinition
+    | structDefinition
+    | "pass"
+    | "return" ?expression
+    | "yield" ?expression
+    | "continue"
+    | "break"
+    | "fallthrough"
+    | ifStatement
+    | switchStatement
+    | matchStatement
+    | forLoop
+    | whileLoop
+    | doWhileLoop
+    | block
+    | expression
+
+importStatement
+    = "import" packageName *(newlines "." packageName)
+
+packageName
+    = identifier *("." identifier)
+
+ifStatement
+    = "if" expression (expression | block)
+      *("else" "if" expression (expression | block))
+      "else" (expression | block)
+
+switchStatement
+    = "switch" expressionList "{" *switchCase "}"
+
+matchStatement
+    = "match" expressionList "{" *switchCase "}"
+
+switchCase
+    = +(case" expressionList ":") *programStatement
+    | "default" ":" *programStatement
+
+forLoop
+    = "for" forVariableList "in" expression (expression | block)
+    | "for" expression (expression | block)
+
+forVariableList
+    = *("," identifier ?type) identifier ?type 
+
+whileLoop
+    = "while" expression (expression | block)
+
+doWhileLoop
+    = "do" (expression | block) "while" expression
+
+block
+    = "{" *(programStatement ?";") "}"
+
+literal
+    = character
+    | string
+    | identifier
+    | integer
+    | float
+    | "(" functionArgumentList ")"
+    | "{" *(arrayElement ",") ?arrayElement "}"
+    | "[" *(arrayElement ",") ?arrayElement "]"
+    | "<" *(mapElement ",") ?mapElement ">"
+
+integer
+    = ?[+-] number
+
+float
+    = ?[+-] number ?"." ?number ?("e" ?[+-] number)
+    | ?[+-] "." number ?("e" ?[+-] number)
+
+identifierList
+    = *(identifier ",") identifier
+
+expressionList
+    = *(expression ",") expression
+
+typeList
+    = *(type ",") type
+
+type
+    | "&" type
+    | "{" ?(expression | type) "}" type
+    | "[" ?(expression | type) "]" type
+    | "fun" ?typeParameters functionParameters ?type
+    | "(" typeList ")"
+    | identifier *("." identifier | ?typeArguments)
