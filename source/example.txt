@@ -5,5 +5,28 @@ func main() {
     printLine("Hello, world!");
 }
 
-1 + 2 * 3 - 4
--(+(1, *(2, 3)), 4)
+
+add = mul *([+-] mul)
+
+mul = sign *([*/] sign)
+
+sign = *[+-] exp
+
+exp = literal *('^' literal)
+
+literal = '(' add ')'
+        | number
+
+
+infix(p) = infix(p+1) *(op(p) expression(p+1))
+
+prefix(p) = *op infix(p+1)
+
+postfix(p) = prefix(p) *op
+
+
+prefix
+
+
+
+

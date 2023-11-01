@@ -6,4 +6,5 @@ disable=missing-docstring,
 		too-many-public-methods,
 		too-many-instance-attributes,
 		too-many-boolean-expressions,
-		too-many-branches
+		too-many-branches,
+		too-few-public-methods,

@@ -1,3 +1,4 @@
+from typing import Optional
 from dataclasses import dataclass
 from enum import Enum, auto
 
@@ -283,27 +284,60 @@ def lexFile(path: str) -> list[Token]:
 @dataclass
 class Node:
     head: Token # The token that represents the type of the node.
-    children: list["Node" | Token] # The node's children. Can be empty.
+    children: list # The node's children. Can be empty.
 
 
-# Parses a list of tokens into a syntax tree representing an expression.
-def parseExpression(tokens: list[Token], i: int=0) -> Node:
-    assert all(token.type != TokenType.INVALID for token in tokens)
-    # The precedence of each operator.
-    precedence = {
-        TokenType.PLUS: 10,
-        TokenType.TIMES: 20,
-    }
+# Represents the state of the parser. Helper for `parse()`.
+class Parser:
+    def __init__(self):
+        self.tokens: list[Token]
+        self.i: int
 
-    while i < len(tokens):
-        result, i = parseTerm(tokens, i)
+    # Looks at the next token without consuming it and checks its type.
+    def peek(self, type: TokenType=None) -> bool:
+        assert self.tokens
+        return self.i < len(self.tokens) and (type is None or self.tokens[self.i].type == type)
+    
+    # Consumes the next token and returns it.
+    def consume(self) -> Optional[Token]:
+        assert self.tokens
+        if self.i < len(self.tokens):
+            self.i += 1
+            return self.tokens[self.i - 1]
+        return None
+    
+    # Parses the given tokens.
+    def parse(self, tokens: list[Token]) -> Node:
+        assert all(token.type != TokenType.INVALID for token in tokens)
+        self.tokens = tokens
+        self.i = 0
+        return self.parseLiteral()
         
+    # Parses an infix expression.
+    def parseInfixExpression(self, precedence: int) -> Node:
+        pass
+
+    # Parses a prefix expression.
+    def parsePrefixExpression(self, precedence: int) -> Node:
+        pass
+    
+    # Parses a postfix expression.
+    def parsePostfixExpression(self, precedence: int) -> Node:
+        pass
+
+    # Parses a literal in an expression.
+    def parseLiteral(self) -> Node | Token:
+        if self.peek(TokenType.NUMBER):
+            return self.consume()
+        else:
+            # TODO: Raise exception.
+            pass
 
 
-# Parses a term of the lowest precedence in an expression.
-def parseTerm(tokens: list[Token], i: int) -> tuple[Node, int]:
-    if tokens[i].type == TokenType.NUMBER:
-        return (tokens[i], i + 1)
+# Parses a list of tokens into a syntax tree.
+def parse(tokens: list[Token]) -> Node:
+    parser = Parser()
+    return parser.parse(tokens)
 
 
 def main():
@@ -313,7 +347,7 @@ def main():
     tokens = lex(text)
     print("--- TOKENS ---")
     for i, token in enumerate(tokens):
-        print(f"{i:<3} '{text[token.start:token.end]}' {token}")
+        print(f"{i:<3} '{text[token.start:token.end]}' {token.type.name}")
     
     # tree = parse(tokens)
     # print("--- SYNTAX TREE ---")
