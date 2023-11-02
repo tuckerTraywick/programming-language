@@ -1,0 +1,111 @@
+# No separate keyword for implementing a method because you will should be able to
+# implement a new method for an already compiled struct.
+
+# One implementation per method name per type, you cannot implement the same method differently
+# for different interfaces.
+
+# Is structural typing compatible with padding??
+
+# Plain structs are structurally typed. Cases are nominally typed within their parent type.
+
+# If a struct has compatible cases, can it be cast???
+
+
+struct Animal {
+    name string
+    age uint
+    makeNoise()
+}
+
+struct Dog {
+    embed Animal
+    tag string
+}
+
+struct Cat {
+    embed Animal
+    breed string
+}
+
+func makeNoise(dog &Dog) {
+    println("woof")
+}
+
+func makeNoise(cat &Cat) {
+    println("meow")
+}
+
+func main() {
+    var pet &Animal = &Dog()
+    pet.makeNoise()
+    pet = &Cat()
+    pet.makeNoise()
+}
+
+
+
+
+
+package animals
+
+struct Dog {
+    tag string
+}
+
+
+package moreAnimals
+from animals import Dog
+
+struct Noisy {
+    makeNoise()
+}
+
+func makeNoise(dog &Dog) {
+    printLine("woof")
+}
+
+
+
+
+
+# Simple structs are structurally typed with warnings for implicit conversions.
+struct A {
+    x int
+}
+
+struct B {
+    x int
+}
+
+var thing A = B() # Valid. Gives warning.
+
+
+
+
+# Assigning of vtables happens when the pointer is cast.
+struct F {
+    f()
+}
+
+struct A {
+    F
+    x int
+}
+
+struct B {
+    F
+    x int
+}
+
+func f(a &A) {
+    printLine("A.f()")
+}
+
+func f(b &B) {
+    printLine("B.f()")
+}
+
+var object &A = &B()
+var trait &F = object
+trait.f()
+>>> A.f()

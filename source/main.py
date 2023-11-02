@@ -16,7 +16,6 @@ class TokenType(Enum):
     PUB = auto()
     VAR = auto()
     FUNC = auto()
-    IMPL = auto()
     STRUCT = auto()
     CASES = auto()
     ABSTRACTS = auto()
@@ -117,7 +116,6 @@ def lex(text: str) -> list[Token]:
         "pub": TokenType.PUB,
         "var": TokenType.VAR,
         "func": TokenType.FUNC,
-        "impl": TokenType.IMPL,
         "struct": TokenType.STRUCT,
         "cases": TokenType.CASES,
         "abstracts": TokenType.ABSTRACTS,
@@ -287,6 +285,16 @@ class Node:
     children: list # The node's children. Can be empty.
 
 
+# Represents a prefix expression. Separate class so I can define prettyprinting methods later.
+class PrefixNode(Node):
+    pass
+
+
+# Represents an infix expression.
+class InfixNode(Node):
+    pass
+
+
 # Represents the state of the parser. Helper for `parse()`.
 class Parser:
     def __init__(self):
@@ -313,33 +321,47 @@ class Parser:
         assert all(token.type != TokenType.INVALID for token in tokens)
         self.tokens = tokens
         self.i = 0
-        return self.parseExpression(0)
+        return self.parseExpression()
     
     # Parse an expression. Helper for `self.parse()`.
-    def parseExpression(self, precedence: int) -> Node:
-        precedence = {
+    def parseExpression(self) -> Token | Node:
+        prefix = {
+            TokenType.MINUS: 30,
+        }
+        infix = {
             TokenType.TIMES: 20,
             TokenType.PLUS: 10,
         }
 
-        children: list[Node] = [self.parseLiteral()]
-        while self.peek() and self.peek().type in precedence:
-            operator: Token = self.consume()
-            if precedence[operator.type] > precedence:
-                return Node(operator, children + [self.parseExpression(precedence[operator.type])])
+        result = None
+        innermost = None
+        while self.peek():
+            next = self.consume()
 
-        
-    # # Parses an infix expression.
-    # def parseInfixExpression(self, precedence: int) -> Node:
-    #     pass
+            if result is None:
+                result = next
+                innermost = next
+            
+            # Try to parse a prefix expression.
+            if next.type in prefix:
+                result
 
-    # # Parses a prefix expression.
-    # def parsePrefixExpression(self, precedence: int) -> Node:
-    #     pass
-    
-    # # Parses a postfix expression.
-    # def parsePostfixExpression(self, precedence: int) -> Node:
-    #     pass
+
+            # Try to parse a prefix expression.
+            if operator.type in prefix:
+                result.append((PrefixNode(self.consume(), [self.parseLiteral()]), prefix[operator.type]))
+            # Try to parse an infix expression.
+            elif operator.type in infix:
+                assert result # TODO: Handle infix operator lhs missing.
+                lhs, precedence = result[-1]
+                self.consume()
+                rhs = self.parseLiteral()
+                if isinstance(lhs, PrefixNode) or isinstance(lhs, InfixNode):
+                    if precedence < infix[operator.type]:
+                        # Steal the lhs's last child.
+                        lhs.children.append(InfixNode(operator, [lhs.children.pop(), rhs]))
+                    else:
+                        result.append(InfixNode(operator, [lhs, rhs]))
 
     # Parses a literal in an expression.
     def parseLiteral(self) -> Node | Token:
@@ -352,8 +374,7 @@ class Parser:
 
 # Parses a list of tokens into a syntax tree.
 def parse(tokens: list[Token]) -> Node:
-    parser = Parser()
-    return parser.parse(tokens)
+    return Parser().parse(tokens)
 
 
 def main():
@@ -365,9 +386,9 @@ def main():
     for i, token in enumerate(tokens):
         print(f"{i:<3} '{text[token.start:token.end]}' {token.type.name}")
     
-    # tree = parse(tokens)
-    # print("--- SYNTAX TREE ---")
-    # print(tree)
+    tree = parse(tokens)
+    print("--- SYNTAX TREE ---")
+    print(tree)
 
 
 if __name__ == "__main__":
