@@ -294,9 +294,11 @@ class Parser:
         self.i: int
 
     # Looks at the next token without consuming it and checks its type.
-    def peek(self, type: TokenType=None) -> bool:
+    def peek(self, type: TokenType=None) -> Token:
         assert self.tokens
-        return self.i < len(self.tokens) and (type is None or self.tokens[self.i].type == type)
+        if self.i < len(self.tokens) and (type is None or self.tokens[self.i].type == type):
+            return self.tokens[self.i]
+        return None
     
     # Consumes the next token and returns it.
     def consume(self) -> Optional[Token]:
@@ -307,23 +309,37 @@ class Parser:
         return None
     
     # Parses the given tokens.
-    def parse(self, tokens: list[Token]) -> Node:
+    def parse(self, tokens: list[Token], precedence: int=0) -> Node:
         assert all(token.type != TokenType.INVALID for token in tokens)
         self.tokens = tokens
         self.i = 0
-        return self.parseLiteral()
-        
-    # Parses an infix expression.
-    def parseInfixExpression(self, precedence: int) -> Node:
-        pass
-
-    # Parses a prefix expression.
-    def parsePrefixExpression(self, precedence: int) -> Node:
-        pass
+        return self.parseExpression(0)
     
-    # Parses a postfix expression.
-    def parsePostfixExpression(self, precedence: int) -> Node:
-        pass
+    # Parse an expression. Helper for `self.parse()`.
+    def parseExpression(self, precedence: int) -> Node:
+        precedence = {
+            TokenType.TIMES: 20,
+            TokenType.PLUS: 10,
+        }
+
+        children: list[Node] = [self.parseLiteral()]
+        while self.peek() and self.peek().type in precedence:
+            operator: Token = self.consume()
+            if precedence[operator.type] > precedence:
+                return Node(operator, children + [self.parseExpression(precedence[operator.type])])
+
+        
+    # # Parses an infix expression.
+    # def parseInfixExpression(self, precedence: int) -> Node:
+    #     pass
+
+    # # Parses a prefix expression.
+    # def parsePrefixExpression(self, precedence: int) -> Node:
+    #     pass
+    
+    # # Parses a postfix expression.
+    # def parsePostfixExpression(self, precedence: int) -> Node:
+    #     pass
 
     # Parses a literal in an expression.
     def parseLiteral(self) -> Node | Token:
