@@ -45,7 +45,6 @@ func main() {
 
 
 
-
 package animals
 
 struct Dog {
@@ -66,8 +65,6 @@ func makeNoise(dog &Dog) {
 
 
 
-
-
 # Simple structs are structurally typed with warnings for implicit conversions.
 struct A {
     x int
@@ -79,21 +76,18 @@ struct B {
 
 var thing A = B() # Valid. Gives warning.
 
-
-
-
 # Assigning of vtables happens when the pointer is cast.
 struct F {
     f()
 }
 
 struct A {
-    F
+    embed F
     x int
 }
 
 struct B {
-    F
+    embed F
     x int
 }
 
