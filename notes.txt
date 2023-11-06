@@ -106,11 +106,11 @@ pub struct Noisy {
     pub makeNoise()
 }
 
-func makeNoise(dog &animals.Dog) {
+pub func makeNoise(dog &animals.Dog) {
     std.io.printLine("woof")
 }
 
-func makeNoise(cat &animals.Cat) {
+pub func makeNoise(cat &animals.Cat) {
     std.io.printLine("meow")
 }
 
@@ -140,8 +140,8 @@ struct Cat {
 
 struct Animal {
     abstract Dog, Cat
-    name uint
-    age uint
+    &name() &uint = auto
+    &age() &uint = auto
 }
 
 func printNameAndAge(pet &Animal) {
@@ -164,10 +164,10 @@ pub struct NodeIndex = usize
 
 pub struct Node {
     pub variant uint16 = case
-    textStart, textEnd CharIndex
-    parent NodeIndex
-    lastChild NodeIndex
-    next NodeIndex
+    pub textStart, textEnd CharIndex
+    pub parent NodeIndex
+    pub lastChild NodeIndex
+    pub next NodeIndex
 } cases {
     default invalid
     number, character, string, identifier
@@ -175,7 +175,7 @@ pub struct Node {
 }
 
 pub struct Tree {
-    pub nodes []Node
+    pub nodes owned []Node
     pub topNode NodeIndex
 }
 
@@ -187,6 +187,7 @@ pub struct ParsingError {
 pub struct ParsingResult = Result[Tree, ParsingError]
 
 pub func firstChild(tree &Tree, index NodeIndex) NodeIndex {
+    assert index < tree.nodes.length, "Node index out of bounds."
     tree.nodes[index].next
 }
 
@@ -200,7 +201,7 @@ pub func parseProgram(parser &Parser) Parser {
 
 pub func parsePackageStatement(parser &Parser) Parser {
     beginNode(.packageStatement)
-    expect(")
+    expect()
 }
 
 struct Parser {
