@@ -14,11 +14,13 @@ class TokenType(Enum):
     PACKAGE = auto()
     IMPORT = auto()
     PUB = auto()
+    PRIV = auto()
     VAR = auto()
     FUNC = auto()
     STRUCT = auto()
     CASES = auto()
-    ABSTRACTS = auto()
+    EXTEND = auto()
+    ABSTRACT = auto()
     PASS = auto()
     RETURN = auto()
     YIELD = auto()
@@ -97,6 +99,10 @@ class Token:
     type: TokenType # The type of the token.
     start: int # The index of the start of the token in the text.
     end: int # The index of the end of the token in the text.
+    text: str # The text of the token. TODO: DELETE THIS AFTER I NO LONGER NEED TO PRINT TOKENS.
+
+    def __str__(self):
+        return f"{self.type.name} '{self.text}'"
 
 
 # Reads the file at `path` into a string.
@@ -114,11 +120,13 @@ def lex(text: str) -> list[Token]:
         "package": TokenType.PACKAGE,
         "import": TokenType.IMPORT,
         "pub": TokenType.PUB,
+        "priv": TokenType.PRIV,
         "var": TokenType.VAR,
         "func": TokenType.FUNC,
         "struct": TokenType.STRUCT,
         "cases": TokenType.CASES,
-        "abstracts": TokenType.ABSTRACTS,
+        "extend": TokenType.EXTEND,
+        "abstract": TokenType.ABSTRACT,
         "pass": TokenType.PASS,
         "return": TokenType.RETURN,
         "yield": TokenType.YIELD,
@@ -219,9 +227,9 @@ def lex(text: str) -> list[Token]:
             # Skip the last quote.
             if i < len(text) and text[i] == "'":
                 i += 1
-                tokens.append(Token(TokenType.CHARACTER, start, i))
+                tokens.append(Token(TokenType.CHARACTER, start, i, text[start:i]))
             else:
-                tokens.append(Token(TokenType.INVALID, start, i))
+                tokens.append(Token(TokenType.INVALID, start, i, text[start:i]))
                 break
         # Try to lex a string literal.
         elif text[i] == '"':
@@ -235,38 +243,38 @@ def lex(text: str) -> list[Token]:
             # Skip the last quote.
             if i < len(text) and text[i] == '"':
                 i += 1
-                tokens.append(Token(TokenType.CHARACTER, start, i))
+                tokens.append(Token(TokenType.CHARACTER, start, i, text[start:i]))
             else:
-                tokens.append(Token(TokenType.INVALID, start, i))
+                tokens.append(Token(TokenType.INVALID, start, i, text[start:i]))
                 break
         # Try to lex a number.
         elif text[i].isdigit():
             start: int = i
             while i < len(text) and text[i].isdigit():
                 i += 1
-            tokens.append(Token(TokenType.NUMBER, start, i))
+            tokens.append(Token(TokenType.NUMBER, start, i, text[start:i]))
         # Try to lex an identifier or keyword.
         elif text[i].isalpha() or text[i] == "_":
             start: int = i
             while i < len(text) and (text[i].isalnum() or text[i] == "_"):
                 i += 1
-            tokens.append(Token(keywords.get(text[start:i-1], TokenType.IDENTIFIER), start, i))
+            tokens.append(Token(keywords.get(text[start:i], TokenType.IDENTIFIER), start, i, text[start:i]))
         # Try to lex an operator.
         elif text[i] in symbols:
             # Try to lex each operator.
             for name, type in operators.items():
                 if text.startswith(name, i):
-                    tokens.append(Token(type, i, i + len(name)))
+                    tokens.append(Token(type, i, i + len(name), text[start:i]))
                     i += len(name)
                     break
             # If it's not an operator, it's an invalid token.
             else:
                 # TODO: Find the length of the invalid token.
-                tokens.append(Token(TokenType.INVALID, i, i))
+                tokens.append(Token(TokenType.INVALID, i, i, text[start:i]))
                 break # Break out of the outer while loop.
         # If none of the above succeed, the token is invalid.
         else:
-            tokens.append(Token(TokenType.INVALID, i, i))
+            tokens.append(Token(TokenType.INVALID, i, i, text[start:i]))
             break
 
     return tokens
@@ -278,21 +286,28 @@ def lexFile(path: str) -> list[Token]:
     return lex(text)
 
 
+# Represents the type of a node.
+class NodeType(Enum):
+    PROGRAM = auto()
+    PACKAGE_STATEMENT = auto()
+
+
 # Represents a node in a parse tree. Has a type and zero or more children.
 @dataclass
 class Node:
-    head: Token # The token that represents the type of the node.
+    type: NodeType # The type of the node.
+    parent: "Node" # The parent of the node.
     children: list # The node's children. Can be empty.
 
-
-# Represents a prefix expression. Separate class so I can define prettyprinting methods later.
-class PrefixNode(Node):
-    pass
-
-
-# Represents an infix expression.
-class InfixNode(Node):
-    pass
+    def prettyPrint(self, indentation: int=0) -> str:
+        tab = "|  "
+        print(tab*indentation + self.type.name)
+        indentation += 1
+        for child in self.children:
+            if isinstance(child, Node):
+                child.prettyPrint(indentation)
+            else:
+                print(tab*indentation + str(child))
 
 
 # Represents the state of the parser. Helper for `parse()`.
@@ -300,77 +315,93 @@ class Parser:
     def __init__(self):
         self.tokens: list[Token]
         self.i: int
+        self.tree: Optional[Node]
+        self.innermost: Optional[Node]
+        self.errorMessage: Optional[str]
 
-    # Looks at the next token without consuming it and checks its type.
-    def peek(self, type: TokenType=None) -> Token:
-        assert self.tokens
-        if self.i < len(self.tokens) and (type is None or self.tokens[self.i].type == type):
-            return self.tokens[self.i]
-        return None
-    
-    # Consumes the next token and returns it.
-    def consume(self) -> Optional[Token]:
-        assert self.tokens
-        if self.i < len(self.tokens):
+    # Accepts the given token if it is present, but doesn't throw an error if it's not.
+    def accept(self, type: TokenType=None) -> bool:
+        assert self.tokens, "Must have tokens to accept a token."
+        assert self.innermost is not None, "Must have a node to append a child."
+        if self.errorMessage is None and self.i < len(self.tokens) and self.tokens[self.i].type == type:
+            self.innermost.children.append(self.tokens[self.i])
             self.i += 1
-            return self.tokens[self.i - 1]
-        return None
-    
+            return True
+        return False
+
+    # Expects the given token and adds an error to the parse tree if not.
+    def expect(self, type: TokenType=None) -> bool:
+        assert self.tokens, "Must have tokens to expect a token."
+        assert self.innermost is not None, "Must have a node to append a child."
+        if self.errorMessage is not None:
+            return False
+        
+        if self.i >= len(self.tokens):
+            self.errorMessage = f"Expected {type.name} at {self.i} but ran out of tokens."
+            return False
+        
+        if self.tokens[self.i].type != type:
+            self.errorMessage = f"Expected {type.name} at {self.i} but got {self.tokens[self.i].type.name}."
+            return False
+
+        self.innermost.children.append(self.tokens[self.i])
+        self.i += 1
+        return True
+
+    # Starts a new node to the parse tree with the given type. Adds it as a child to the innermost node.
+    def startNode(self, type: NodeType):
+        if self.errorMessage is not None:
+            return
+        
+        if self.tree is None:
+            self.tree = Node(type, None, [])
+            self.innermost = self.tree
+        else:
+            newInnermost = Node(type, self.innermost, [])
+            self.innermost.children.append(newInnermost)
+            self.innermost = newInnermost
+
+    # Ends the current node and steps up one level in the parse tree.
+    def endNode(self):
+        assert self.tree is not None, "Must have a parse tree to end a node."
+        # Only end the node if it's not the topmost one.
+        if self.innermost is not self.tree:
+            self.innermost = self.innermost.parent
+
+    # Runs the given parser and resets if it fails.
+    def maybe(self, parser):
+        previousI = self.i
+        previousInnermost = self.innermost
+        parser()
+        if self.errorMessage:
+            self.i = previousI
+            self.innermost = previousInnermost
+
     # Parses the given tokens.
-    def parse(self, tokens: list[Token], precedence: int=0) -> Node:
-        assert all(token.type != TokenType.INVALID for token in tokens)
+    def parse(self, tokens: list[Token]) -> Node:
+        assert all(token.type != TokenType.INVALID for token in tokens), "Cannot parse invalid tokens yet."
         self.tokens = tokens
         self.i = 0
-        return self.parseExpression()
+        self.tree = None
+        self.innermost = None
+        self.errorMessage = None
+        self.program()
+        return self.tree
     
-    # Parse an expression. Helper for `self.parse()`.
-    def parseExpression(self) -> Token | Node:
-        prefix = {
-            TokenType.MINUS: 30,
-        }
-        infix = {
-            TokenType.TIMES: 20,
-            TokenType.PLUS: 10,
-        }
+    # Parses a program. Helper for `self.parse()`.
+    def program(self):
+        self.startNode(NodeType.PROGRAM)
+        self.packageStatement()
+        self.endNode()
 
-        result = None
-        innermost = None
-        while self.peek():
-            next = self.consume()
-
-            if result is None:
-                result = next
-                innermost = next
-            
-            # Try to parse a prefix expression.
-            if next.type in prefix:
-                result
-
-
-            # Try to parse a prefix expression.
-            if operator.type in prefix:
-                result.append((PrefixNode(self.consume(), [self.parseLiteral()]), prefix[operator.type]))
-            # Try to parse an infix expression.
-            elif operator.type in infix:
-                assert result # TODO: Handle infix operator lhs missing.
-                lhs, precedence = result[-1]
-                self.consume()
-                rhs = self.parseLiteral()
-                if isinstance(lhs, PrefixNode) or isinstance(lhs, InfixNode):
-                    if precedence < infix[operator.type]:
-                        # Steal the lhs's last child.
-                        lhs.children.append(InfixNode(operator, [lhs.children.pop(), rhs]))
-                    else:
-                        result.append(InfixNode(operator, [lhs, rhs]))
-
-    # Parses a literal in an expression.
-    def parseLiteral(self) -> Node | Token:
-        if self.peek(TokenType.NUMBER):
-            return self.consume()
-        else:
-            # TODO: Raise exception.
-            pass
-
+    # Parses a `package` statement. Helper for `self.parse()`
+    def packageStatement(self):
+        self.startNode(NodeType.PACKAGE_STATEMENT)
+        self.accept(TokenType.PUB)
+        self.expect(TokenType.PACKAGE)
+        self.expect(TokenType.IDENTIFIER)
+        self.endNode()
+    
 
 # Parses a list of tokens into a syntax tree.
 def parse(tokens: list[Token]) -> Node:
@@ -384,11 +415,14 @@ def main():
     tokens = lex(text)
     print("--- TOKENS ---")
     for i, token in enumerate(tokens):
-        print(f"{i:<3} '{text[token.start:token.end]}' {token.type.name}")
+        print(f"{i:<3} {token}")
     
-    tree = parse(tokens)
-    print("--- SYNTAX TREE ---")
-    print(tree)
+    parser = Parser()
+    tree = parser.parse(tokens)
+    print("\n--- SYNTAX TREE ---")
+    if parser.errorMessage:
+        print("Error message:", parser.errorMessage + "\n")
+    tree.prettyPrint()
 
 
 if __name__ == "__main__":

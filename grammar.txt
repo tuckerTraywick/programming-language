@@ -2,7 +2,7 @@ lineComment = "#"
 
 keyword
     = "package" | "import"
-    | "pub" | "var" | "func" | "impl" | "struct" | "cases" | "abstracts"
+    | "pub" | "var" | "func" | "impl" | "struct" | "cases" | "extend" | "abstract"
     | "pass" | "return" | "yield" | "break" | "continue" | "fallthrough"
     | "if" | "else" | "switch" | "match" | "case" | "default"
     | "do" | "while" | "for" | "from" | "to" | "thru" | "by"

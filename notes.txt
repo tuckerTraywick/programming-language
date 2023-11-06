@@ -5,10 +5,40 @@
 # for different interfaces.
 
 # Is structural typing compatible with padding??
-
-# Plain structs are structurally typed. Cases are nominally typed within their parent type.
-
 # If a struct has compatible cases, can it be cast???
+
+# No structural typing, just "extend" and "abstract".
+
+# "abstract" only works if the alignment is compatible.
+
+# No postfix operators because they're too hard to distinguish from infix ones.
+
+def parseExpression():
+    tree = None
+    while tokens:
+        token = peek()
+        if token is prefix:
+            addLeaf(tree, PrefixNode(consume(), [parseLiteral()]))
+        elif token is infix:
+            lhs = tree.innermost
+            operator = self.consume()
+            rhs = self.parseLiteral()
+            if precedence(operator) > precedence(lhs):
+                # Steal the innermost tree's last child.
+                appendLeaf(lhs, InfixNode(operator, [lhs.children.pop(), rhs]))
+            else:
+                # Wrap the innermost tree.
+                replaceLeaf(lhs, InfixNode(operator, [lhs, rhs]))
+        elif tree is None:
+            tree = parseLiteral()
+        else:
+            break
+
+    if tokens:
+        raise exception
+    return tree
+
+
 
 
 struct Animal {
@@ -18,12 +48,12 @@ struct Animal {
 }
 
 struct Dog {
-    embed Animal
+    extend Animal
     tag string
 }
 
 struct Cat {
-    embed Animal
+    extend Animal
     breed string
 }
 
@@ -45,61 +75,144 @@ func main() {
 
 
 
-package animals
+pub package animals
+
+pub struct Animal {
+    pub name string
+    pub age uint
+    pub walk()
+}
+
+pub struct Dog {
+    extend Animal
+    pub tag string
+}
+
+pub struct Cat {
+    extend Animal
+    pub breed string
+}
+
+pub func walk(dog &Dog) {}
+
+pub func walk(cat &Cat) {}
+
+
+pub package moreAnimals
+import std.io, animals
+
+pub struct Noisy {
+    abstract animals.Dog, .Cat
+    pub makeNoise()
+}
+
+func makeNoise(dog &animals.Dog) {
+    std.io.printLine("woof")
+}
+
+func makeNoise(cat &animals.Cat) {
+    std.io.printLine("meow")
+}
+
+func main() {
+    var pet &Noisy = &animals.Dog()
+    pet.makeNoise()
+    var dog = animals.Dog()
+    animals.makeNoise(dog)
+}
+
+
+
+
+package abstractingExample
+import std.io
 
 struct Dog {
-    tag string
+    name string
+    age uint
+}
+
+struct Cat {
+    age uint
+    breed string
+    name string
+}
+
+struct Animal {
+    abstract Dog, Cat
+    name uint
+    age uint
+}
+
+func printNameAndAge(pet &Animal) {
+    std.io.printLine(f"name={pet.name}, age={pet.age}")
+}
+
+func main() {
+    printNameAndAge(&Dog("fido", 1))
+    printNameAndAge(&Cat(1, "tabby", "felix"))
 }
 
 
-package moreAnimals
-from animals import Dog
 
-struct Noisy {
-    makeNoise()
+
+package compiler
+
+pub struct CharIndex = usize
+
+pub struct NodeIndex = usize
+
+pub struct Node {
+    pub variant uint16 = case
+    textStart, textEnd CharIndex
+    parent NodeIndex
+    lastChild NodeIndex
+    next NodeIndex
+} cases {
+    default invalid
+    number, character, string, identifier
+    program, packageStatement, ...
 }
 
-func makeNoise(dog &Dog) {
-    printLine("woof")
+pub struct Tree {
+    pub nodes []Node
+    pub topNode NodeIndex
 }
 
-
-
-# Simple structs are structurally typed with warnings for implicit conversions.
-struct A {
-    x int
+pub struct ParsingError {
+    pub message string
+    pub index usize
 }
 
-struct B {
-    x int
+pub struct ParsingResult = Result[Tree, ParsingError]
+
+pub func firstChild(tree &Tree, index NodeIndex) NodeIndex {
+    tree.nodes[index].next
 }
 
-var thing A = B() # Valid. Gives warning.
+pub func parse(tokens []Token) ParsingResult {
 
-# Assigning of vtables happens when the pointer is cast.
-struct F {
-    f()
 }
 
-struct A {
-    embed F
-    x int
+pub func parseProgram(parser &Parser) Parser {
+    
 }
 
-struct B {
-    embed F
-    x int
+pub func parsePackageStatement(parser &Parser) Parser {
+    beginNode(.packageStatement)
+    expect(")
 }
 
-func f(a &A) {
-    printLine("A.f()")
+struct Parser {
+    tokens []Token
+    index usize
+    result ParsingResult
 }
 
-func f(b &B) {
-    printLine("B.f()")
+func currentToken(parser &Parser) ?Token {
+    if parser.index < parser.tokens.length {
+        return parser.tokens[parser.index]
+    } else {
+        return None
+    }
 }
-
-var object &A = &B()
-var trait &F = object
-trait.f()
->>> A.f()
