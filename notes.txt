@@ -158,62 +158,98 @@ func main() {
 
 package compiler
 
-pub struct CharIndex = usize
+struct CharIndex = usize
 
-pub struct NodeIndex = usize
+struct NodeIndex = usize
 
-pub struct Node {
-    pub variant uint16 = case
-    pub textStart, textEnd CharIndex
-    pub parent NodeIndex
-    pub lastChild NodeIndex
-    pub next NodeIndex
+struct Node {
+    variant uint16 = case
+    variantName string = case
+    textStart CharIndex
+    textEnd CharIndex
+    parent NodeIndex
+    lastChild NodeIndex
+    next NodeIndex
 } cases {
     default invalid
     number, character, string, identifier
+    PACKAGE, IMPORT, VAR, FUNC, PLUS, MINUS ...
     program, packageStatement, ...
 }
 
-pub struct Tree {
-    pub nodes owned []Node
-    pub topNode NodeIndex
+struct Tree {
+    embed std.traits.Pretty
+    text string
+    nodes []Node
+    topNode NodeIndex
 }
 
-pub struct ParsingError {
-    pub message string
-    pub index usize
+struct ParsingError {
+    message string
+    index usize
 }
 
-pub struct ParsingResult = Result[Tree, ParsingError]
-
-pub func firstChild(tree &Tree, index NodeIndex) NodeIndex {
-    assert index < tree.nodes.length, "Node index out of bounds."
-    tree.nodes[index].next
-}
-
-pub func parse(tokens []Token) ParsingResult {
-
-}
-
-pub func parseProgram(parser &Parser) Parser {
-    
-}
-
-pub func parsePackageStatement(parser &Parser) Parser {
-    beginNode(.packageStatement)
-    expect()
-}
+struct ParsingResult = Result[Tree, ParsingError]
 
 struct Parser {
-    tokens []Token
-    index usize
-    result ParsingResult
+    tree &Tree
+    error ?ParsingError
+    currentToken usize
+    topNode NodeIndex
+    bottomNode NodeIndex
 }
 
-func currentToken(parser &Parser) ?Token {
-    if parser.index < parser.tokens.length {
-        return parser.tokens[parser.index]
-    } else {
-        return None
+# Tree functions
+func getNode(tree &Tree, index NodeIndex) &Node {
+    assert index < tree.nodes.length, "Node index out of bounds."
+    return tree.nodes[index]
+}
+
+func setNode(tree &Tree, index NodeIndex, value &Node) &Node {
+    assert index < tree.nodes.length, "Node index out of bounds."
+    tree.nodes[index] = value
+}
+
+func firstChild(tree &Tree, index NodeIndex) NodeIndex {
+    var lastChildIndex = tree->getNode(index).lastChild
+    return tree->getNode(lastChildIndex).next
+}
+
+func text(tree &tree, index NodeIdnex) string {
+    var node = tree->getNode(index)
+    return tree.text[node.textStart thru node.textEnd]
+}
+
+# Lexing functions
+func lex(text string) ParsingResult
+
+# Parsing functions
+func zeroOrMore(parser &Parser, f func(&Parser)) {
+    if parser.error {
+        return
     }
+
+    var previousState = *parser
+    do {
+        f(parser)
+    } while not parser.error and parser.currentToken < parser.tree.nodes.length
+
+    if parser.error {
+        *parser = previousState
+    }
+}
+
+func parse(tree &Tree) ParsingResult {
+    var parser = Parser(tree=tree)
+    return parseProgram(&parser)
+}
+
+func parsePackageStatement(parser &Parser) {
+    parser->beginNode(.PACKAGE)
+    parser->expect(.identifier)
+    zeroOrMore(parser, func(parser) {
+        parser->expect(.DOT)
+        parser->expect(.identifier)
+    })
+    parser->endNode()
 }
