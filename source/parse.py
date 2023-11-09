@@ -58,6 +58,7 @@ class Parser:
         self.tree: Tree
         self.bottomNode: Node
         self.keepParsing: bool
+        self.saves: list
 
     # The current token being parsed.
     @property
@@ -83,14 +84,15 @@ class Parser:
         if self.keepParsing and self.bottomNode is not self.tree.topNode:
             self.bottomNode = self.bottomNode.parent
 
-    # Accepts a token of any of the given types then appends it to the bottom node if it is present, but does nothing if it isn't.
+    # Accepts a token of any of the given types then appends it to the bottom node if it is present,
+    # but does nothing if it isn't.
     def accept(self, *types: TokenType):
         if self.keepParsing and self.currentToken and self.currentToken.type in types:
             self.bottomNode.children.append(self.currentToken)
             self.getNextToken()
 
-    # Expects a token of any of the given types then appends it to the bottom node if it is present, and adds
-    # the given error to the parse tree if it isn't.
+    # Expects a token of any of the given types then appends it to the bottom node if it is present,
+    # and adds the given error to the parse tree if it isn't.
     def expectError(self, error: str, *types: TokenType):
         if self.keepParsing:
             if self.currentToken and self.currentToken.type in types:
@@ -102,8 +104,8 @@ class Parser:
                 self.tree.errors.append(errorLeaf)
                 self.keepParsing = False
     
-    # Expects a token of any of the given types then appends it to the bottom node if it is present, and adds
-    # a generic error to the parse tree if it isn't.
+    # Expects a token of any of the given types then appends it to the bottom node if it is present,
+    # and adds a generic error to the parse tree if it isn't.
     def expect(self, *types: TokenType):
         typeNames = ", ".join(type.name for type in types[:-1]) + (" or " if len(types) > 1 else "") + types[-1].name
         error = f"Expected {typeNames}, but got {self.currentToken.type.name if self.currentToken else 'nothing'}."
@@ -114,16 +116,16 @@ class Parser:
         if self.keepParsing:
             # Save the current state.
             previousTokenIndex = self.tokenIndex
-            previousBottomNode = self.bottomNode
             previousChildrenLength = len(self.bottomNode.children)
             previousErrorsLength = len(self.tree.errors)
+            previousBottomNode = self.bottomNode
             f()
             if not self.keepParsing:
                 # Backtrack to before `f()` was called.
                 self.tokenIndex = previousTokenIndex
+                self.tree.errors = self.tree.errors[:previousErrorsLength]
                 self.bottomNode = previousBottomNode
                 self.bottomNode.children = self.bottomNode.children[:previousChildrenLength]
-                self.tree.errors = self.tree.errors[:previousErrorsLength]
                 self.keepParsing = True
                 return False
             return True
@@ -135,19 +137,46 @@ class Parser:
             if not self.maybe(f):
                 return
 
-    # Accepts one or more of the given parser and adds an error to the parse tree if there is not at least one occurrence.
+    # Accepts one or more of the given parser and adds an error to the parse tree if there is not at
+    # least one occurrence.
     def oneOrMore(self, f):
         f()
         self.zeroOrMore(f)
 
-    # Accepts any of the given parsers. If none of the parsers succeed, the error of the last parser is the one that gets
-    # added to the parse tree.
+    # Accepts any of the given parsers. If none of the parsers succeed, the error of the last parser
+    # is the one that gets added to the parse tree.
     def any(self, *fs):
         if self.keepParsing:
             for f in fs[:-1]:
                 if self.maybe(f):
                     return
             fs[-1]()
+
+    # Saves the state of the parser in case it needs to recover from an error.
+    def save(self):
+        self.saves.append((self.keepParsing, self.tokenIndex, len(self.bottomNode.children), len(self.tree.errors), self.bottomNode))
+
+    # Recovers to a previous save if an error was encountered.
+    def recover(self):
+        doRecover, previousTokenIndex, previousChildrenLength, previousErrorsLength, previousBottomNode = self.saves.pop()
+        if doRecover and not self.keepParsing:
+            self.keepParsing = True
+            # self.tokenIndex = previousTokenIndex
+            # self.bottomNode.children = self.bottomNode.children[:previousChildrenLength]
+            # self.tree.errors = self.tree.errors[:previousErrorsLength]
+            # self.bottomNode = previousBottomNode
+
+    # Recovers to the previous save and consumes tokens until a `;` is found if an error was
+    # encountered.
+    def recoverUntilLineEnd(self):
+        doRecover, previousTokenIndex, previousChildrenLength, previousErrorsLength, previousBottomNode = self.saves.pop()
+        if doRecover and not self.keepParsing:
+            self.keepParsing = True
+            while self.currentToken and self.currentToken.type != TokenType.SEMICOLON:
+                self.getNextToken()
+            
+            if self.currentToken and self.currentToken.type == TokenType.SEMICOLON:
+                self.getNextToken()
 
     # Parses the given tokens.
     def parse(self, tokens: list[Token]) -> Tree:
@@ -156,12 +185,15 @@ class Parser:
         self.tree = Tree(Node(NodeType.PROGRAM, None, []), [])
         self.bottomNode = self.tree.topNode
         self.keepParsing = True
+        self.saves = []
         self.parseProgram()
         return self.tree
 
     # Parses a program. Helper for `self.parse()`.
     def parseProgram(self):
         self.zeroOrMore(self.parseStatement)
+        # for i in range(3):
+        #     self.parsePackageStatement()
 
     # Parses a statement. Helper for `self.parse()`.
     def parseStatement(self):
@@ -175,125 +207,28 @@ class Parser:
         self.beginNode(NodeType.PACKAGE_STATEMENT)
         self.accept(TokenType.PUB)
         self.expect(TokenType.PACKAGE)
+        self.save()
         self.expectError("Expected a package name.", TokenType.IDENTIFIER)
+        self.recover()
+        self.parseLineEnd()
         self.endNode()
 
     # Parses an import statement. Helper for `self.parse()`
     def parseImportStatement(self):
         self.beginNode(NodeType.IMPORT_STATEMENT)
         self.expect(TokenType.IMPORT)
-        self.expectError("Expected a name.", TokenType.IDENTIFIER)
+        self.expectError("Expected a name to import.", TokenType.IDENTIFIER)
+        self.expectError("Expected a semicolon.", TokenType.SEMICOLON)
         self.endNode()
+
+    # Parses a `;` and maybe recovers from extra tokens before the `;`. Helper for `self.parse()`.
+    def parseLineEnd(self):
+        self.save()
+        self.expectError("Expected semicolon and end of statement.", TokenType.SEMICOLON)
+        self.recoverUntilLineEnd()
+
 
 
 # Parses a list of tokens into a syntax tree.
 def parse(tokens: list[Token]) -> Node:
     return Parser().parse(tokens)
-
-
-# # Represents the state of the parser. Helper for `parse()`.
-# class Parser:
-#     def __init__(self):
-#         self.tokens: list[Token]
-#         self.i: int
-#         self.tree: Optional[Node]
-#         self.innermost: Optional[Node]
-#         self.errorMessage: Optional[str]
-
-#     # Accepts the given token if it is present, but doesn't throw an error if it's not.
-#     def accept(self, type: TokenType=None) -> bool:
-#         assert self.tokens, "Must have tokens to accept a token."
-#         assert self.innermost is not None, "Must have a node to append a child."
-#         if self.errorMessage is None and self.i < len(self.tokens) and self.tokens[self.i].type == type:
-#             self.innermost.children.append(self.tokens[self.i])
-#             self.i += 1
-#             return True
-#         return False
-
-#     # Expects the given token and adds an error to the parse tree if not.
-#     def expect(self, type: TokenType=None, errorMessage: str=None) -> bool:
-#         assert self.tokens, "Must have tokens to expect a token."
-#         assert self.innermost is not None, "Must have a node to append a child."
-#         if self.errorMessage is not None:
-#             return False
-        
-#         if self.i >= len(self.tokens):
-#             self.errorMessage = (f"{self.i}: " + errorMessage) or f"Expected {type.name} at {self.i} but ran out of tokens."
-#             return False
-        
-#         if self.tokens[self.i].type != type:
-#             self.errorMessage = (f"{self.i}: " + errorMessage) or f"Expected {type.name} at {self.i} but got {self.tokens[self.i].type.name}."
-#             return False
-
-#         self.innermost.children.append(self.tokens[self.i])
-#         self.i += 1
-#         return True
-
-#     # Starts a new node to the parse tree with the given type. Adds it as a child to the innermost node.
-#     def startNode(self, type: NodeType):
-#         if self.errorMessage is not None:
-#             return
-        
-#         if self.tree is None:
-#             self.tree = Node(type, None, [])
-#             self.innermost = self.tree
-#         else:
-#             newInnermost = Node(type, self.innermost, [])
-#             self.innermost.children.append(newInnermost)
-#             self.innermost = newInnermost
-
-#     # Ends the current node and steps up one level in the parse tree.
-#     def endNode(self):
-#         assert self.tree is not None, "Must have a parse tree to end a node."
-#         # Only end the node if it's not the topmost one.
-#         if self.innermost is not self.tree:
-#             self.innermost = self.innermost.parent
-
-#     # Runs the given parser and resets if it fails.
-#     def maybe(self, parser):
-#         if self.errorMessage is not None:
-#             return
-#         previousI = self.i
-#         previousInnermost = self.innermost
-#         parser()
-#         if self.errorMessage:
-#             self.i = previousI
-#             self.innermost = previousInnermost
-#             self.errorMessage = None
-    
-#     # Accepts zero or more of the given parser and resets it when it fails.
-#     def zeroOrMore(self, parser):
-#         while self.errorMessage is None:
-#             previousI = self.i
-#             previousInnermost = self.innermost
-#             parser()
-#             if self.errorMessage is not None:
-#                 self.i = previousI
-#                 self.innermost = previousInnermost
-#                 self.errorMessage = None
-#                 break
-
-#     # Parses the given tokens.
-#     def parse(self, tokens: list[Token]) -> Node:
-#         assert all(token.type != TokenType.INVALID for token in tokens), "Cannot parse invalid tokens yet."
-#         self.tokens = tokens
-#         self.i = 0
-#         self.tree = None
-#         self.innermost = None
-#         self.errorMessage = None
-#         self.program()
-#         return self.tree
-    
-#     # Parses a program. Helper for `self.parse()`.
-#     def program(self):
-#         self.startNode(NodeType.PROGRAM)
-#         self.packageStatement()
-#         self.endNode()
-
-#     # Parses a `package` statement. Helper for `self.parse()`
-#     def packageStatement(self):
-#         self.startNode(NodeType.PACKAGE_STATEMENT)
-#         self.accept(TokenType.PUB)
-#         self.expect(TokenType.PACKAGE, "Expected a declaration.")
-#         self.expect(TokenType.IDENTIFIER, "Expected a package name.")
-#         self.endNode()

@@ -1,3 +1,4 @@
-package hello
-import std
-import math
+package hello;
+package asdf 12 df;
+package;
+import a;
