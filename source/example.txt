@@ -1,3 +1,4 @@
 package hello;
 import a.b, c, d.e;
 
+pub var a int;

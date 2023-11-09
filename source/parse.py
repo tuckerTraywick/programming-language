@@ -10,6 +10,7 @@ class NodeType(Enum):
     PACKAGE_STATEMENT = auto()
     IMPORT_STATEMENT = auto()
     PACKAGE_NAME = auto()
+    VARIABLE_DEFINITION = auto()
 
 
 # Represents a node in a parse tree. Can have zero or more children.
@@ -200,6 +201,7 @@ class Parser:
     def parseStatement(self):
         self.any(
             self.parseImportStatement,
+            self.parseVariableDefinition,
         )
 
     # Parses a package statement. Helper for `self.parse()`
@@ -229,6 +231,17 @@ class Parser:
     def parseImportStatementName(self):
         self.expect(TokenType.COMMA)
         self.parsePackageName()
+
+    # Parses a variable declaration / definition. Helper for `self.parse()`.
+    def parseVariableDefinition(self):
+        self.beginNode(NodeType.VARIABLE_DEFINITION)
+        self.accept(TokenType.PUB)
+        self.expect(TokenType.VAR)
+        self.save()
+        self.expect(TokenType.IDENTIFIER)
+        self.accept(TokenType.IDENTIFIER)
+        self.recoverUntilLineEnd()
+        self.parseLineEnd()
 
     # Parses a package name. Helper for `self.parse()`.
     def parsePackageName(self):

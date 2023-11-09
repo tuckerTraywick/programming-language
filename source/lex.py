@@ -13,7 +13,6 @@ class TokenType(Enum):
     PACKAGE = auto()
     IMPORT = auto()
     PUB = auto()
-    PRIV = auto()
     VAR = auto()
     FUNC = auto()
     STRUCT = auto()
@@ -117,7 +116,6 @@ def lex(text: str) -> list[Token]:
         "package": TokenType.PACKAGE,
         "import": TokenType.IMPORT,
         "pub": TokenType.PUB,
-        "priv": TokenType.PRIV,
         "var": TokenType.VAR,
         "func": TokenType.FUNC,
         "struct": TokenType.STRUCT,
