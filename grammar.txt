@@ -119,7 +119,7 @@ programStatement
     | expression
 
 importStatement
-    = "import" packageName *(newlines "." packageName)
+    = "import" packageName *("," packageName)
 
 packageName
     = identifier *("." identifier)

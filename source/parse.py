@@ -9,6 +9,7 @@ class NodeType(Enum):
     PROGRAM = auto()
     PACKAGE_STATEMENT = auto()
     IMPORT_STATEMENT = auto()
+    PACKAGE_NAME = auto()
 
 
 # Represents a node in a parse tree. Can have zero or more children.
@@ -156,22 +157,18 @@ class Parser:
 
     # Saves the state of the parser in case it needs to recover from an error.
     def save(self):
-        self.saves.append((self.keepParsing, self.tokenIndex, len(self.bottomNode.children), len(self.tree.errors), self.bottomNode))
+        self.saves.append(self.keepParsing)
 
     # Recovers to a previous save if an error was encountered.
     def recover(self):
-        doRecover, previousTokenIndex, previousChildrenLength, previousErrorsLength, previousBottomNode = self.saves.pop()
+        doRecover = self.saves.pop()
         if doRecover and not self.keepParsing:
             self.keepParsing = True
-            # self.tokenIndex = previousTokenIndex
-            # self.bottomNode.children = self.bottomNode.children[:previousChildrenLength]
-            # self.tree.errors = self.tree.errors[:previousErrorsLength]
-            # self.bottomNode = previousBottomNode
 
     # Recovers to the previous save and consumes tokens until a `;` is found if an error was
     # encountered.
     def recoverUntilLineEnd(self, keepLineEnd=False):
-        doRecover, previousTokenIndex, previousChildrenLength, previousErrorsLength, previousBottomNode = self.saves.pop()
+        doRecover = self.saves.pop()
         if doRecover and not self.keepParsing:
             self.keepParsing = True
             while self.currentToken and self.currentToken.type != TokenType.SEMICOLON:
@@ -196,12 +193,12 @@ class Parser:
     def parseProgram(self):
         # for i in range(4):
         #     self.parsePackageStatement()
+        self.maybe(self.parsePackageStatement)
         self.zeroOrMore(self.parseStatement)
 
     # Parses a statement. Helper for `self.parse()`.
     def parseStatement(self):
         self.any(
-            self.parsePackageStatement,
             self.parseImportStatement,
         )
 
@@ -211,7 +208,7 @@ class Parser:
         self.accept(TokenType.PUB)
         self.expect(TokenType.PACKAGE)
         self.save()
-        self.expectError("Expected a package name.", TokenType.IDENTIFIER)
+        self.parsePackageName()
         self.recoverUntilLineEnd()
         self.parseLineEnd()
         self.endNode()
@@ -221,10 +218,29 @@ class Parser:
         self.beginNode(NodeType.IMPORT_STATEMENT)
         self.expect(TokenType.IMPORT)
         self.save()
-        self.expectError("Expected a name to import.", TokenType.IDENTIFIER)
+        self.parsePackageName()
+        self.zeroOrMore(self.parseImportStatementName)
+        self.accept(TokenType.COMMA)
         self.recoverUntilLineEnd()
         self.parseLineEnd()
         self.endNode()
+    
+    # Parses a package name in an import statement. Helper for `self.parseImportStatement()`.
+    def parseImportStatementName(self):
+        self.expect(TokenType.COMMA)
+        self.parsePackageName()
+
+    # Parses a package name. Helper for `self.parse()`.
+    def parsePackageName(self):
+        self.beginNode(NodeType.PACKAGE_NAME)
+        self.expectError("Expected a package name.", TokenType.IDENTIFIER)
+        self.zeroOrMore(self.parsePackageNameEnd)
+        self.endNode()
+
+    # Parses the end of a package name. Helper for `self.parsePackageName()`.
+    def parsePackageNameEnd(self):
+        self.expect(TokenType.DOT)
+        self.expectError("Invalid package name (expected identifier or `*`).", TokenType.IDENTIFIER, TokenType.TIMES)
 
     # Parses a `;` and maybe recovers from extra tokens before the `;`. Helper for `self.parse()`.
     def parseLineEnd(self):

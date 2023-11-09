@@ -1,5 +1,3 @@
-package a;
-package 123 a extraToken anotherExtraToken;
-package 1;
-package a 123;
-import;
+package hello;
+import a.b, c, d.e;
+
