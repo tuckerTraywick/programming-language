@@ -36,7 +36,7 @@ class ParsingError:
     tokenIndex: int
 
     def __str__(self) -> str:
-        return f"{self.tokenIndex}: {self.message}"
+        return f"token {self.tokenIndex}: {self.message}"
 
 
 # Represents the child of a `Node`.
@@ -99,6 +99,8 @@ class Parser:
                 self.bottomNode.children.append(self.currentToken)
                 self.getNextToken()
             else:
+                if self.currentToken:
+                    error = error.replace("$", self.currentToken.type.name)
                 errorLeaf = ParsingError(error, self.tokenIndex)
                 self.bottomNode.children.append(errorLeaf)
                 self.tree.errors.append(errorLeaf)
@@ -176,6 +178,7 @@ class Parser:
                 self.getNextToken()
             
             if self.currentToken and self.currentToken.type == TokenType.SEMICOLON:
+                self.bottomNode.children.append(self.currentToken)
                 self.getNextToken()
 
     # Parses the given tokens.
@@ -192,9 +195,7 @@ class Parser:
     # Parses a program. Helper for `self.parse()`.
     def parseProgram(self):
         self.zeroOrMore(self.parseStatement)
-        # for i in range(3):
-        #     self.parsePackageStatement()
-
+        
     # Parses a statement. Helper for `self.parse()`.
     def parseStatement(self):
         self.any(
@@ -217,14 +218,16 @@ class Parser:
     def parseImportStatement(self):
         self.beginNode(NodeType.IMPORT_STATEMENT)
         self.expect(TokenType.IMPORT)
+        self.save()
         self.expectError("Expected a name to import.", TokenType.IDENTIFIER)
-        self.expectError("Expected a semicolon.", TokenType.SEMICOLON)
+        self.recover()
+        self.parseLineEnd()
         self.endNode()
 
     # Parses a `;` and maybe recovers from extra tokens before the `;`. Helper for `self.parse()`.
     def parseLineEnd(self):
         self.save()
-        self.expectError("Expected semicolon and end of statement.", TokenType.SEMICOLON)
+        self.expectError("Expected a semicolon.", TokenType.SEMICOLON)
         self.recoverUntilLineEnd()
 
 

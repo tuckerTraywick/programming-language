@@ -1,4 +1,3 @@
-package hello;
-package asdf 12 df;
-package;
-import a;
+package a;
+import a extraToken anotherExtraToken;
+package 1;

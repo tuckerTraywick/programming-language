@@ -10,8 +10,11 @@ if __name__ == "__main__":
     print("--- TOKENS ---")
     for i, token in enumerate(tokens):
         print(f"{i:<3} {token}")
-    
+
     tree = parse(tokens)
+    if tree.errors:
+        print("\n--- PARSING ERRORS ---")
+        for error in tree.errors:
+            print(error)        
     print("\n--- SYNTAX TREE ---")
-    print(f"Errors: {tree.errors}")
     tree.topNode.prettyPrint()
