@@ -158,98 +158,112 @@ func main() {
 
 package compiler
 
-struct CharIndex = usize
-
-struct NodeIndex = usize
+struct Tree {
+    top &Node
+    errors ?[]&ParsingERror
+}
 
 struct Node {
-    variant uint16 = case
-    variantName string = case
-    textStart CharIndex
-    textEnd CharIndex
-    parent NodeIndex
-    lastChild NodeIndex
-    next NodeIndex
-} cases {
-    default invalid
-    number, character, string, identifier
-    PACKAGE, IMPORT, VAR, FUNC, PLUS, MINUS ...
+    type NodeType
+    parent ?&Node
+    children ?[]&Leaf
+}
+
+struct NodeType cases {
     program, packageStatement, ...
 }
 
-struct Tree {
-    embed std.traits.Pretty
+struct &Leaf = &Token | &Node | &ParsingError
+
+struct Token {
+    type TokenType
     text string
-    nodes []Node
-    topNode NodeIndex
+    textIndex usize
+}
+
+struct TokenType cases {
+    default invalid
+    number, character, string, identifier
+    PACKAGE, IMPORT, VAR, FUNC, PLUS, MINUS ...
 }
 
 struct ParsingError {
     message string
-    index usize
+    tokenIndex usize
+    textIndex usize
+    row usize
+    column usize
 }
-
-struct ParsingResult = Result[Tree, ParsingError]
 
 struct Parser {
-    tree &Tree
-    error ?ParsingError
-    currentToken usize
-    topNode NodeIndex
-    bottomNode NodeIndex
-}
-
-# Tree functions
-func getNode(tree &Tree, index NodeIndex) &Node {
-    assert index < tree.nodes.length, "Node index out of bounds."
-    return tree.nodes[index]
-}
-
-func setNode(tree &Tree, index NodeIndex, value &Node) &Node {
-    assert index < tree.nodes.length, "Node index out of bounds."
-    tree.nodes[index] = value
-}
-
-func firstChild(tree &Tree, index NodeIndex) NodeIndex {
-    var lastChildIndex = tree->getNode(index).lastChild
-    return tree->getNode(lastChildIndex).next
-}
-
-func text(tree &tree, index NodeIdnex) string {
-    var node = tree->getNode(index)
-    return tree.text[node.textStart thru node.textEnd]
+    tokens []Token
+    tokenIndex usize
+    tree Tree
+    bottomNode ?&Node # The innermost, rightmost node of the tree.
+    bottomLeaf ?&Leaf # The rightmost leaf of the bottom node.
+    keepParsing bool # Set to false when an unrecoverable error is encountered.
 }
 
 # Lexing functions
-func lex(text string) ParsingResult
+func lex(text string) []Token
 
-# Parsing functions
-func zeroOrMore(parser &Parser, f func(&Parser)) {
-    if parser.error {
+# Parsing functions.
+func parse(text string) Tree
+
+func parse(tokens []Token) Tree {
+    var parser = Parser(tokens=tokens, tree=&Node.program())
+    parseProgram(&parser)
+    return Tree(parser.topNode, parser.errors)
+}
+
+func .currentToken(parser &Parser) ?Token {
+    if parser.tokenIndex < parser.tokens.length {
+        return parser.tokens[parser.tokenIndex]
+    }
+    return none
+}
+
+func advance(parser &Parser) {
+    assert parser.tokenIndex < parser.tokens.length, "advance() should only be called when tokens are left."
+    ++parser.tokenIndex
+}
+
+func accept(parser &Parser, types ..TokenType, errorMessage ?string) {
+    if parser.keepParsing and parser.currentToken and parser.currentToken.type in types {
+        parser->advance()
+    }
+}
+
+func expect(parser &Parser, types ..TokenType, errorMessage ?string) {
+    if not parser.keepParsing {
         return
     }
 
-    var previousState = *parser
-    do {
-        f(parser)
-    } while not parser.error and parser.currentToken < parser.tree.nodes.length
-
-    if parser.error {
-        *parser = previousState
+    if parser.currentToken.type not in types {
+        parser->addLeaf(&ParsingError(errorMessage))
     }
 }
 
-func parse(tree &Tree) ParsingResult {
-    var parser = Parser(tree=tree)
-    return parseProgram(&parser)
+func maybe(parser &Parser, f func(&Parser))
+
+func any(parser &Parser, fs ..func(&Parser))
+
+func zeroOrMore(parser &Parser, f func(&Parser))
+
+func oneOrMore(parser &Parser, f func(&Parser), errorMessage ?string)
+
+func parseProgram(parser &Parser) {
+    parsePackageStatement(parser)
 }
 
 func parsePackageStatement(parser &Parser) {
-    parser->beginNode(.PACKAGE)
-    parser->expect(.identifier)
-    zeroOrMore(parser, func(parser) {
-        parser->expect(.DOT)
-        parser->expect(.identifier)
-    })
-    parser->endNode()
+    parser->beginNode(.packageStatement)
+        ->accept(.PUB)
+        ->expect(.PACKAGE, "Expected a declaration.")
+        ->expect(.identifier, "Expected a package name.")
+        ->zeroOrMore(parser, func(parser &Parser) {
+            parser->expect(.DOT)
+            ->expect(.identifier, .TIMES, "Incomplete package name.")
+        })
+    ->endNode()
 }

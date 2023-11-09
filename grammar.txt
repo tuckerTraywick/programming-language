@@ -100,8 +100,8 @@ functionArgument
 
 programStatement
     = importStatement
-    | ?("external" | "static") variableDefinition
-    | ?"static" functionDefinition
+    | ?("persistent" | "inline") variableDefinition
+    | ?"inline" functionDefinition
     | structDefinition
     | "pass"
     | "return" ?expression
@@ -127,7 +127,7 @@ packageName
 ifStatement
     = "if" expression (expression | block)
       *("else" "if" expression (expression | block))
-      "else" (expression | block)
+      ?("else" (expression | block))
 
 switchStatement
     = "switch" expressionList "{" *switchCase "}"
