@@ -1,3 +1,5 @@
 package a;
-import a extraToken anotherExtraToken;
+package 123 a extraToken anotherExtraToken;
 package 1;
+package a 123;
+import;

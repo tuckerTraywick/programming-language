@@ -170,14 +170,14 @@ class Parser:
 
     # Recovers to the previous save and consumes tokens until a `;` is found if an error was
     # encountered.
-    def recoverUntilLineEnd(self):
+    def recoverUntilLineEnd(self, keepLineEnd=False):
         doRecover, previousTokenIndex, previousChildrenLength, previousErrorsLength, previousBottomNode = self.saves.pop()
         if doRecover and not self.keepParsing:
             self.keepParsing = True
             while self.currentToken and self.currentToken.type != TokenType.SEMICOLON:
                 self.getNextToken()
-            
-            if self.currentToken and self.currentToken.type == TokenType.SEMICOLON:
+
+            if keepLineEnd and self.currentToken and self.currentToken.type == TokenType.SEMICOLON:
                 self.bottomNode.children.append(self.currentToken)
                 self.getNextToken()
 
@@ -194,8 +194,10 @@ class Parser:
 
     # Parses a program. Helper for `self.parse()`.
     def parseProgram(self):
+        # for i in range(4):
+        #     self.parsePackageStatement()
         self.zeroOrMore(self.parseStatement)
-        
+
     # Parses a statement. Helper for `self.parse()`.
     def parseStatement(self):
         self.any(
@@ -210,7 +212,7 @@ class Parser:
         self.expect(TokenType.PACKAGE)
         self.save()
         self.expectError("Expected a package name.", TokenType.IDENTIFIER)
-        self.recover()
+        self.recoverUntilLineEnd()
         self.parseLineEnd()
         self.endNode()
 
@@ -220,7 +222,7 @@ class Parser:
         self.expect(TokenType.IMPORT)
         self.save()
         self.expectError("Expected a name to import.", TokenType.IDENTIFIER)
-        self.recover()
+        self.recoverUntilLineEnd()
         self.parseLineEnd()
         self.endNode()
 
@@ -228,8 +230,7 @@ class Parser:
     def parseLineEnd(self):
         self.save()
         self.expectError("Expected a semicolon.", TokenType.SEMICOLON)
-        self.recoverUntilLineEnd()
-
+        self.recoverUntilLineEnd(True)
 
 
 # Parses a list of tokens into a syntax tree.
