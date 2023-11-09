@@ -238,7 +238,7 @@ class Parser:
         self.accept(TokenType.PUB)
         self.expect(TokenType.VAR)
         self.save()
-        self.expect(TokenType.IDENTIFIER)
+        self.expectError("Expected an identifier.", TokenType.IDENTIFIER)
         self.accept(TokenType.IDENTIFIER)
         self.recoverUntilLineEnd()
         self.parseLineEnd()
