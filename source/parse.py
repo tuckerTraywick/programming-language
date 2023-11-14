@@ -153,24 +153,24 @@ class Parser:
 
     # Accepts any of the given parsers. If none of the parsers succeed, the error of the last parser
     # is the one that gets added to the parse tree.
-    def any(self, *fs):
+    def any(self, *fns):
         if self.keepParsing:
-            for f in fs[:-1]:
+            for f in fns[:-1]:
                 if self.maybe(f):
                     return
-            fs[-1]()
+            fns[-1]()
 
     # Saves the state of the parser in case it needs to recover from an error.
     def save(self):
         self.saves.append(self.keepParsing)
 
     # Recovers to a previous save if an error was encountered.
-    def recover(self, endNode=False):
+    def recover(self, errorMessage=None):
         doRecover = self.saves.pop()
         if doRecover and not self.keepParsing:
             self.keepParsing = True
-            if endNode:
-                self.endNode()
+            if errorMessage:
+                self.current
 
     # Recovers to the previous save and consumes tokens until a `;` is found if an error was
     # encountered.
@@ -260,13 +260,29 @@ class Parser:
     # Parses a variable declaration / definition. Helper for `self.parse()`.
     def parseVariableDefinition(self):
         self.beginNode(NodeType.VARIABLE_DEFINITION)
+        # ?"pub" "var"
         self.accept(TokenType.PUB)
         self.expect(TokenType.VAR)
+        
+        # identifier ?identifier
         self.save()
         self.expectError("Expected an identifier.", TokenType.IDENTIFIER)
         self.accept(TokenType.IDENTIFIER)
         self.recoverUntilLineEnd()
+
+        # ?("=" expression) ';'
+        self.maybe(self.parseAssignmentRhs)
         self.parseLineEnd()
+        self.endNode()
+
+    # Parses a `= <expression>`. Helper for `self.parse()`.
+    def parseAssignmentRhs(self):
+        self.expect(TokenType.ASSIGN)
+        self.parseExpression()
+
+    # Parses an expression with operators. Helper for `self.parse()`.
+    def parseExpression(self):
+        self.expectError("Expected an expression.", TokenType.NUMBER)
 
     # Parses a `;` and maybe recovers from extra tokens before the `;`. Helper for `self.parse()`.
     def parseLineEnd(self):

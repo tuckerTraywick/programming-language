@@ -1,7 +1,3 @@
-beginNode() and endNode() need to use a stack to make sure to end nodes when an error
-occurs within a node.
-
-
 # No separate keyword for implementing a method because you will should be able to
 # implement a new method for an already compiled struct.
 
