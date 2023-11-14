@@ -1,4 +1,5 @@
 package hello;
 import a.b, c, d.e;
-
+from import io;
+# A variable declaration.
 pub var a int;

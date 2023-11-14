@@ -1,3 +1,7 @@
+beginNode() and endNode() need to use a stack to make sure to end nodes when an error
+occurs within a node.
+
+
 # No separate keyword for implementing a method because you will should be able to
 # implement a new method for an already compiled struct.
 
@@ -258,12 +262,12 @@ func parseProgram(parser &Parser) {
 
 func parsePackageStatement(parser &Parser) {
     parser->beginNode(.packageStatement)
-        ->accept(.PUB)
-        ->expect(.PACKAGE, "Expected a declaration.")
-        ->expect(.identifier, "Expected a package name.")
-        ->zeroOrMore(parser, func(parser &Parser) {
+        parser->accept(.PUB)
+        parser->expect(.PACKAGE, "Expected a declaration.")
+        parser->expect(.identifier, "Expected a package name.")
+        parser->zeroOrMore(parser, func(parser &Parser) {
             parser->expect(.DOT)
-            ->expect(.identifier, .TIMES, "Incomplete package name.")
+            parser->expect(.identifier, .TIMES, "Incomplete package name.")
         })
-    ->endNode()
+    parser->endNode()
 }
