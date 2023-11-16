@@ -1,8 +1,1 @@
-package hello;
-import a.b, c, d.e;
-from import io;
-pub var 1 int;
-from std import io, math;
-
-var a int = -;
-pub var b;
+pub package ;

@@ -1,28 +1,32 @@
-from typing import Optional
 from dataclasses import dataclass
-from enum import Enum, auto
 from lex import *
-
-
-# Represents the type of a node.
-class NodeType(Enum):
-    PROGRAM = auto()
-    PACKAGE_STATEMENT = auto()
-    IMPORT_STATEMENT = auto()
-    PACKAGE_NAME = auto()
-    VARIABLE_DEFINITION = auto()
 
 
 # Represents a node in a parse tree. Can have zero or more children.
 @dataclass
 class Node:
-    type: NodeType # The type of the node.
-    parent: Optional[type["Node"]] # The parent of the node.
-    children: list[type["Leaf"]] # The node's children. Can be empty.
+    type: str # The type of the node.
+    children: list # The children of the node. May be empty.
 
-    def prettyPrint(self, indentation: int=0) -> str:
+    # The characters parsed by the node (excluding whitespace and newlines).
+    @property
+    def text(self):
+        result = ""
+        for child in self.children:
+            if isinstance(child, Node):
+                result += child.text
+            elif isinstance(child, str):
+                result += child
+        return result
+    
+    def __str__(self):
+        children = ", ".join(map(str, self.children))
+        return f"{self.type}({children})"
+
+    # Prints a multi-line representation of the node.
+    def prettyPrint(self, indentation=0):
         tab = "|  "
-        print(tab*indentation + self.type.name)
+        print(tab*indentation + self.type)
         indentation += 1
         for child in self.children:
             if isinstance(child, Node):
@@ -31,274 +35,135 @@ class Node:
                 print(tab*indentation + str(child))
 
 
-# Represents an error encountered during parsing. Gets added to the parse tree.
+# Represents a non-recoverable error encountered during parsing.
 @dataclass
 class ParsingError:
-    message: str
-    tokenIndex: int
+    index: int # The token the error occurred at.
+    message: str # An explanation of the error.
 
-    def __str__(self) -> str:
-        return f"token {self.tokenIndex}: {self.message}"
-
-
-# Represents the child of a `Node`.
-Leaf = Token | Node | ParsingError
+    def __str__(self):
+        return f"Error (token {self.index}): {self.message}"
 
 
-# The result of parsing a list of tokens. Represents the abstract syntax tree of a program.
-@dataclass
-class Tree:
-    topNode: Node
-    errors: list[ParsingError]
+# Parses a token of the given type. Fails if it is not present.
+def token(type):
+    def parse(tokens, index):
+        if index >= len(tokens):
+            error = ParsingError(index, f"Expected {type} at {index}, but ran out of tokens.")
+            return (index, error, error)
+        if tokens[index].type != type:
+            error = ParsingError(index, f"Expected {type} at {index}, but got {tokens[index]}.")
+            return (index, error, error)
+        return (index + 1, tokens[index], None)
+    return parse
 
 
-# Holds state for the parser. Helper for `parse()`.
-class Parser:
-    def __init__(self):
-        self.tokens: list[Token]
-        self.tokenIndex: int
-        self.tree: Tree
-        self.bottomNode: Node
-        self.keepParsing: bool
-        self.saves: list
-        self.nodeSaves: list[bool]
-
-    # The current token being parsed.
-    @property
-    def currentToken(self) -> Optional[Token]:
-        if self.tokenIndex < len(self.tokens):
-            return self.tokens[self.tokenIndex]
-        return None
-    
-    # Advances to the next token.
-    def getNextToken(self):
-        assert self.tokenIndex < len(self.tokens), "Must have tokens left to call `getNextToken().`"
-        self.tokenIndex += 1
-
-    # Starts a new node in the parse tree and moves the bottom node down one level.
-    def beginNode(self, type: NodeType):
-        if self.keepParsing:
-            newNode = Node(type, self.bottomNode, [])
-            self.bottomNode.children.append(newNode)
-            self.bottomNode = newNode
-            self.nodeSaves.append(True)
-        else:
-            self.nodeSaves.append(False)
-
-    # Ends a node in the parse tree and move the bottom node up one level.
-    def endNode(self):
-        if self.nodeSaves.pop() and self.bottomNode is not self.tree.topNode:
-            self.bottomNode = self.bottomNode.parent
-
-    # Accepts a token of any of the given types then appends it to the bottom node if it is present,
-    # but does nothing if it isn't.
-    def accept(self, *types: TokenType):
-        if self.keepParsing and self.currentToken and self.currentToken.type in types:
-            self.bottomNode.children.append(self.currentToken)
-            self.getNextToken()
-
-    # Expects a token of any of the given types then appends it to the bottom node if it is present,
-    # and adds the given error to the parse tree if it isn't.
-    def expectError(self, error: str, *types: TokenType):
-        if self.keepParsing:
-            if self.currentToken and self.currentToken.type in types:
-                self.bottomNode.children.append(self.currentToken)
-                self.getNextToken()
+# Parses a sequence of parsers. Fails if any of the given parsers fail.
+def sequence(*parsers):
+    def parse(tokens, index):
+        children, error = [], None
+        for parser in parsers:
+            if isinstance(parser, str):
+                index, child, error = token(parser)(tokens, index)
             else:
-                if self.currentToken:
-                    error = error.replace("$", self.currentToken.type.name)
-                errorLeaf = ParsingError(error, self.tokenIndex)
-                self.bottomNode.children.append(errorLeaf)
-                self.tree.errors.append(errorLeaf)
-                self.keepParsing = False
-    
-    # Expects a token of any of the given types then appends it to the bottom node if it is present,
-    # and adds a generic error to the parse tree if it isn't.
-    def expect(self, *types: TokenType):
-        typeNames = ", ".join(type.name for type in types[:-1]) + (" or " if len(types) > 1 else "") + types[-1].name
-        error = f"Expected {typeNames}, but got {self.currentToken.type.name if self.currentToken else 'nothing'}."
-        self.expectError(error, *types)
+                index, child, error = parser(tokens, index)
 
-    # Accepts the given parser and backtracks if it fails. Returns true if it succeeds.
-    def maybe(self, f) -> bool:
-        if self.keepParsing:
-            # Save the current state.
-            previousTokenIndex = self.tokenIndex
-            previousChildrenLength = len(self.bottomNode.children)
-            previousErrorsLength = len(self.tree.errors)
-            previousBottomNode = self.bottomNode
-            f()
-            if not self.keepParsing:
-                # Backtrack to before `f()` was called.
-                self.tokenIndex = previousTokenIndex
-                self.tree.errors = self.tree.errors[:previousErrorsLength]
-                self.bottomNode = previousBottomNode
-                self.bottomNode.children = self.bottomNode.children[:previousChildrenLength]
-                self.keepParsing = True
-                return False
-            return True
-        return False
+            if isinstance(child, list):
+                children += child
+            elif child is not None:
+                children.append(child)
 
-    # Accepts zero or more of the given parser and backtracks if the parser fails.
-    def zeroOrMore(self, f):
-        while self.keepParsing:
-            if not self.maybe(f):
-                return
-
-    # Accepts one or more of the given parser and adds an error to the parse tree if there is not at
-    # least one occurrence.
-    def oneOrMore(self, f):
-        f()
-        self.zeroOrMore(f)
-
-    # Accepts any of the given parsers. If none of the parsers succeed, the error of the last parser
-    # is the one that gets added to the parse tree.
-    def any(self, *fns):
-        if self.keepParsing:
-            for f in fns[:-1]:
-                if self.maybe(f):
-                    return
-            fns[-1]()
-
-    # Saves the state of the parser in case it needs to recover from an error.
-    def save(self):
-        self.saves.append(self.keepParsing)
-
-    # Recovers to a previous save if an error was encountered.
-    def recover(self):
-        doRecover = self.saves.pop()
-        if doRecover and not self.keepParsing:
-            self.keepParsing = True
-            # if errorMessage:
-            #     self.current
-
-    # Recovers to the previous save and consumes tokens until a `;` is found if an error was
-    # encountered.
-    def recoverUntilLineEnd(self, keepLineEnd=False):
-        doRecover = self.saves.pop()
-        if doRecover and not self.keepParsing:
-            self.keepParsing = True
-            while self.currentToken and self.currentToken.type != TokenType.SEMICOLON:
-                self.getNextToken()
-
-            if keepLineEnd and self.currentToken and self.currentToken.type == TokenType.SEMICOLON:
-                self.bottomNode.children.append(self.currentToken)
-                self.getNextToken()
-
-    # Parses the given tokens.
-    def parse(self, tokens: list[Token]) -> Tree:
-        self.tokens = tokens
-        self.tokenIndex = 0
-        self.tree = Tree(Node(NodeType.PROGRAM, None, []), [])
-        self.bottomNode = self.tree.topNode
-        self.keepParsing = True
-        self.saves = []
-        self.nodeSaves = [True]
-        self.parseProgram()
-        return self.tree
-
-    # Parses a program. Helper for `self.parse()`.
-    def parseProgram(self):
-        # ?packageStatement *statement
-        self.maybe(self.parsePackageStatement)
-        self.zeroOrMore(self.parseStatement)
-
-    # Parses a statement. Helper for `self.parse()`.
-    def parseStatement(self):
-        self.any(
-            self.parseImportStatement,
-            self.parseVariableDefinition,
-        )
-
-    # Parses a package statement. Helper for `self.parse()`
-    def parsePackageStatement(self):
-        self.beginNode(NodeType.PACKAGE_STATEMENT)
-        # ?"pub" "package"
-        self.accept(TokenType.PUB)
-        self.expect(TokenType.PACKAGE)
-        self.save()
-        # packageName lineEnd
-        self.parsePackageName()
-        self.recoverUntilLineEnd()
-        self.parseLineEnd()
-        self.endNode()
-
-    # Parses an import statement. Helper for `self.parse()`
-    def parseImportStatement(self):
-        self.beginNode(NodeType.IMPORT_STATEMENT)
-        # ?from "import"
-        self.maybe(self.parseFrom)
-        self.expect(TokenType.IMPORT)
-        self.save()
-        # packageName *importStatementName endLine
-        self.parsePackageName()
-        self.zeroOrMore(self.parseImportStatementName)
-        self.accept(TokenType.COMMA)
-        self.recoverUntilLineEnd()
-        self.parseLineEnd()
-        self.endNode()
-
-    # Parses the beginning of an import statement.
-    def parseFrom(self):
-        # "from" packageName
-        self.expect(TokenType.FROM)
-        self.save()
-        self.parsePackageName()
-        self.recover()
-
-    # Parses a package name in an import statement. Helper for `self.parseImportStatement()`.
-    def parseImportStatementName(self):
-        # "," packageName
-        self.expect(TokenType.COMMA)
-        self.parsePackageName()
-
-    # Parses a package name. Helper for `self.parse()`.
-    def parsePackageName(self):
-        self.beginNode(NodeType.PACKAGE_NAME)
-        # identifier *packageNameEnd
-        self.expectError("Expected a package name.", TokenType.IDENTIFIER)
-        self.zeroOrMore(self.parsePackageNameEnd)
-        self.endNode()
-
-    # Parses the end of a package name. Helper for `self.parsePackageName()`.
-    def parsePackageNameEnd(self):
-        # "." (identifier | "*")
-        self.expect(TokenType.DOT)
-        self.expectError("Invalid package name (expected an identifier or `*`).", TokenType.IDENTIFIER, TokenType.TIMES)
-
-    # Parses a variable declaration / definition. Helper for `self.parse()`.
-    def parseVariableDefinition(self):
-        self.beginNode(NodeType.VARIABLE_DEFINITION)
-        # ?"pub" "var"
-        self.accept(TokenType.PUB)
-        self.expect(TokenType.VAR)
-        # identifier ?identifier
-        self.save()
-        self.expectError("Expected an identifier.", TokenType.IDENTIFIER)
-        self.accept(TokenType.IDENTIFIER)
-        self.recoverUntilLineEnd()
-        # ?("=" expression) lineEnd
-        self.maybe(self.parseAssignmentRhs)
-        self.parseLineEnd()
-        self.endNode()
-
-    # Parses a `= <expression>`. Helper for `self.parse()`.
-    def parseAssignmentRhs(self):
-        # "=" expression
-        self.expect(TokenType.ASSIGN)
-        self.parseExpression()
-
-    # Parses an expression with operators. Helper for `self.parse()`.
-    def parseExpression(self):
-        self.expectError("Expected an expression.", TokenType.NUMBER)
-
-    # Parses a `;` and maybe recovers from extra tokens before the `;`. Helper for `self.parse()`.
-    def parseLineEnd(self):
-        self.save()
-        self.expectError("Expected a semicolon.", TokenType.SEMICOLON)
-        self.recoverUntilLineEnd(True)
+            if error:
+                break
+        return (index, children, error)
+    return parse
 
 
-# Parses a list of tokens into a syntax tree.
-def parse(tokens: list[Token]) -> Node:
-    return Parser().parse(tokens)
+# Parses any of the given choices. Returns the error of the last choice if all choices fail.
+def choice(*parsers):
+    def parse(tokens, index):
+        newIndex, result, error = True, None, None
+        for parser in parsers:
+            if isinstance(parser, str):
+                newIndex, result, error = token(parser)(tokens, index)
+            else:
+                newIndex, result, error = parser(tokens, index)
+            
+            if not error:
+                return (newIndex, result, error)
+        return (newIndex, result, error)
+    return parse
+
+
+# Parses a sequence and puts it in a node with the given type. Fails if any of the given parsers fail.
+def node(type, *parsers):
+    def parse(tokens, index):
+        index, children, error = sequence(*parsers)(tokens, index)
+        return (index, Node(type, children), error)
+    return parse
+
+
+# Tries the given parsers and just returns None if one fails.
+def maybe(*parsers):
+    def parse(tokens, index):
+        newIndex, result, error = sequence(*parsers)(tokens, index)
+        if error:
+            return (index, None, None)
+        return (newIndex, result, None)
+    return parse
+
+
+# # Tries the given parsers and recovers if one fails. Just adds the error message to the parse tree and continues parsing.
+# def recover(*parsers):
+#     def parse(tokens, index):
+#         index, result, _ = sequence(*parsers)(tokens, index)
+#         return (index, result, None)
+#     return parse
+
+
+# Tries the given parsers and recovers if one fails. Just adds the error message to the parse tree and continues parsing.
+# On failure, consumes tokens until the current token matches the type given.
+def recoverUntil(type, message, *parsers):
+    def parse(tokens, index):
+        index, result, error = sequence(*parsers)(tokens, index)
+        if error:
+            while index < len(tokens) and tokens[index].type != type:
+                index += 1
+
+            if message:
+                error.message = message.replace("$i", str(index)).replace("$t", str(tokens[index]))
+        return (index, result, None)
+    return parse
+
+
+# Parses zero or more of the given sequence.
+def zeroOrMore(*parsers):
+    def parse(tokens, index):
+        children = []
+        while True:
+            index, child, error = sequence(*parsers)(tokens, index)
+            if error:
+                break
+
+            if isinstance(child, list):
+                children += child
+            else:
+                children.append(child)
+        return (index, children, None)
+    return parse
+
+
+# Parses one or more of the given sequence.
+def oneOrMore(*parsers):
+    return sequence(*parsers, zeroOrMore(*parsers))
+
+
+# The grammar.
+lineEnd = ";"
+packageStatement = node("packageStatement", maybe("pub"), "package", recoverUntil(lineEnd, "Expected a package name.", "identifier"), lineEnd)
+program = node("program", maybe(packageStatement))
+
+
+# Parses the given tokens into a syntax tree.
+def parse(tokens):
+    return program(tokens, 0)[1:]

@@ -1,20 +1,18 @@
 from lex import *
-# from combinators import *
+from parse import *
 
 
 if __name__ == "__main__":
-    path = "source/example.txt"
-    text = readFile(path)
+    text = readFile("source/example.txt")
     
     tokens = lex(text)
     print("--- TOKENS ---")
     for i, token in enumerate(tokens):
         print(f"{i:<3} {token}")
 
-    # tree = parse(tokens)
-    # if tree.errors:
-    #     print("\n--- PARSING ERRORS ---")
-    #     for error in tree.errors:
-    #         print(error)        
-    # print("\n--- SYNTAX TREE ---")
-    # tree.topNode.prettyPrint()
+    tree, error = parse(tokens)
+    print("\n--- SYNTAX TREE ---")
+    if error:
+        print(f"Error: {error.message}")
+    if tree:
+        tree.prettyPrint()
