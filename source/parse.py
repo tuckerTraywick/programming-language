@@ -144,6 +144,32 @@ def recover(*parsers):
     return parse
 
 
+# Skips tokens until `;`.
+def lineEnd(tokens, index, recovered):
+    if index < len(tokens) and tokens[index].type == ";":
+        return (index + 1, tokens[index], None, False)
+
+    found = False
+    newIndex = index
+    while newIndex < len(tokens):
+        if tokens[newIndex].type != ";":
+            found = True
+            break
+        newIndex += 1
+
+    # TODO: Figure out what to do next.
+    if found:
+        index
+
+    if not recovered:
+        error = ParsingError(index, "Expected end of statement.")
+    else:
+        error = None
+
+    
+    return ()
+
+
 # Parses zero or more of the given sequence.
 def zeroOrMore(*parsers):
     assert parsers
@@ -170,7 +196,11 @@ def zeroOrMore(*parsers):
 
 
 # The grammar
-lineEnd = sequence(recover(";"), maybe(";"))
+#lineEnd = sequence(recover(";"), maybe(";"))
+
+variableDefinition = node("variableDefinition",
+    maybe("pub"), "var", recover("identifier"), maybe("identifier"), maybe("=", "number"), lineEnd,
+)
 
 packageName = node("packageName",
     "identifier", zeroOrMore(".", "identifier"), maybe(".", recover("*")),
@@ -182,10 +212,12 @@ packageNameList = sequence(
 
 importStatement = node("importStatement", choice(
     sequence("from", recover(packageName), recover("import", packageNameList), lineEnd),
+    sequence("import", recover(packageName), lineEnd)
 ))
 
 programStatement = choice(
     importStatement,
+    variableDefinition,
 )
 
 packageStatement = node("packageStatement",
