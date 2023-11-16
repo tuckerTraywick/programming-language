@@ -47,26 +47,43 @@ class ParsingError:
 
 # Parses a token of the given type. Fails if it is not present.
 def token(type):
-    def parse(tokens, index):
+    def parse(tokens, index, recovered):
         if index >= len(tokens):
             error = ParsingError(index, f"Expected {type} at {index}, but ran out of tokens.")
-            return (index, error, error)
+            return (index, error, error, False)
+        
+        if recovered:
+            # Fastforward to the expected token or the end of the line.
+            # If neither is encountered, rewind to the previous index.
+            oldIndex = index
+            while index < len(tokens):
+                if tokens[index].type == type:
+                    break
+
+                if tokens[index].type == ";":
+                    break
+                index += 1
+            
+            if index == len(tokens):
+                index = oldIndex
+
         if tokens[index].type != type:
             error = ParsingError(index, f"Expected {type} at {index}, but got {tokens[index]}.")
-            return (index, error, error)
-        return (index + 1, tokens[index], None)
+            return (index, error, error, False)
+        return (index + 1, tokens[index], None, False)
     return parse
 
 
 # Parses a sequence of parsers. Fails if any of the given parsers fail.
 def sequence(*parsers):
-    def parse(tokens, index):
-        children, error = [], None
+    assert parsers
+    def parse(tokens, index, recovered):
+        children = []
         for parser in parsers:
             if isinstance(parser, str):
-                index, child, error = token(parser)(tokens, index)
+                index, child, error, recovered = token(parser)(tokens, index, recovered)
             else:
-                index, child, error = parser(tokens, index)
+                index, child, error, recovered = parser(tokens, index, recovered)
 
             if isinstance(child, list):
                 children += child
@@ -75,122 +92,96 @@ def sequence(*parsers):
 
             if error:
                 break
-        return (index, children, error)
+        return (index, children, error, recovered)
     return parse
 
 
 # Parses any of the given choices. Returns the error of the last choice if all choices fail.
 def choice(*parsers):
-    def parse(tokens, index):
-        newIndex, result, error = True, None, None
+    assert parsers
+    def parse(tokens, index, recovered):
         for parser in parsers:
             if isinstance(parser, str):
-                newIndex, result, error = token(parser)(tokens, index)
+                newIndex, result, error, newRecovered = token(parser)(tokens, index, recovered)
             else:
-                newIndex, result, error = parser(tokens, index)
+                newIndex, result, error, newRecovered = parser(tokens, index, recovered)
             
             if not error:
-                return (newIndex, result, error)
-        return (newIndex, result, error)
+                return (newIndex, result, error, newRecovered)
+        return (newIndex, result, error, newRecovered)
     return parse
 
 
 # Parses a sequence and puts it in a node with the given type. Fails if any of the given parsers 
 # fail.
 def node(type, *parsers):
-    def parse(tokens, index):
-        index, children, error = sequence(*parsers)(tokens, index)
-        return (index, Node(type, children), error)
+    assert parsers
+    def parse(tokens, index, recovered):
+        index, children, error, recovered = sequence(*parsers)(tokens, index, recovered)
+        return (index, Node(type, children), error, recovered)
     return parse
 
 
 # Tries the given parsers and just returns None if one fails.
 def maybe(*parsers):
-    def parse(tokens, index):
-        newIndex, result, error = sequence(*parsers)(tokens, index)
-        if error:
-            return (index, None, None)
-        return (newIndex, result, None)
+    assert parsers
+    def parse(tokens, index, recovered):
+        index, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
+        return (index, None if error else result, None, recovered)
     return parse
 
 
-# Tries the given parsers and recovers if one fails. Just adds the error message to the parse tree 
-# and continues parsing. On failure, consumes tokens until the current token matches the type given.
-def recoverUntil(type, stop, message, *parsers):
-    def parse(tokens, index):
-        index, result, error = sequence(*parsers)(tokens, index)
-        oldIndex = index
-        if error:
-            found = False
-            while index < len(tokens):
-                if isinstance(type, list) and tokens[index].type in type \
-                or tokens[index].type == type:
-                    found = True
-                    break
-                if tokens[index].type == stop:
-                    break
-                index += 1
-
-            if not found:
-                index = oldIndex
-
-            if message:
-                token = str(tokens[index]) if index < len(tokens) else ""
-                error.message = message.replace("$i", str(index)).replace("$t", token)
-
-            # TODO: Make this more legible.
-            if isinstance(result[-1], Node) and result[-1].children and isinstance(result[-1].children[0], ParsingError):
-                result[-1] = result[-1].children[0]
-        return (index, result, None)
+# Tries the given parsers and recovers if one fails. Just adds the error message to the parse tree.
+def recover(*parsers):
+    assert parsers
+    def parse(tokens, index, recovered):
+        index, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
+        # if error:
+            # # TODO: Make this more legible.
+            # if isinstance(result[-1], Node) and result[-1].children and isinstance(result[-1].children[0], ParsingError):
+            #     result[-1] = result[-1].children[0]
+        return (index, result, None, bool(error))
     return parse
-
-
-# Same as `recoverUntil()` but doesn't stop at a given token.
-def recover(type, message, *parsers):
-    return recoverUntil(type, type, message, *parsers)
 
 
 # Parses zero or more of the given sequence.
 def zeroOrMore(*parsers):
-    def parse(tokens, index):
-        children, newIndex = [], index
+    assert parsers
+    def parse(tokens, index, recovered):
+        children = []
         while True:
-            newIndex, child, error = sequence(*parsers)(tokens, index)
+            newIndex, child, error, newRecovered = sequence(*parsers)(tokens, index, recovered)
             if error:
                 break
             index = newIndex
+            recovered = newRecovered
 
             if isinstance(child, list):
                 children += child
             else:
                 children.append(child)
-        return (index, children, None)
+        return (index, children, None, recovered)
     return parse
 
 
 # Parses one or more of the given sequence.
-def oneOrMore(*parsers):
-    return sequence(*parsers, zeroOrMore(*parsers))
+# def oneOrMore(*parsers):
+#     return sequence(*parsers, zeroOrMore(*parsers))
 
 
 # The grammar
-lineEnd = sequence(
-    recover(";", "Expected end of statement.", ";"), zeroOrMore(";")
-)
+lineEnd = sequence(recover(";"), maybe(";"))
 
 packageName = node("packageName",
-    "identifier", zeroOrMore(".", "identifier"),
-    maybe(".", recover(";", "Expected identifier or `*`.", "*")),
+    "identifier", zeroOrMore(".", "identifier"), maybe(".", recover("*")),
 )
 
-recoverPackageName = recover(";", "Expected package name.", packageName)
+packageNameList = sequence(
+    packageName, zeroOrMore(",", packageName),
+)
 
 importStatement = node("importStatement", choice(
-    sequence(
-        "from", recoverUntil("import", ";", "Expected package name.", packageName),
-        recover(";", "Expected import statement.", "import", recoverPackageName), lineEnd,
-    ),
-    sequence("import", recoverPackageName, lineEnd),
+    sequence("from", recover(packageName), recover("import", packageNameList), lineEnd),
 ))
 
 programStatement = choice(
@@ -198,7 +189,7 @@ programStatement = choice(
 )
 
 packageStatement = node("packageStatement",
-    maybe("pub"), "package", recoverPackageName, lineEnd,
+    maybe("pub"), "package", recover(packageName), lineEnd,
 )
 
 program = node("program",
@@ -208,4 +199,4 @@ program = node("program",
 
 # Parses the given tokens into a syntax tree.
 def parse(tokens):
-    return program(tokens, 0)[1:]
+    return program(tokens, 0, False)[1:3]
