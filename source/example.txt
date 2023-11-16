@@ -1,1 +1,9 @@
-pub package ;
+package hello;
+import std.math;
+import std.;
+import ;
+import std.math 1;
+from std.math import pi;
+from  . 3;
+import a;
+from 1; import 2 a;

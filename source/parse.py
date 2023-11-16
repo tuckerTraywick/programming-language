@@ -95,7 +95,8 @@ def choice(*parsers):
     return parse
 
 
-# Parses a sequence and puts it in a node with the given type. Fails if any of the given parsers fail.
+# Parses a sequence and puts it in a node with the given type. Fails if any of the given parsers 
+# fail.
 def node(type, *parsers):
     def parse(tokens, index):
         index, children, error = sequence(*parsers)(tokens, index)
@@ -113,37 +114,50 @@ def maybe(*parsers):
     return parse
 
 
-# # Tries the given parsers and recovers if one fails. Just adds the error message to the parse tree and continues parsing.
-# def recover(*parsers):
-#     def parse(tokens, index):
-#         index, result, _ = sequence(*parsers)(tokens, index)
-#         return (index, result, None)
-#     return parse
-
-
-# Tries the given parsers and recovers if one fails. Just adds the error message to the parse tree and continues parsing.
-# On failure, consumes tokens until the current token matches the type given.
-def recoverUntil(type, message, *parsers):
+# Tries the given parsers and recovers if one fails. Just adds the error message to the parse tree 
+# and continues parsing. On failure, consumes tokens until the current token matches the type given.
+def recoverUntil(type, stop, message, *parsers):
     def parse(tokens, index):
         index, result, error = sequence(*parsers)(tokens, index)
+        oldIndex = index
         if error:
-            while index < len(tokens) and tokens[index].type != type:
+            found = False
+            while index < len(tokens):
+                if isinstance(type, list) and tokens[index].type in type \
+                or tokens[index].type == type:
+                    found = True
+                    break
+                if tokens[index].type == stop:
+                    break
                 index += 1
 
+            if not found:
+                index = oldIndex
+
             if message:
-                error.message = message.replace("$i", str(index)).replace("$t", str(tokens[index]))
+                token = str(tokens[index]) if index < len(tokens) else ""
+                error.message = message.replace("$i", str(index)).replace("$t", token)
+
+            if isinstance(result[-1], Node) and result[-1].children and isinstance(result[-1].children[0], ParsingError):
+                result[-1] = result[-1].children[0]
         return (index, result, None)
     return parse
+
+
+# Same as `recoverUntil()` but doesn't stop at a given token.
+def recover(type, message, *parsers):
+    return recoverUntil(type, type, message, *parsers)
 
 
 # Parses zero or more of the given sequence.
 def zeroOrMore(*parsers):
     def parse(tokens, index):
-        children = []
+        children, newIndex = [], index
         while True:
-            index, child, error = sequence(*parsers)(tokens, index)
+            newIndex, child, error = sequence(*parsers)(tokens, index)
             if error:
                 break
+            index = newIndex
 
             if isinstance(child, list):
                 children += child
@@ -158,10 +172,37 @@ def oneOrMore(*parsers):
     return sequence(*parsers, zeroOrMore(*parsers))
 
 
-# The grammar.
-lineEnd = ";"
-packageStatement = node("packageStatement", maybe("pub"), "package", recoverUntil(lineEnd, "Expected a package name.", "identifier"), lineEnd)
-program = node("program", maybe(packageStatement))
+# The grammar
+lineEnd = sequence(
+    recover(";", "Expected end of statement.", ";"), zeroOrMore(";")
+)
+
+packageName = node("packageName",
+    "identifier", zeroOrMore(".", "identifier"),
+    maybe(".", recover(";", "Expected identifier or `*`.", "*")),
+)
+
+recoverPackageName = recover(";", "Expected package name.", packageName)
+
+importStatement = node("importStatement", choice(
+    sequence(
+        "from", recoverUntil("import", ";", "Expected package name.", packageName),
+        recover(";", "Expected import statement.", "import", packageName), lineEnd,
+    ),
+    sequence("import", recoverPackageName, lineEnd),
+))
+
+programStatement = choice(
+    importStatement,
+)
+
+packageStatement = node("packageStatement",
+    maybe("pub"), "package", recoverPackageName, lineEnd,
+)
+
+program = node("program",
+    maybe(packageStatement), zeroOrMore(programStatement),
+)
 
 
 # Parses the given tokens into a syntax tree.
