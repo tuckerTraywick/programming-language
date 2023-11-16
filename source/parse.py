@@ -165,12 +165,12 @@ class Parser:
         self.saves.append(self.keepParsing)
 
     # Recovers to a previous save if an error was encountered.
-    def recover(self, errorMessage=None):
+    def recover(self):
         doRecover = self.saves.pop()
         if doRecover and not self.keepParsing:
             self.keepParsing = True
-            if errorMessage:
-                self.current
+            # if errorMessage:
+            #     self.current
 
     # Recovers to the previous save and consumes tokens until a `;` is found if an error was
     # encountered.
@@ -199,6 +199,7 @@ class Parser:
 
     # Parses a program. Helper for `self.parse()`.
     def parseProgram(self):
+        # ?packageStatement *statement
         self.maybe(self.parsePackageStatement)
         self.zeroOrMore(self.parseStatement)
 
@@ -212,9 +213,11 @@ class Parser:
     # Parses a package statement. Helper for `self.parse()`
     def parsePackageStatement(self):
         self.beginNode(NodeType.PACKAGE_STATEMENT)
+        # ?"pub" "package"
         self.accept(TokenType.PUB)
         self.expect(TokenType.PACKAGE)
         self.save()
+        # packageName lineEnd
         self.parsePackageName()
         self.recoverUntilLineEnd()
         self.parseLineEnd()
@@ -223,9 +226,11 @@ class Parser:
     # Parses an import statement. Helper for `self.parse()`
     def parseImportStatement(self):
         self.beginNode(NodeType.IMPORT_STATEMENT)
+        # ?from "import"
         self.maybe(self.parseFrom)
         self.expect(TokenType.IMPORT)
         self.save()
+        # packageName *importStatementName endLine
         self.parsePackageName()
         self.zeroOrMore(self.parseImportStatementName)
         self.accept(TokenType.COMMA)
@@ -235,6 +240,7 @@ class Parser:
 
     # Parses the beginning of an import statement.
     def parseFrom(self):
+        # "from" packageName
         self.expect(TokenType.FROM)
         self.save()
         self.parsePackageName()
@@ -242,18 +248,21 @@ class Parser:
 
     # Parses a package name in an import statement. Helper for `self.parseImportStatement()`.
     def parseImportStatementName(self):
+        # "," packageName
         self.expect(TokenType.COMMA)
         self.parsePackageName()
 
     # Parses a package name. Helper for `self.parse()`.
     def parsePackageName(self):
         self.beginNode(NodeType.PACKAGE_NAME)
+        # identifier *packageNameEnd
         self.expectError("Expected a package name.", TokenType.IDENTIFIER)
         self.zeroOrMore(self.parsePackageNameEnd)
         self.endNode()
 
     # Parses the end of a package name. Helper for `self.parsePackageName()`.
     def parsePackageNameEnd(self):
+        # "." (identifier | "*")
         self.expect(TokenType.DOT)
         self.expectError("Invalid package name (expected an identifier or `*`).", TokenType.IDENTIFIER, TokenType.TIMES)
 
@@ -263,20 +272,19 @@ class Parser:
         # ?"pub" "var"
         self.accept(TokenType.PUB)
         self.expect(TokenType.VAR)
-        
         # identifier ?identifier
         self.save()
         self.expectError("Expected an identifier.", TokenType.IDENTIFIER)
         self.accept(TokenType.IDENTIFIER)
         self.recoverUntilLineEnd()
-
-        # ?("=" expression) ';'
+        # ?("=" expression) lineEnd
         self.maybe(self.parseAssignmentRhs)
         self.parseLineEnd()
         self.endNode()
 
     # Parses a `= <expression>`. Helper for `self.parse()`.
     def parseAssignmentRhs(self):
+        # "=" expression
         self.expect(TokenType.ASSIGN)
         self.parseExpression()
 
