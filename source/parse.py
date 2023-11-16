@@ -138,6 +138,7 @@ def recoverUntil(type, stop, message, *parsers):
                 token = str(tokens[index]) if index < len(tokens) else ""
                 error.message = message.replace("$i", str(index)).replace("$t", token)
 
+            # TODO: Make this more legible.
             if isinstance(result[-1], Node) and result[-1].children and isinstance(result[-1].children[0], ParsingError):
                 result[-1] = result[-1].children[0]
         return (index, result, None)
@@ -187,7 +188,7 @@ recoverPackageName = recover(";", "Expected package name.", packageName)
 importStatement = node("importStatement", choice(
     sequence(
         "from", recoverUntil("import", ";", "Expected package name.", packageName),
-        recover(";", "Expected import statement.", "import", packageName), lineEnd,
+        recover(";", "Expected import statement.", "import", recoverPackageName), lineEnd,
     ),
     sequence("import", recoverPackageName, lineEnd),
 ))
