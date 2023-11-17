@@ -195,10 +195,21 @@ def zeroOrMore(*parsers):
 
 
 # The grammar
-#lineEnd = sequence(recover(";"), maybe(";"))
+functionBody = node("functionBody", choice(
+    sequence(recover("=", recover("number")), lineEnd),
+    sequence(lineEnd, "number", lineEnd, "end"),
+))
+
+functionParameters = node("functionParameters",
+    "(", ")",
+)
+
+functionDefinition = node("functionDefiniton",
+    "fun", recover("identifier"), functionParameters, functionBody,
+)
 
 variableDefinition = node("variableDefinition",
-    maybe("pub"), "var", recover("identifier"), maybe("identifier"), maybe("=", "number"), lineEnd,
+    "var", recover("identifier"), maybe("identifier"), maybe("=", "number"), lineEnd,
 )
 
 packageName = node("packageName",
@@ -206,21 +217,22 @@ packageName = node("packageName",
 )
 
 packageNameList = sequence(
-    packageName, zeroOrMore(",", packageName),
+    packageName, zeroOrMore(",", maybe("\n"), packageName), maybe(","),
 )
 
 importStatement = node("importStatement", choice(
-    sequence("from", recover(packageName), recover("import", packageNameList), lineEnd),
+    sequence("from", recover(packageName), recover("import", maybe("\n"), packageNameList), lineEnd),
     sequence("import", recover(packageName), lineEnd)
 ))
 
 programStatement = choice(
     importStatement,
     variableDefinition,
+    functionDefinition,
 )
 
 packageStatement = node("packageStatement",
-    maybe("pub"), "package", recover(packageName), lineEnd,
+    "package", recover(packageName), lineEnd,
 )
 
 program = node("program",

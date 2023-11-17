@@ -196,6 +196,9 @@ def lex(text: str) -> list[Token]:
             tokens.append(Token("invalid", text[start:i]))
             break
 
+    # Append a '\n' to the end of the token stream to make parsing slightly easier.
+    if not tokens or tokens[-1].type != "\n":
+        tokens.append(Token("\n", "\n"))
     return tokens
 
 
