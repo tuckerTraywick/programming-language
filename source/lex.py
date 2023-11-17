@@ -23,14 +23,20 @@ def readFile(path: str) -> str:
 def lex(text: str) -> list[Token]:
     keywords = {
         "package",
+        "from",
         "import",
+        "begin",
+        "end",
         "pub",
+        "priv",
+        "inline",
+        "persistent",
         "var",
-        "func",
+        "fun",
         "struct",
         "cases",
-        "extend",
-        "abstract",
+        "embed",
+        "impl",
         "pass",
         "return",
         "yield",
@@ -44,7 +50,6 @@ def lex(text: str) -> list[Token]:
         "fallthrough",
         "for",
         "in",
-        "from",
         "until",
         "thru",
         "by",
@@ -111,8 +116,13 @@ def lex(text: str) -> list[Token]:
     tokens: list[Token] = []
     i: int = 0
     while i < len(text):
+        # Lex newlines.
+        if text[i] == "\n":
+            if tokens[-1].type != "\n":
+                tokens.append(Token("\n", "\n"))
+                i += 1
         # Skip whitespace.
-        if text[i].isspace():
+        elif text[i].isspace():
             i += 1
         # Skip comments.
         elif text[i] == lineComment:

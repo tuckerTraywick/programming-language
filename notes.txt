@@ -7,9 +7,9 @@
 # Is structural typing compatible with padding??
 # If a struct has compatible cases, can it be cast???
 
-# No structural typing, just "extend" and "abstract".
+# No structural typing, just "embed" and "embed in".
 
-# "abstract" only works if the alignment is compatible.
+# "embed/impl in" only works if the alignment is compatible.
 
 # No postfix operators because they're too hard to distinguish from infix ones.
 
@@ -41,229 +41,146 @@ def parseExpression():
 
 
 
-struct Animal {
-    name string
-    age uint
-    makeNoise()
-}
+package
+from
+import
+var
+fun
+struct
+embed # Subtype. Doesn't cause error if methods are not implemented.
+impl # Subtype. Causes error if all non-default methods are not implemented.
+embed in # Supertype.
+impl in # Supertype.
+pub # Visible outside of this package (default is visible only within this package, i.e., protected).
+priv # Only visible in the current file.
+static # Only exists at compile time, cannot take the address of.
+persistent # Exists outside of function.
 
-struct Dog {
-    extend Animal
-    tag string
-}
 
-struct Cat {
-    extend Animal
-    breed string
-}
 
-func makeNoise(dog &Dog) {
-    println("woof")
-}
 
-func makeNoise(cat &Cat) {
-    println("meow")
-}
+package animals
+from std.io import printLine
 
-func main() {
-    var pet &Animal = &Dog()
+struct Animal
+    var name string
+    var age uint
+    fun makeNoise(&this)
+end
+
+struct Dog
+    embed Animal
+    var tag string
+end
+
+struct Cat
+    embed Animal
+    var breed string
+end
+
+fun makeNoise(dog &Dog)
+    printLine("woof")
+end
+
+fun makeNoise(cat &Cat)
+    printLine("meow")
+end
+
+fun main()
+    var pet mut &Animal = &Dog("fido", 2, "123 doggy lane")
     pet.makeNoise()
-    pet = &Cat()
-    pet.makeNoise()
-}
+    pet = &Cat("felix", 2, "tabby")
+end
 
 
 
 
-pub package animals
+package colors
 
-pub struct Animal {
-    pub name string
-    pub age uint
-    pub walk()
-}
+struct Color
+    var r, g, b uint8
+cases
+    var red(255, 0, 0), green(0, 255, 0), blue(0, 0, 255)
+end
 
-pub struct Dog {
-    extend Animal
-    pub tag string
-}
-
-pub struct Cat {
-    extend Animal
-    pub breed string
-}
-
-pub func walk(dog &Dog) {}
-
-pub func walk(cat &Cat) {}
-
-
-pub package moreAnimals
-import std.io, animals
-
-pub struct Noisy {
-    abstract animals.Dog, .Cat
-    pub makeNoise()
-}
-
-pub func makeNoise(dog &animals.Dog) {
-    std.io.printLine("woof")
-}
-
-pub func makeNoise(cat &animals.Cat) {
-    std.io.printLine("meow")
-}
-
-func main() {
-    var pet &Noisy = &animals.Dog()
-    pet.makeNoise()
-    var dog = animals.Dog()
-    animals.makeNoise(dog)
-}
+fun grayscale(color Color) Color = pass
 
 
 
 
-package abstractingExample
-import std.io
+package shapes
+form std.io import printLine
+from std.math import pi
 
-struct Dog {
-    name string
-    age uint
-}
+struct Shape
+    var color (3)uint8
+    fun area(this) ufloat64
+case
+    struct Circle
+        var radius ufloat64
+    end
 
-struct Cat {
-    age uint
-    breed string
-    name string
-}
+    struct Rectangle
+        var width, height ufloat64
+    end
 
-struct Animal {
-    abstract Dog, Cat
-    &name() &uint = auto
-    &age() &uint = auto
-}
+    struct Triangle
+        var base, height ufloat64
+    end
+end
 
-func printNameAndAge(pet &Animal) {
-    std.io.printLine(f"name={pet.name}, age={pet.age}")
-}
+fun area(circle Shape.Circle)
+    return pi*circle.radius**2
+end
 
-func main() {
-    printNameAndAge(&Dog("fido", 1))
-    printNameAndAge(&Cat(1, "tabby", "felix"))
-}
+fun area(rectangle Shape.Rectanlge)
+    return rectanlge.width*rectangle.height
+end
+
+fun area(triangle Shape.Triangle)
+    return 0.5*triangle.base*triangle.height
+end
+
+fun main()
+    var shape mut Shape = .Rectangle(2, 5)
+    printLine(shape.area()) # Prints "10".
+    shape = .Triangle(2, 5)
+    printLine(shpae.area()) # Prints "5".
+end
 
 
 
 
-package compiler
+pub package physics
 
-struct Tree {
-    top &Node
-    errors ?[]&ParsingERror
-}
+pub struct Entity
+    pub var position, velocity acceleration Vector
+    pub fun update(&mut this, delta ufloat64)
+cases
+    struct Circle
+        pub var radius ufloat64
+    end
 
-struct Node {
-    type NodeType
-    parent ?&Node
-    children ?[]&Leaf
-}
+    struct Mesh
+        pub var vertices owned []Vector
+    end
+end
 
-struct NodeType cases {
-    program, packageStatement, ...
-}
+pub fun update(circle &mut Entity.Circle) = pass
 
-struct &Leaf = &Token | &Node | &ParsingError
+pub fun update(mesh &mut Entity.Mesh) = pass
 
-struct Token {
-    type TokenType
-    text string
-    textIndex usize
-}
 
-struct TokenType cases {
-    default invalid
-    number, character, string, identifier
-    PACKAGE, IMPORT, VAR, FUNC, PLUS, MINUS ...
-}
 
-struct ParsingError {
-    message string
-    tokenIndex usize
-    textIndex usize
-    row usize
-    column usize
-}
 
-struct Parser {
-    tokens []Token
-    tokenIndex usize
-    tree Tree
-    bottomNode ?&Node # The innermost, rightmost node of the tree.
-    bottomLeaf ?&Leaf # The rightmost leaf of the bottom node.
-    keepParsing bool # Set to false when an unrecoverable error is encountered.
-}
+pub package std.collections
+import std.operations
+import std.debug
 
-# Lexing functions
-func lex(text string) []Token
-
-# Parsing functions.
-func parse(text string) Tree
-
-func parse(tokens []Token) Tree {
-    var parser = Parser(tokens=tokens, tree=&Node.program())
-    parseProgram(&parser)
-    return Tree(parser.topNode, parser.errors)
-}
-
-func .currentToken(parser &Parser) ?Token {
-    if parser.tokenIndex < parser.tokens.length {
-        return parser.tokens[parser.tokenIndex]
-    }
-    return none
-}
-
-func advance(parser &Parser) {
-    assert parser.tokenIndex < parser.tokens.length, "advance() should only be called when tokens are left."
-    ++parser.tokenIndex
-}
-
-func accept(parser &Parser, types ..TokenType, errorMessage ?string) {
-    if parser.keepParsing and parser.currentToken and parser.currentToken.type in types {
-        parser->advance()
-    }
-}
-
-func expect(parser &Parser, types ..TokenType, errorMessage ?string) {
-    if not parser.keepParsing {
-        return
-    }
-
-    if parser.currentToken.type not in types {
-        parser->addLeaf(&ParsingError(errorMessage))
-    }
-}
-
-func maybe(parser &Parser, f func(&Parser))
-
-func any(parser &Parser, fs ..func(&Parser))
-
-func zeroOrMore(parser &Parser, f func(&Parser))
-
-func oneOrMore(parser &Parser, f func(&Parser), errorMessage ?string)
-
-func parseProgram(parser &Parser) {
-    parsePackageStatement(parser)
-}
-
-func parsePackageStatement(parser &Parser) {
-    parser->beginNode(.packageStatement)
-        parser->accept(.PUB)
-        parser->expect(.PACKAGE, "Expected a declaration.")
-        parser->expect(.identifier, "Expected a package name.")
-        parser->zeroOrMore(parser, func(parser &Parser) {
-            parser->expect(.DOT)
-            parser->expect(.identifier, .TIMES, "Incomplete package name.")
-        })
-    parser->endNode()
-}
+pub struct List[T]
+    impl std.operations.To[string]
+    impl std.operations.Arithmetic, .Bitwise, .Logical, .Comparison
+    impl std.operations.Equality, .GetEelement, .SetElement
+    priv var elements owned []T
+    priv var capacity usize
+end
