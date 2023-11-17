@@ -13,6 +13,21 @@
 
 # No postfix operators because they're too hard to distinguish from infix ones.
 
+package
+from
+import
+var
+fun
+struct
+embed # Subtype. Doesn't cause error if methods are not implemented.
+impl # Subtype. Causes error if all non-default methods are not implemented.
+embed in # Supertype.
+impl in # Supertype.
+pub # Visible outside of this package (default is visible only within this package, i.e., protected).
+priv # Only visible in the current file.
+static # Only exists at compile time, cannot take the address of.
+persistent # Exists outside of function.
+
 def parseExpression():
     tree = None
     while tokens:
@@ -37,24 +52,6 @@ def parseExpression():
     if tokens:
         raise exception
     return tree
-
-
-
-
-package
-from
-import
-var
-fun
-struct
-embed # Subtype. Doesn't cause error if methods are not implemented.
-impl # Subtype. Causes error if all non-default methods are not implemented.
-embed in # Supertype.
-impl in # Supertype.
-pub # Visible outside of this package (default is visible only within this package, i.e., protected).
-priv # Only visible in the current file.
-static # Only exists at compile time, cannot take the address of.
-persistent # Exists outside of function.
 
 
 
@@ -98,12 +95,15 @@ end
 package colors
 
 struct Color
-    var r, g, b uint8
+    var r, g, b const uint8
 cases
-    var red(255, 0, 0), green(0, 255, 0), blue(0, 0, 255)
+    default struct Rgb
+    case black = (0, 0, 0)
+    case white = (255, 255, 255)
+    case red = (255, 0, 0)
+    case green = (0, 255, 0)
+    case blue = (0, 0, 255)
 end
-
-fun grayscale(color Color) Color = pass
 
 
 
@@ -115,7 +115,7 @@ from std.math import pi
 struct Shape
     var color (3)uint8
     fun area(this) ufloat64
-case
+cases
     struct Circle
         var radius ufloat64
     end
@@ -166,9 +166,9 @@ cases
     end
 end
 
-pub fun update(circle &mut Entity.Circle) = pass
+pub fun update(circle &mut Entity.Circle, delta) = pass
 
-pub fun update(mesh &mut Entity.Mesh) = pass
+pub fun update(mesh &mut Entity.Mesh, delta) = pass
 
 
 
@@ -184,3 +184,59 @@ pub struct List[T]
     priv var elements owned []T
     priv var capacity usize
 end
+
+fun &capacity(list &List) = auto
+
+
+
+
+pub package language.lexer
+
+pub struct Token
+    pub var variant const uint = auto
+    pub var text string
+    pub var index usize
+    pub var row, column usize
+cases
+    struct invalid, identifier, number, char, string, ...
+end
+
+pub struct LexingError
+    embed Error
+    pub var message string
+    pub var index usize
+    pub var row, column usize
+end
+
+pub struct LexingResult = owned []Token or LexingError
+
+pub fun lexFile(path string) LexingResult or FileError
+
+pub fun lexFile(file File) LexingResult or FileError
+
+pub fun lex(text string) LexingResult
+
+
+pub package language.parser
+import .lexer
+
+pub struct Node
+    pub var variant const uint = auto
+    pub var children owned optional [](owned &Node or Token)
+cases
+    struct program, importStatement, ...
+end
+
+pub struct ParsingError
+    embed Error
+    pub var message string
+    pub var index usize
+end
+
+pub struct ParsingResult = owned &Node or ParsingError
+
+pub fun parseFile(path string) ParsingResult or FileError
+
+pub fun parseFile(file File) ParsingResult or FileError
+
+pub fun parse(text string) ParsingResult

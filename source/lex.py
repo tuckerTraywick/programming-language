@@ -25,8 +25,6 @@ def lex(text: str) -> list[Token]:
         "package",
         "from",
         "import",
-        "begin",
-        "end",
         "pub",
         "priv",
         "inline",
@@ -37,6 +35,8 @@ def lex(text: str) -> list[Token]:
         "cases",
         "embed",
         "impl",
+        "begin",
+        "end",
         "pass",
         "return",
         "yield",
@@ -100,7 +100,7 @@ def lex(text: str) -> list[Token]:
         "!=",
         ".",
         ",",
-        ";",
+        #";",
         "(",
         ")",
         "[",
@@ -120,7 +120,7 @@ def lex(text: str) -> list[Token]:
         if text[i] == "\n":
             if tokens[-1].type != "\n":
                 tokens.append(Token("\n", "\n"))
-                i += 1
+            i += 1
         # Skip whitespace.
         elif text[i].isspace():
             i += 1

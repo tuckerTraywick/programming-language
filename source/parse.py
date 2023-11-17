@@ -146,27 +146,28 @@ def recover(*parsers):
 
 # Skips tokens until `;`.
 def lineEnd(tokens, index, recovered):
-    if index >= len(tokens) or tokens[index].type != ";":
-        return ()
-    if index < len(tokens) and tokens[index].type == ";":
-        return (index + 1, tokens[index], None, False)
+    if index >= len(tokens):
+        error = ParsingError(index, "Expected new line, but ran out of tokens.")
+        return (index, error, error, False)
 
     found = False
     oldIndex = index
     while index < len(tokens):
-        if tokens[index].type != ";":
+        if tokens[index].type == "\n":
             found = True
             break
         index += 1
+
+    if found:
+        if recovered or index == oldIndex:
+            return (index + 1, tokens[index], None, False)
+        error = ParsingError(oldIndex, "Expected end of statement.")
+        return (index + 1, [error, tokens[index]], None, False)
     
-    error = None
-    token = tokens[index]
-    if not found:
-        index = oldIndex
-        error = ParsingError(index, "Expected end of statement.")
-        token = None
-    
-    return (index, token, error, False)
+    index = oldIndex
+    error = ParsingError(index, "Expected end of statement.")
+    return (index, error, error, False)
+
 
 # Parses zero or more of the given sequence.
 def zeroOrMore(*parsers):
