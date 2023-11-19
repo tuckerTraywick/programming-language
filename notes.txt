@@ -185,7 +185,7 @@ pub struct List[T]
     priv var capacity usize
 end
 
-fun &capacity(list &List) = auto
+pub fun &capacity(list &List) = auto
 
 
 
@@ -208,11 +208,11 @@ pub struct LexingError
     pub var row, column usize
 end
 
-pub struct LexingResult = owned []Token or LexingError
+pub struct LexingResult = Result[owned []Token, LexingError]
 
-pub fun lexFile(path string) LexingResult or FileError
+pub fun lexFile(path string) Result[LexingResult, FileError]
 
-pub fun lexFile(file File) LexingResult or FileError
+pub fun lexFile(file File) Result[LexingResult, FileError]
 
 pub fun lex(text string) LexingResult
 
@@ -222,7 +222,7 @@ import .lexer
 
 pub struct Node
     pub var variant const uint = auto
-    pub var children owned optional [](owned &Node or Token)
+    pub var children Optional[owned []Any[owned &Node, Token]]
 cases
     struct program, importStatement, ...
 end
@@ -233,10 +233,27 @@ pub struct ParsingError
     pub var index usize
 end
 
-pub struct ParsingResult = owned &Node or ParsingError
+pub struct ParsingResult = Result[owned &Node, ParsingError]
 
-pub fun parseFile(path string) ParsingResult or FileError
+pub fun parseFile(path string) Result[ParsingResult, FileError]
 
-pub fun parseFile(file File) ParsingResult or FileError
+pub fun parseFile(file File) Result[ParsingResult, FileError]
 
 pub fun parse(text string) ParsingResult
+
+
+
+
+package std.types
+
+pub struct Any[T..] cases
+    embed T
+end
+
+pub struct Result[T, U] cases
+    struct Okay = T, Error = U
+end
+
+pub fun onOkay[Result[T, U], V](value V) Result[V, U]
+
+pub fun onError[Result[T, U], V](value V) Result[T, V]
