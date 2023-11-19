@@ -1,1 +1,2 @@
-fun sayHi() = 1
+var a int =
+fun sayHi( {}

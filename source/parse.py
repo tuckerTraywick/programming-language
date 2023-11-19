@@ -49,7 +49,7 @@ class ParsingError:
 def token(type):
     def parse(tokens, index, recovered):
         if index >= len(tokens):
-            error = ParsingError(index, f"Expected {type} at {index}, but ran out of tokens.")
+            error = ParsingError(index, f"Expected {type}, but ran out of tokens.")
             return (index, error, error, False)
         
         if recovered:
@@ -68,7 +68,7 @@ def token(type):
                 index = oldIndex
 
         if tokens[index].type != type:
-            error = ParsingError(index, f"Expected {type} at {index}, but got {tokens[index]}.")
+            error = ParsingError(index, f"Expected {type}, but got {tokens[index]}.")
             return (index, error, error, False)
         return (index + 1, tokens[index], None, False)
     return parse
@@ -79,7 +79,9 @@ def sequence(*parsers):
     assert parsers
     def parse(tokens, index, recovered):
         children = []
+        oldIndex = index
         for parser in parsers:
+            oldIndex = index
             if isinstance(parser, str):
                 index, child, error, recovered = token(parser)(tokens, index, recovered)
             else:
@@ -91,6 +93,7 @@ def sequence(*parsers):
                 children.append(child)
 
             if error:
+                index = oldIndex
                 break
         return (index, children, error, recovered)
     return parse
@@ -108,7 +111,7 @@ def choice(*parsers):
             
             if not error:
                 return (newIndex, result, error, newRecovered)
-        return (newIndex, result, error, newRecovered)
+        return (index, result, error, newRecovered)
     return parse
 
 
@@ -117,8 +120,8 @@ def choice(*parsers):
 def node(type, *parsers):
     assert parsers
     def parse(tokens, index, recovered):
-        index, children, error, recovered = sequence(*parsers)(tokens, index, recovered)
-        return (index, Node(type, children), error, recovered)
+        newIndex, children, error, recovered = sequence(*parsers)(tokens, index, recovered)
+        return (index if error else newIndex, Node(type, children), error, recovered)
     return parse
 
 
@@ -126,8 +129,8 @@ def node(type, *parsers):
 def maybe(*parsers):
     assert parsers
     def parse(tokens, index, recovered):
-        index, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
-        return (index, None if error else result, None, recovered)
+        newIndex, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
+        return (index if error else newIndex, None if error else result, None, recovered)
     return parse
 
 
@@ -135,12 +138,12 @@ def maybe(*parsers):
 def recover(*parsers):
     assert parsers
     def parse(tokens, index, recovered):
-        index, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
-        # if error:
-            # # TODO: Make this more legible.
-            # if isinstance(result[-1], Node) and result[-1].children and isinstance(result[-1].children[0], ParsingError):
-            #     result[-1] = result[-1].children[0]
-        return (index, result, None, bool(error))
+        newIndex, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
+        if error:
+            # TODO: Make this more legible.
+            if isinstance(result[-1], Node) and result[-1].children and isinstance(result[-1].children[0], ParsingError):
+                result[-1] = result[-1].children[0]
+        return (index if error else newIndex, result, None, bool(error))
     return parse
 
 
@@ -195,13 +198,12 @@ def zeroOrMore(*parsers):
 
 
 # The grammar
-functionBody = node("functionBody", choice(
-    sequence(recover("=", recover("number")), lineEnd),
-    sequence(lineEnd, "number", lineEnd, "end"),
-))
+functionBody = node("functionBody",
+    "{", recover("}"),
+)
 
 functionParameters = node("functionParameters",
-    "(", ")",
+    "(", recover(")"),
 )
 
 functionDefinition = node("functionDefiniton",
@@ -209,7 +211,7 @@ functionDefinition = node("functionDefiniton",
 )
 
 variableDefinition = node("variableDefinition",
-    "var", recover("identifier"), maybe("identifier"), maybe("=", "number"), lineEnd,
+    "var", recover("identifier"), maybe("identifier"), maybe("=", recover("number")), lineEnd,
 )
 
 packageName = node("packageName",

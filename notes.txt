@@ -19,13 +19,14 @@ import
 var
 fun
 struct
+alias
 embed # Subtype. Doesn't cause error if methods are not implemented.
 impl # Subtype. Causes error if all non-default methods are not implemented.
 embed in # Supertype.
 impl in # Supertype.
 pub # Visible outside of this package (default is visible only within this package, i.e., protected).
 priv # Only visible in the current file.
-static # Only exists at compile time, cannot take the address of.
+inline # Only exists at compile time, cannot take the address of.
 persistent # Exists outside of function.
 
 def parseExpression():
@@ -59,51 +60,51 @@ def parseExpression():
 package animals
 from std.io import printLine
 
-struct Animal
-    var name string
-    var age uint
-    fun makeNoise(&this)
-end
+struct Animal {
+    name string
+    age uint
+    makeNoise(&this)
+}
 
-struct Dog
+struct Dog {
     embed Animal
-    var tag string
-end
+    tag string
+}
 
-struct Cat
+struct Cat {
     embed Animal
-    var breed string
-end
+    breed string
+}
 
-fun makeNoise(dog &Dog)
+fun makeNoise(dog &Dog) {
     printLine("woof")
-end
+}
 
-fun makeNoise(cat &Cat)
+fun makeNoise(cat &Cat) {
     printLine("meow")
-end
+}
 
-fun main()
+fun main() {
     var pet mut &Animal = &Dog("fido", 2, "123 doggy lane")
     pet.makeNoise()
     pet = &Cat("felix", 2, "tabby")
-end
+}
 
 
 
 
 package colors
 
-struct Color
-    var r, g, b const uint8
-cases
+struct Color {
+    r, g, b const uint8
+} cases {
     default struct Rgb
-    case black = (0, 0, 0)
-    case white = (255, 255, 255)
-    case red = (255, 0, 0)
-    case green = (0, 255, 0)
-    case blue = (0, 0, 255)
-end
+    black = (0, 0, 0)
+    white = (255, 255, 255)
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
+}
 
 
 
@@ -112,59 +113,59 @@ package shapes
 form std.io import printLine
 from std.math import pi
 
-struct Shape
-    var color (3)uint8
-    fun area(this) ufloat64
-cases
-    struct Circle
-        var radius ufloat64
-    end
+struct Shape {
+    color (3)uint8
+    area(this) ufloat64
+} cases {
+    struct Circle {
+        radius ufloat64
+    }
 
-    struct Rectangle
-        var width, height ufloat64
-    end
+    struct Rectangle {
+        width, height ufloat64
+    }
 
-    struct Triangle
-        var base, height ufloat64
-    end
-end
+    struct Triangle {
+        base, height ufloat64
+    }
+}
 
-fun area(circle Shape.Circle)
+fun area(circle Shape.Circle) {
     return pi*circle.radius**2
-end
+}
 
-fun area(rectangle Shape.Rectanlge)
+fun area(rectangle Shape.Rectanlge) {
     return rectanlge.width*rectangle.height
-end
+}
 
-fun area(triangle Shape.Triangle)
+fun area(triangle Shape.Triangle) {
     return 0.5*triangle.base*triangle.height
-end
+}
 
-fun main()
+fun main() {
     var shape mut Shape = .Rectangle(2, 5)
     printLine(shape.area()) # Prints "10".
     shape = .Triangle(2, 5)
     printLine(shpae.area()) # Prints "5".
-end
+}
 
 
 
 
 pub package physics
 
-pub struct Entity
-    pub var position, velocity acceleration Vector
-    pub fun update(&mut this, delta ufloat64)
-cases
-    struct Circle
-        pub var radius ufloat64
-    end
+pub struct Entity {
+    pub position, velocity acceleration Vector
+    pub update(&mut this, delta ufloat64)
+} cases {
+    struct Circle {
+        pub radius ufloat64
+    }
 
-    struct Mesh
-        pub var vertices owned []Vector
-    end
-end
+    struct Mesh {
+        pub vertices owned []Vector
+    }
+}
 
 pub fun update(circle &mut Entity.Circle, delta) = pass
 
@@ -177,38 +178,46 @@ pub package std.collections
 import std.operations
 import std.debug
 
-pub struct List[T]
+pub struct List[T] {
     impl std.operations.To[string]
     impl std.operations.Arithmetic, .Bitwise, .Logical, .Comparison
     impl std.operations.Equality, .GetEelement, .SetElement
-    priv var elements owned []T
-    priv var capacity usize
-end
+    priv elements owned []T
+    priv capacity usize
+}
+
+pub fun new(list &List, capacity usize)
+
+pub fun new[T](list &List[T], values []T, capacity Optional[usize]=.None)
+
+pub fun new[T](list &List[T], fill T, length usize, capacity Optional[usize]=.None)
 
 pub fun &capacity(list &List) = auto
+
+pub fun &elements(list &List) = auto
 
 
 
 
 pub package language.lexer
 
-pub struct Token
-    pub var variant const uint = auto
-    pub var text string
-    pub var index usize
-    pub var row, column usize
-cases
+pub struct Token {
+    pub variant const uint = auto
+    pub text string
+    pub index usize
+    pub row, column usize
+} cases {
     struct invalid, identifier, number, char, string, ...
-end
+}
 
-pub struct LexingError
+pub struct LexingError {
     embed Error
-    pub var message string
-    pub var index usize
-    pub var row, column usize
-end
+    pub message string
+    pub index usize
+    pub row, column usize
+}
 
-pub struct LexingResult = Result[owned []Token, LexingError]
+pub struct LexingResult = Result[List[Token], LexingError]
 
 pub fun lexFile(path string) Result[LexingResult, FileError]
 
@@ -220,18 +229,18 @@ pub fun lex(text string) LexingResult
 pub package language.parser
 import .lexer
 
-pub struct Node
-    pub var variant const uint = auto
-    pub var children Optional[owned []Any[owned &Node, Token]]
-cases
+pub struct Node {
+    pub variant const uint = auto
+    pub children List[Any[owned &Node, Token]]
+} cases {
     struct program, importStatement, ...
-end
+}
 
-pub struct ParsingError
+pub struct ParsingError {
     embed Error
-    pub var message string
-    pub var index usize
-end
+    pub message string
+    pub index usize
+}
 
 pub struct ParsingResult = Result[owned &Node, ParsingError]
 
@@ -246,14 +255,82 @@ pub fun parse(text string) ParsingResult
 
 package std.types
 
-pub struct Any[T..] cases
+pub struct All[T..] {
     embed T
-end
+}
 
-pub struct Result[T, U] cases
+pub struct Any[T..] cases {
+    embed T
+}
+
+pub struct Result[T, U] cases {
     struct Okay = T, Error = U
-end
+}
 
 pub fun onOkay[Result[T, U], V](value V) Result[V, U]
 
 pub fun onError[Result[T, U], V](value V) Result[T, V]
+
+
+
+
+package std.math
+from std.types import Number
+
+pub var pi float64
+pub var tau float64
+pub var e float64
+pub var inf float64
+
+pub fun abs(x impls Number) impls Number
+pub fun min[T impls Number](values []T) T
+pub fun max[T impls Number](values []T) T
+...
+
+pub fun sin(x float64) float64
+pub fun cos(x float64) float64
+...
+
+
+
+
+pub package std.flags
+from std.types import Primitive
+
+pub var arguments owned []owned string
+
+pub fun description(message string)
+
+pub fun usage(message string)
+
+pub fun parseFlags()
+
+pub fun flag[T impls Primitive](name string, description string, defaultValue Optional[T]=.None) Optional[T]
+
+pub fun flag[T impls Primitive](names []string, description string, defaultValue Optional[T]=.None) Optional[T]
+
+pub fun printHelp()
+
+priv var flags Map[string, Primitive]
+
+
+package add1
+from std import flags
+from std.io import printLine
+
+fun main() {
+    flags.description("Adds one to a number.")
+    flags.usage("add1 [options] --number=<integer>")
+    flags.parseFlags()
+    
+    var help = flags.flag[bool](["h", "help"], "Print this help message.")
+    var number = flags.flag[int]("number=<integer>", "The number to add 1 to.")
+    
+    if help {
+        printHelp()
+    }
+    
+    if number {
+        printLine(f"{number} + 1 = {number + 1}")
+    }
+}
