@@ -178,7 +178,7 @@ pub package std.collections
 import std.operations
 import std.debug
 
-pub struct List[T] {
+pub struct List[type T] {
     impl std.operations.To[string]
     impl std.operations.Arithmetic, .Bitwise, .Logical, .Comparison
     impl std.operations.Equality, .GetEelement, .SetElement
@@ -188,9 +188,9 @@ pub struct List[T] {
 
 pub fun new(list &List, capacity usize)
 
-pub fun new[T](list &List[T], values []T, capacity Optional[usize]=.None)
+pub fun new[type T](list &List[T], values []T, capacity Optional[usize]=.None)
 
-pub fun new[T](list &List[T], fill T, length usize, capacity Optional[usize]=.None)
+pub fun new[type T](list &List[T], fill T, length usize, capacity Optional[usize]=.None)
 
 pub fun &capacity(list &List) = auto
 
@@ -255,21 +255,21 @@ pub fun parse(text string) ParsingResult
 
 package std.types
 
-pub struct All[T..] {
+pub struct All[type T..] {
     embed T
 }
 
-pub struct Any[T..] cases {
+pub struct Any[type T..] cases {
     embed T
 }
 
-pub struct Result[T, U] cases {
+pub struct Result[type T, type U] cases {
     struct Okay = T, Error = U
 }
 
-pub fun onOkay[Result[T, U], V](value V) Result[V, U]
+pub fun onOkay[Result[type T, type U], type V](value V) Result[V, U]
 
-pub fun onError[Result[T, U], V](value V) Result[T, V]
+pub fun onError[Result[type T, type U], type V](value V) Result[T, V]
 
 
 
@@ -305,9 +305,9 @@ pub fun usage(message string)
 
 pub fun parseFlags()
 
-pub fun flag[T impls Primitive](name string, description string, defaultValue Optional[T]=.None) Optional[T]
+pub fun flag[type T Primitive](name string, description string, defaultValue Optional[T]=.None) Optional[T]
 
-pub fun flag[T impls Primitive](names []string, description string, defaultValue Optional[T]=.None) Optional[T]
+pub fun flag[type T Primitive](names []string, description string, defaultValue Optional[T]=.None) Optional[T]
 
 pub fun printHelp()
 
@@ -327,10 +327,29 @@ fun main() {
     var number = flags.flag[int]("number=<integer>", "The number to add 1 to.")
     
     if help {
-        printHelp()
+        flags.printHelp()
     }
     
     if number {
         printLine(f"{number} + 1 = {number + 1}")
     }
 }
+
+
+
+
+pub package std.io
+
+pub struct Serialize {
+    pub serialize(&this, file File) Optional[Any[SerializationError, FileWriteError]]
+}
+
+pub struct Deserialize {
+    pub deserialize(&this, file File) Optional[Any[DeserializationError, FileReadError]]
+}
+
+pub struct Serializeable = All[Serialize, Deserialize]
+
+pub struct SerializationError = Error
+
+pub struct DeserializationError = Error
