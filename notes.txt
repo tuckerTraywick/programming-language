@@ -1,3 +1,5 @@
+# The bug is being caused by not returning an error on recovery?
+
 # No separate keyword for implementing a method because you will should be able to
 # implement a new method for an already compiled struct.
 

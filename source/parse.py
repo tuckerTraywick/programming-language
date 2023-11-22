@@ -45,6 +45,19 @@ class ParsingError:
         return f"Error (token {self.index}): {self.message}"
 
 
+# Represents a parsing rule yet to be defined. Used to make indirectly recursive rules.
+class ForwardDeclaration:
+    def __init__(self):
+        self.parser = None
+
+    def __call__(self, *args):
+        return self.parser(*args)
+    
+    # Defines the rule.
+    def define(self, parser):
+        self.parser = parser
+
+
 # Parses a token of the given type. Fails if it is not present.
 def token(type):
     def parse(tokens, index, recovered):
@@ -53,6 +66,7 @@ def token(type):
             return (index, error, error, False)
         
         if recovered:
+            print("token", index, repr(type))
             # Fastforward to the expected token or the end of the line.
             # If neither is encountered, rewind to the previous index.
             oldIndex = index
@@ -89,7 +103,7 @@ def sequence(*parsers):
 
             if isinstance(child, list):
                 children += child
-            elif child is not None:
+            elif child:
                 children.append(child)
 
             if error:
@@ -134,8 +148,9 @@ def maybe(*parsers):
     return parse
 
 
-# Tries the given parsers and recovers if one fails. Just adds the error message to the parse tree.
-def recover(*parsers):
+# Tries the given parsers and recovers if one fails. Throws the given error message on failure
+# and just adds the error message to the parse tree.
+def recoverMessage(message, *parsers):
     assert parsers
     def parse(tokens, index, recovered):
         newIndex, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
@@ -143,7 +158,26 @@ def recover(*parsers):
             # TODO: Make this more legible.
             if isinstance(result[-1], Node) and result[-1].children and isinstance(result[-1].children[0], ParsingError):
                 result[-1] = result[-1].children[0]
+            
+            if message:
+                error.message = message
         return (index if error else newIndex, result, None, bool(error))
+    return parse
+
+
+# Tries the given parsers and recovers if one fails. Throws a default error message on failure
+# and just adds the error message to the parse tree.
+def recover(*parsers):
+    return recoverMessage(None, *parsers)
+
+
+# Tries the given parsers and replaces the error message if they fail.
+def errorMessage(message, *parsers):
+    def parse(tokens, index, recovered):
+        newIndex, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
+        if error:
+            error = ParsingError(error.index, message)
+        return (index if error else newIndex, result, error, recovered)
     return parse
 
 
@@ -197,48 +231,216 @@ def zeroOrMore(*parsers):
 #     return sequence(*parsers, zeroOrMore(*parsers))
 
 
-# The grammar
+# Error messages
+missingPackageName = "Expected package name."
+missingImportStatement = "Expected import statement."
+missingExpression = "Expected expression."
+missingCloseParenthesis = "Expected closing `)`."
+missingCloseBrace = "Expected closing `}`."
+missingVariableName = "Expected variable name."
+missingFunctionName = "Expected function name."
+missingFunctionParameters = "Expected function parameters."
+missingFunctionBody = "Expected function body."
+missingStructName = "Expected struct name."
+missingCaseName = "Expected case name."
+missingType = "Expected type."
+invalidPackageName = "Invalid package name. Expected identifier or `*`."
+syntaxError = "Syntax error."
+
+
+# Grammar
+structDefinition = ForwardDeclaration()
+
+openBrace = sequence(
+    maybe("\n"),
+    "{",
+    maybe("\n")
+)
+
+closeBrace = sequence(
+    maybe("\n"),
+    recoverMessage(missingCloseBrace, "}")
+)
+
+expression = node("expression",
+    recoverMessage(missingExpression, "number")
+)
+
+type = node("type",
+    "identifier"
+)
+
+accessModifier = maybe(
+    choice(
+        "pub",
+        "priv"
+    )
+)
+
 functionBody = node("functionBody",
-    "{", recover("}"),
+    openBrace,
+    recoverMessage(missingCloseBrace, closeBrace)
+)
+
+functionParameter = node("functionParameter",
+    "identifier",
+    choice(
+        sequence(
+            "=",
+            recoverMessage(missingExpression, expression)
+        ),
+        sequence(
+            recoverMessage(missingType, type),
+            maybe(
+                "=",
+                recoverMessage(missingExpression, expression)
+            )
+        )
+    )
 )
 
 functionParameters = node("functionParameters",
-    "(", recover(")"),
+    "(",
+    zeroOrMore(
+        functionParameter,
+        ","
+    ),
+    maybe(functionParameter),
+    recover(missingCloseParenthesis, ")")
+)
+
+functionHeader = node("functionHeader",
+    accessModifier,
+    "fun",
+    recoverMessage(missingFunctionName, "identifier"),
+    recoverMessage(missingFunctionParameters, functionParameters, maybe(type))
 )
 
 functionDefinition = node("functionDefiniton",
-    "fun", recover("identifier"), functionParameters, functionBody,
+    functionHeader,
+    recoverMessage(missingFunctionBody, functionBody),
+    lineEnd
 )
 
 variableDefinition = node("variableDefinition",
-    "var", recover("identifier"), maybe("identifier"), maybe("=", recover("number")), lineEnd,
+    accessModifier,
+    "var",
+    recoverMessage(missingVariableName, "identifier"),
+    maybe(type),
+    maybe(
+        "=",
+        recoverMessage(missingExpression, expression)
+    ),
+    lineEnd
 )
 
+embedStatement = node("embedStatement",
+    "embed",
+    recoverMessage(missingType, type),
+    lineEnd
+)
+
+structCase = node("structCase",
+    choice(
+        embedStatement,
+        structDefinition,
+        sequence(
+            "case",
+            recoverMessage(missingCaseName, "identifier"),
+            maybe(
+                "=",
+                recoverMessage(missingExpression, expression)
+            ), 
+            lineEnd
+        )
+    )
+)
+
+structField = node("structField",
+    choice(
+        embedStatement,
+        variableDefinition,
+        sequence(
+            functionHeader,
+            lineEnd
+        )
+    )
+)
+
+structDefinition.define(node("structDefinition",
+    accessModifier,
+    "struct",
+    recoverMessage(missingStructName, "identifier"),
+    maybe(
+        openBrace,
+        zeroOrMore(structField),
+        closeBrace,
+    ),
+    maybe(
+        "cases", 
+        openBrace,
+        zeroOrMore(structCase),
+        closeBrace
+    ),
+    lineEnd
+))
+
 packageName = node("packageName",
-    "identifier", zeroOrMore(".", "identifier"), maybe(".", recover("*")),
+    "identifier",
+    zeroOrMore(".", "identifier"),
+    maybe(
+        ".",
+        recoverMessage(invalidPackageName, "*")
+    )
 )
 
 packageNameList = sequence(
-    packageName, zeroOrMore(",", maybe("\n"), packageName), maybe(","),
+    packageName,
+    zeroOrMore(",",
+        maybe("\n"),
+        packageName
+    ),
+    maybe(",")
 )
 
-importStatement = node("importStatement", choice(
-    sequence("from", recover(packageName), recover("import", maybe("\n"), packageNameList), lineEnd),
-    sequence("import", recover(packageName), lineEnd)
-))
+importStatement = node("importStatement",
+    choice(
+        sequence(
+            "from",
+            recoverMessage(missingPackageName, packageName),
+            recoverMessage(missingImportStatement,
+                "import", 
+                maybe("\n"),
+                packageNameList
+            ),
+            lineEnd
+        ),
+        sequence(
+            "import",
+            recoverMessage(missingPackageName, packageName),
+            lineEnd
+        )
+    )
+)
 
 programStatement = choice(
     importStatement,
     variableDefinition,
     functionDefinition,
+    structDefinition
 )
 
 packageStatement = node("packageStatement",
-    "package", recover(packageName), lineEnd,
+    maybe("pub"),
+    "package",
+    recoverMessage(missingPackageName, packageName),
+    lineEnd
 )
 
 program = node("program",
-    maybe(packageStatement), zeroOrMore(programStatement),
+    maybe(packageStatement),
+    programStatement,
+    zeroOrMore(programStatement)
 )
 
 
