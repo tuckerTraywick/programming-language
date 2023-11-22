@@ -66,7 +66,6 @@ def token(type):
             return (index, error, error, False)
         
         if recovered:
-            print("token", index, repr(type))
             # Fastforward to the expected token or the end of the line.
             # If neither is encountered, rewind to the previous index.
             oldIndex = index
@@ -125,7 +124,7 @@ def choice(*parsers):
             
             if not error:
                 return (newIndex, result, error, newRecovered)
-        return (index, result, error, newRecovered)
+        return (index, result, error, False)
     return parse
 
 
@@ -143,8 +142,10 @@ def node(type, *parsers):
 def maybe(*parsers):
     assert parsers
     def parse(tokens, index, recovered):
-        newIndex, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
-        return (index if error else newIndex, None if error else result, None, recovered)
+        newIndex, result, error, newRecovered = sequence(*parsers)(tokens, index, recovered)
+        if error:
+            return (index, None, None, newRecovered)
+        return (newIndex, result, error, newRecovered)
     return parse
 
 
@@ -153,8 +154,10 @@ def maybe(*parsers):
 def recoverMessage(message, *parsers):
     assert parsers
     def parse(tokens, index, recovered):
+        oldRecovered = recovered
         newIndex, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
         if error:
+            print(index, newIndex, oldRecovered, result)
             # TODO: Make this more legible.
             if isinstance(result[-1], Node) and result[-1].children and isinstance(result[-1].children[0], ParsingError):
                 result[-1] = result[-1].children[0]
@@ -181,7 +184,7 @@ def errorMessage(message, *parsers):
     return parse
 
 
-# Skips tokens until `;`.
+# Skips tokens until `\n`.
 def lineEnd(tokens, index, recovered):
     if index >= len(tokens):
         error = ParsingError(index, "Expected new line, but ran out of tokens.")
@@ -224,11 +227,6 @@ def zeroOrMore(*parsers):
                 children.append(child)
         return (index, children, None, recovered)
     return parse
-
-
-# Parses one or more of the given sequence.
-# def oneOrMore(*parsers):
-#     return sequence(*parsers, zeroOrMore(*parsers))
 
 
 # Error messages
@@ -301,12 +299,9 @@ functionParameter = node("functionParameter",
 
 functionParameters = node("functionParameters",
     "(",
-    zeroOrMore(
-        functionParameter,
-        ","
-    ),
-    maybe(functionParameter),
-    recover(missingCloseParenthesis, ")")
+    functionParameter,
+    ",",
+    recoverMessage(missingCloseParenthesis, ")")
 )
 
 functionHeader = node("functionHeader",
