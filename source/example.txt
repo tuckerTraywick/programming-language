@@ -1,1 +1,28 @@
-var a = 1 or 1*2 + 3 == 4*4 and (6 or 1) << 32
+struct Animal {
+    var name string
+    var age uint
+    fun makeNoise()
+}
+
+struct Dog {
+    embed Animal
+    var tag string
+}
+
+struct Cat {
+    embed Animal
+    var breed string
+}
+
+fun makeNoise(dog &Dog) {
+    printLine("woof")
+}
+
+fun makeNoise(cat &Cat) {
+    printLine("meow")
+}
+
+fun main(args []string) {
+    var pet mut &Animal = &Dog()
+    pet.makeNoise()
+}

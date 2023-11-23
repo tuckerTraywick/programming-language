@@ -155,6 +155,15 @@ def lineEnd(tokens, index):
     return (index, error, error)
 
 
+# Skips until the given token is encountered.
+def recover(*types):
+    def parse(tokens, index):
+        while index <= len(tokens) and tokens[index].type not in types:
+            index += 1
+        return (index, None, None)
+    return parse
+
+
 # Parses zero or more of the given sequence.
 def zeroOrMore(*parsers):
     assert parsers
@@ -200,7 +209,6 @@ def expression(basicExpression, infix, prefix):
             index += 1
             if infix[operator.type] > precedence:
                 index, rhs, error = parsePrefix(tokens, index)
-                print(">", lhs, rhs, operator)
                 if error:
                     return (index, error, error)
                 
@@ -213,7 +221,6 @@ def expression(basicExpression, infix, prefix):
                 break
             else:
                 index, rhs, error = parsePrefix(tokens, index)
-                print("==", lhs, rhs)
                 if error:
                     return (index, error, error)
                 children += [operator, rhs]
@@ -399,10 +406,6 @@ basicExpression.define(node("basicExpression",
     )
 ))
 
-# expression.define(node("expression",
-#     basicExpression
-# ))
-
 basicType = node("basicType",
     "identifier",
     zeroOrMore(
@@ -499,7 +502,7 @@ variableDefinition = node("variableDefinition",
 functionBody = node("functionBody",
     openBrace,
     zeroOrMore(programStatement),
-    choice(closeBrace, missingCloseBrace)
+    closeBrace
 )
 
 functionParameter = node("functionParameter",
@@ -527,7 +530,7 @@ functionParameters = node("functionParameters",
         ","
     ),
     maybe(functionParameter),
-    choice(")", missingCloseParenthesis),
+    ")" # choice(")", missingCloseParenthesis),
 )
 
 functionSignature = node("functionSignature",
@@ -550,9 +553,24 @@ functionDefinition = node("functionDefinition",
     choice(
         sequence(
             "identifier",
-            choice(functionParameters, missingFunctionParameters),
-            maybe(type),
-            choice(functionBody, missingFunctionBody)
+            choice(
+                sequence(
+                    functionParameters,
+                    maybe(type),
+                    choice(functionBody, missingFunctionBody)
+                ),
+                sequence(
+                    missingFunctionParameters,
+                    recover("{"),
+                    choice(
+                        functionBody,
+                        sequence(missingFunctionBody, recover("}"))
+                    )
+                )
+            )
+            # choice(functionParameters, missingFunctionParameters),
+            # maybe(type),
+            # choice(functionBody, missingFunctionBody)
         ),
         missingFunctionName
     ),
