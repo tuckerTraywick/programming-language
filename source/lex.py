@@ -158,7 +158,7 @@ def lex(text: str) -> list[Token]:
             # Skip the last quote.
             if i < len(text) and text[i] == '"':
                 i += 1
-                tokens.append(Token("character", text[start:i]))
+                tokens.append(Token("string", text[start:i]))
             else:
                 tokens.append(Token("invalid", text[start:i]))
                 break

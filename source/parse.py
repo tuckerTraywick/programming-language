@@ -173,11 +173,11 @@ def zeroOrMore(*parsers):
     return parse
 
 
-# Parses an expression using the given operator precedences with the given literal parser.
-def expression(literal, operators):
-    def parse(tokens, index):
-        pass
-    return parse
+# # Parses an expression using the given operator precedences with the given literal parser.
+# def expression(literal, operators):
+#     def parse(tokens, index):
+#         pass
+#     return parse
 
 
 # Error messages
@@ -185,6 +185,8 @@ missingCloseParenthesis = error("Expected a closing `)`.")
 missingCloseBrace = error("Expected a closing `}`.")
 missingCloseBracket = error("Expected a closing `]`.")
 missingIdentifier = error("Expected an identifier.")
+missingMember = error("Expected a member name.")
+missingDecimalDigits = error("Expected at least one digit after `.`.")
 missingPackageName = error("Expected a package name.")
 missingImportStatement = error("Expected an import statement.")
 missingPackageNameList = error("Expected a list of package names or a `*`.")
@@ -206,10 +208,119 @@ syntaxError = error("Syntax error.")
 # Grammar
 structDefinition = ForwardDeclaration()
 type = ForwardDeclaration()
+expression = ForwardDeclaration()
 
-expression = node("expression",
-    "number"
+memberAccess = node("memberAccess",
+    ".",
+    choice("identifier", missingMember)
 )
+
+elementAccess = node("elementAccess",
+    "[",
+    zeroOrMore(
+        expression,
+        ","
+    ),
+    maybe(expression),
+    choice("]", missingCloseParenthesis)
+)
+
+functionCall = node("functionCall",
+    "(",
+    zeroOrMore(
+        expression,
+        ","
+    ),
+    maybe(expression),
+    choice(")", missingCloseParenthesis)
+)
+
+booleanLiteral = node("booleanLiteral",
+    choice(
+        "true",
+        "false"
+    )
+)
+
+numberLiteral = node("numberLiteral",
+    maybe(
+        choice(
+            "+",
+            "-"
+        )
+    ),
+    choice(
+        sequence(
+            "number",
+            maybe(
+                ".",
+                maybe("number")
+            )
+        ),
+        sequence(
+            ".",
+            choice("number", missingDecimalDigits)
+        )
+    ),
+)
+
+stringLiteral = node("stringLiteral",
+    "string"
+)
+
+characterLiteral = node("characterLiteral",
+    "character"
+)
+
+arrayLiteral = node("arrayLiteral",
+    "[",
+    zeroOrMore(
+        expression,
+        ",",
+    ),
+    maybe(expression),
+    choice("]", missingCloseParenthesis)
+)
+
+tupleLiteral = node("tupleLiteral",
+    "(",
+    zeroOrMore(
+        expression,
+        ",",
+    ),
+    maybe(expression),
+    choice(")", missingCloseParenthesis)
+)
+
+literal = choice(
+    tupleLiteral,
+    arrayLiteral,
+    characterLiteral,
+    stringLiteral,
+    numberLiteral,
+    booleanLiteral,
+    "identifier",
+)
+
+basicExpression = node("basicExpression",
+    literal,
+    zeroOrMore(
+        choice(
+            memberAccess,
+            elementAccess,
+            functionCall,
+        )
+    )
+)
+
+expression.define(node("expression",
+    basicExpression
+))
+
+# expression = expression("number", {
+#     "*": 20,
+#     "+": 10,
+# })
 
 basicType = node("basicType",
     "identifier",
