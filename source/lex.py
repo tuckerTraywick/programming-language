@@ -120,7 +120,7 @@ def lex(text: str) -> list[Token]:
     while i < len(text):
         # Lex newlines.
         if text[i] == "\n":
-            if tokens[-1].type != "\n":
+            if not tokens or tokens[-1].type != "\n":
                 tokens.append(Token("\n", "\n"))
             i += 1
         # Skip whitespace.

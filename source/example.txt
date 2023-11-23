@@ -1,2 +1,5 @@
-package main.hello.world
-import std
+struct Color cases {
+    struct Rgb {
+        var a int
+    }
+}

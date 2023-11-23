@@ -68,7 +68,7 @@ def token(type):
         if tokens[index].type != type:
             error = ParsingError(index, f"Expected {repr(type)}, but got {tokens[index]}.")
             return (index, error, error)
-        return (index + 1, tokens[index], None)
+        return (index + 1, tokens[index] if tokens[index].type != "\n" else [], None)
     return parse
 
 
@@ -145,12 +145,12 @@ def lineEnd(tokens, index):
         return (index, error, error)
     
     if tokens[index].type == "\n":
-        return (index + 1, tokens[index], None)
+        return (index + 1, [], None)
 
     error = ParsingError(index, "Expected end of statement.")
     while index < len(tokens):
         if tokens[index].type == "\n":
-            return (index + 1, [error, tokens[index]], None)
+            return (index + 1, error, None)
         index += 1
     return (index, error, error)
 
@@ -174,25 +174,199 @@ def zeroOrMore(*parsers):
 
 
 # Error messages
-missingPackageName = error("Expected package name.")
-missingImportStatement = error("Expected import statement.")
-missingPackageNameList = error("Expected a list of package names.")
-missingExpression = error("Expected expression.")
-missingCloseParenthesis = error("Expected closing `)`.")
-missingCloseBrace = error("Expected closing `}`.")
-missingVariableName = error("Expected variable name.")
-missingFunctionName = error("Expected function name.")
+missingPackageName = error("Expected a package name.")
+missingImportStatement = error("Expected an import statement.")
+missingPackageNameList = error("Expected a list of package names or a `*`.")
+missingExpression = error("Expected an expression.")
+missingCloseParenthesis = error("Expected a closing `)`.")
+missingCloseBrace = error("Expected a closing `}`.")
+missingVariableName = error("Expected a variable name.")
+missingFunctionName = error("Expected a function name.")
 missingFunctionParameters = error("Expected function parameters.")
-missingFunctionBody = error("Expected function body.")
-missingStructName = error("Expected struct name.")
-missingCaseName = error("Expected case name.")
-missingType = error("Expected type.")
-invalidPackageName = error("Invalid package name. Expected identifier or `*`.")
+missingTypeOrDefaultValue = error("Expected an argument type and/or default value.")
+missingFunctionBody = error("Expected a function body.")
+missingStructName = error("Expected a struct name.")
+missingCases = error("Expected struct cases.")
+missingCaseName = error("Expected a case name.")
+missingType = error("Expected a type.")
+invalidPackageName = error("Invalid package name. Expected an identifier or a `*`.")
 syntaxError = error("Syntax error.")
-# lineEnd = "\n"
 
 
 # Grammar
+structDefinition = ForwardDeclaration()
+
+type = node("type",
+    "identifier",
+)
+
+expression = node("expression",
+    "number"
+)
+
+accessModifier = maybe(
+    choice(
+        "pub",
+        "priv"
+    )
+)
+
+openBrace = sequence(
+    "{",
+    maybe("\n")
+)
+
+closeBrace = sequence(
+    maybe("\n"),
+    "}",
+)
+
+variableDefinition = node("variableDefinition",
+    accessModifier,
+    "var",
+    choice(
+        sequence(
+            "identifier",
+            choice(
+                sequence(
+                    type,
+                    maybe(
+                        "=",
+                        choice(expression, missingExpression)
+                    )
+                ),
+                sequence(
+                    "=",
+                    choice(expression, missingExpression)
+                )
+            )
+        ),
+        missingVariableName
+    ),
+    lineEnd
+)
+
+functionBody = node("functionBody",
+    "{",
+    choice("}", missingCloseBrace)
+)
+
+functionParameter = node("functionParameter",
+    "identifier",
+    choice(
+        sequence(
+            type,
+            maybe(
+                "=",
+                choice(expression, missingExpression)
+            )
+        ),
+        sequence(
+            "=",
+            choice(expression, missingExpression)
+        ),
+        missingTypeOrDefaultValue
+    )
+)
+
+functionParameters = node("functionParameters",
+    "(",
+    zeroOrMore(
+        functionParameter,
+        ","
+    ),
+    maybe(functionParameter),
+    choice(")", missingCloseParenthesis),
+)
+
+functionSignature = node("functionSignature",
+    accessModifier,
+    "fun",
+    choice(
+        sequence(
+            "identifier",
+            choice(functionParameters, missingFunctionParameters),
+            maybe(type),
+        ),
+        missingFunctionName
+    ),
+    lineEnd
+)
+
+functionDefinition = node("functionDefinition",
+    accessModifier,
+    "fun",
+    choice(
+        sequence(
+            "identifier",
+            choice(functionParameters, missingFunctionParameters),
+            maybe(type),
+            choice(functionBody, missingFunctionBody)
+        ),
+        missingFunctionName
+    ),
+    lineEnd
+)
+
+structCase = node("structCase",
+    choice(
+        sequence(
+            "case",
+            choice(
+                sequence(
+                    "identifier",
+                    maybe(
+                        "=",
+                        choice(expression, missingExpression)
+                    )
+                ),
+                missingCaseName
+            ),
+            lineEnd
+        ),
+        structDefinition
+    ),
+)
+
+structCases = node("structCases",
+    "cases",
+    openBrace,
+    maybe(
+        "default",
+        structCase
+    ),
+    zeroOrMore(structCase),
+    choice(closeBrace, missingCloseBrace),
+)
+
+structMember = choice(
+    sequence(
+        "embed",
+        choice(
+            type,
+            missingType
+        ),
+        lineEnd
+    ),
+    functionSignature,
+    variableDefinition
+)
+
+structBody = node("structBody",
+    openBrace,
+    zeroOrMore(structMember),
+    choice(closeBrace, missingCloseBrace)
+)
+
+structDefinition.define(node("structDefinition",
+    accessModifier,
+    "struct",
+    choice("identifier", missingStructName),
+    maybe(structBody),
+    maybe(structCases),
+    lineEnd
+))
+
 packageName = node("packageName",
     "identifier",
     zeroOrMore(".", "identifier"),
@@ -220,7 +394,11 @@ importStatement = node("importStatement",
             choice(
                 sequence(
                     "import",
-                    choice(packageNameList, missingPackageNameList)
+                    choice(
+                        "*",
+                        packageNameList, 
+                        missingPackageNameList
+                    )
                 ),
                 missingImportStatement,
             ),
@@ -241,9 +419,18 @@ packageStatement = node("packageStatement",
     lineEnd
 )
 
+programStatement = node("programStatement",
+    choice(
+        importStatement,
+        structDefinition,
+        functionDefinition,
+        variableDefinition,
+    )
+)
+
 program = node("program",
-    packageStatement,
-    importStatement,
+    maybe(packageStatement),
+    zeroOrMore(programStatement),
 )
 
 
