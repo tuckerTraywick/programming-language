@@ -317,11 +317,6 @@ expression.define(node("expression",
     basicExpression
 ))
 
-# expression = expression("number", {
-#     "*": 20,
-#     "+": 10,
-# })
-
 basicType = node("basicType",
     "identifier",
     zeroOrMore(
