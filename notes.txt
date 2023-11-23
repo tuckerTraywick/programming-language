@@ -15,6 +15,8 @@
 
 # Prefix operators are all higher precedence than infix operators (besides . [] ()).
 
+# No right associative operators.
+
 highest
     literal
     f(x) a->f(x) x[i] a.b
@@ -26,12 +28,18 @@ lowest
 
 expression = expression1 *([+-] expression1)
 expression1 = expression2 *([*/%] expresssion2)
-expression3 = [+-] expression4
+expression3 = ?[+-] expression4
 expression4 = expression5 *("^" expression5)
 expression5 = basicExpression
 
-expression(n) = prefix(n) *(infix(n) expression(n-1))
+expression(n) = ?prefix(n) *(infix(n) expression(n-1))
+expression(0) = basicExpression
 
+expression(p) = *prefixOperator basicExpression *(infixOperator(p) expression(p-1))
+
+
+1 + 2 * 3 + 4
+1 * 2 + 3
 
 package
 from

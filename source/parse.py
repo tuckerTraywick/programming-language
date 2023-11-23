@@ -173,11 +173,62 @@ def zeroOrMore(*parsers):
     return parse
 
 
-# # Parses an expression using the given operator precedences with the given literal parser.
-# def expression(literal, operators):
-#     def parse(tokens, index):
-#         pass
-#     return parse
+# Parses an expression using the given operator precedences with the given literal parser.
+def expression(basicExpression, prefix, infix):
+    def parsePrefix(tokens, index):
+        operators = []
+        # Parse zero or more prefix operators.
+        while index < len(tokens) and tokens[index].type in prefix:
+            operators.append(tokens[index])
+            index += 1
+
+        index, operand, error = basicExpression(tokens, index)
+        if error:
+            return (index, error, error)
+        
+        if operators:
+            return (index, Node("prefixExpression", operators + [operand]), error)
+        return (index, operand, error)
+    
+    def parseInfix(tokens, index, precedence, lhs):
+        children = [lhs]
+        while index < len(tokens):
+            operator = tokens[index]
+            if operator.type not in infix:
+                break
+                
+            index += 1
+            if infix[operator.type] > precedence:
+                index, rhs, error = parsePrefix(tokens, index)
+                print(">", lhs, rhs, operator)
+                if error:
+                    return (index, error, error)
+                
+                index, result, error = parseInfix(tokens, index, infix[operator.type] + 1, rhs)
+                if error:
+                    return (index, error, error)
+                children += [operator, result]
+                # children.append(Node("infixExpression", [children.pop(), operator, result]))
+            elif infix[operator.type] < precedence:
+                index -= 1
+                break
+            else:
+                index, rhs, error = parsePrefix(tokens, index)
+                print("==", lhs, rhs)
+                if error:
+                    return (index, error, error)
+                children += [operator, rhs]
+        
+        if len(children) > 1:
+            return (index, Node("infixExpression", children), None)
+        return (index, children[0], None)
+
+    def parse(tokens, index):
+        index, lhs, error = parsePrefix(tokens, index)
+        if error:
+            return (index, error, error)
+        return parseInfix(tokens, index, 0, lhs)
+    return parse
 
 
 # Error messages
@@ -208,7 +259,16 @@ syntaxError = error("Syntax error.")
 # Grammar
 structDefinition = ForwardDeclaration()
 type = ForwardDeclaration()
-expression = ForwardDeclaration()
+basicExpression = ForwardDeclaration()
+expression = expression(basicExpression, 
+    {
+        "-": 30,
+    }, 
+    {
+        "*": 20,
+        "+": 10,
+    }
+)
 
 memberAccess = node("memberAccess",
     ".",
@@ -302,7 +362,7 @@ literal = choice(
     "identifier",
 )
 
-basicExpression = node("basicExpression",
+basicExpression.define(node("basicExpression",
     literal,
     zeroOrMore(
         choice(
@@ -311,11 +371,11 @@ basicExpression = node("basicExpression",
             functionCall,
         )
     )
-)
-
-expression.define(node("expression",
-    basicExpression
 ))
+
+# expression.define(node("expression",
+#     basicExpression
+# ))
 
 basicType = node("basicType",
     "identifier",
