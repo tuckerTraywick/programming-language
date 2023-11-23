@@ -269,7 +269,6 @@ programStatement = ForwardDeclaration()
 basicExpression = ForwardDeclaration()
 expression = expression(basicExpression, 
     {
-        "->": 210,
         "as": 200,
         "*": 190,
         "/": 180,
@@ -303,9 +302,19 @@ expression = expression(basicExpression,
     }
 )
 
-memberAccess = node("memberAccess",
-    ".",
-    choice("identifier", missingMember)
+arrow = node("arrow",
+    "->",
+    choice("identifier", missingIdentifier),
+)
+
+functionCall = node("functionCall",
+    "(",
+    zeroOrMore(
+        expression,
+        ","
+    ),
+    maybe(expression),
+    choice(")", missingCloseParenthesis)
 )
 
 elementAccess = node("elementAccess",
@@ -318,14 +327,9 @@ elementAccess = node("elementAccess",
     choice("]", missingCloseParenthesis)
 )
 
-functionCall = node("functionCall",
-    "(",
-    zeroOrMore(
-        expression,
-        ","
-    ),
-    maybe(expression),
-    choice(")", missingCloseParenthesis)
+memberAccess = node("memberAccess",
+    ".",
+    choice("identifier", missingMember)
 )
 
 booleanLiteral = node("booleanLiteral",
@@ -401,6 +405,7 @@ basicExpression.define(node("basicExpression",
         choice(
             memberAccess,
             elementAccess,
+            arrow,
             functionCall,
         )
     )
@@ -474,6 +479,26 @@ closeBrace = sequence(
     "}",
 )
 
+assignment = node("assignment",
+    expression,
+    choice(
+        "=",
+        "+=",
+        "-=",
+        "*=",
+        "/=",
+        "%=",
+        "~=",
+        "<<=",
+        ">>=",
+        "&="
+        "|=",
+        "^=",
+    ),
+    choice(expression, missingExpression),
+    lineEnd,
+)
+
 variableDefinition = node("variableDefinition",
     accessModifier,
     "var",
@@ -530,7 +555,7 @@ functionParameters = node("functionParameters",
         ","
     ),
     maybe(functionParameter),
-    ")" # choice(")", missingCloseParenthesis),
+    ")"
 )
 
 functionSignature = node("functionSignature",
@@ -568,9 +593,6 @@ functionDefinition = node("functionDefinition",
                     )
                 )
             )
-            # choice(functionParameters, missingFunctionParameters),
-            # maybe(type),
-            # choice(functionBody, missingFunctionBody)
         ),
         missingFunctionName
     ),
@@ -699,6 +721,7 @@ programStatement.define(choice(
     structDefinition,
     functionDefinition,
     variableDefinition,
+    assignment,
     sequence(
         expression,
         lineEnd
