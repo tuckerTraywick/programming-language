@@ -1,5 +1,1 @@
-from std.io import printLine
-
-fun main(args []string) {
-    printLine("hello")
-}
+var a = 1 or 1*2 + 3 == 4*4 and (6 or 1) << 32

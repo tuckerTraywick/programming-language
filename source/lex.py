@@ -181,13 +181,14 @@ def lex(text: str) -> list[Token]:
                 tokens.append(Token("identifier", token))
         # Try to lex an operator.
         elif text[i] in symbols:
-            start = i
-            # Try to lex each operator.
-            for name in operators:
-                if text.startswith(name, i):
-                    i += len(name)
-                    tokens.append(Token(text[start:i], text[start:i]))
-                    break
+            # 2-character operators.
+            if i < len(text) - 1 and text[i:i+2] in operators:
+                tokens.append(Token(text[i:i+2], text[i:i+2]))
+                i += 2
+            # 1-character operators.
+            elif text[i] in operators:
+                tokens.append(Token(text[i], text[i]))
+                i += 1
             # If it's not an operator, it's an invalid token.
             else:
                 # TODO: Find the length of the invalid token.

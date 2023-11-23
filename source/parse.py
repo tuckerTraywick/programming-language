@@ -174,7 +174,7 @@ def zeroOrMore(*parsers):
 
 
 # Parses an expression using the given operator precedences with the given literal parser.
-def expression(basicExpression, prefix, infix):
+def expression(basicExpression, infix, prefix):
     def parsePrefix(tokens, index):
         operators = []
         # Parse zero or more prefix operators.
@@ -262,11 +262,37 @@ programStatement = ForwardDeclaration()
 basicExpression = ForwardDeclaration()
 expression = expression(basicExpression, 
     {
-        "-": 30,
+        "->": 210,
+        "as": 200,
+        "*": 190,
+        "/": 180,
+        "%": 170,
+        "+": 160,
+        "-": 150,
+        "<<": 140,
+        ">>": 130,
+        "&": 120,
+        "|": 110,
+        "^": 100,
+        "is": 90,
+        "==": 80,
+        "!=": 70,
+        ">": 60,
+        ">=": 50,
+        "<": 40,
+        "<=": 30,
+        "and": 20,
+        "or": 10,
+        "xor": 10,
     }, 
     {
-        "*": 20,
-        "+": 10,
+        "+",
+        "-",
+        "&",
+        "*",
+        "~",
+        "not",
+        "new",
     }
 )
 
