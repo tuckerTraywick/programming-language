@@ -258,6 +258,8 @@ missingStructCase = error("Expected a struct case.")
 missingCases = error("Expected struct cases.")
 missingCaseName = error("Expected a case name.")
 missingType = error("Expected a type.")
+missingWhile = error("Expected a `while` statement.")
+missingIn = error("Expected `in` statement.")
 invalidPackageName = error("Invalid package name. Expected an identifier or a `*`.")
 syntaxError = error("Syntax error.")
 
@@ -269,7 +271,6 @@ programStatement = ForwardDeclaration()
 basicExpression = ForwardDeclaration()
 expression = expression(basicExpression, 
     {
-        "as": 200,
         "*": 190,
         "/": 180,
         "%": 170,
@@ -280,6 +281,7 @@ expression = expression(basicExpression,
         "&": 120,
         "|": 110,
         "^": 100,
+        "as": 95,
         "is": 90,
         "==": 80,
         "!=": 70,
@@ -290,7 +292,7 @@ expression = expression(basicExpression,
         "and": 20,
         "or": 10,
         "xor": 10,
-    }, 
+    },
     {
         "+",
         "-",
@@ -298,7 +300,6 @@ expression = expression(basicExpression,
         "*",
         "~",
         "not",
-        "new",
     }
 )
 
@@ -497,6 +498,93 @@ assignment = node("assignment",
     ),
     choice(expression, missingExpression),
     lineEnd,
+)
+
+block = node("block",
+    openBrace,
+    zeroOrMore(programStatement),
+    closeBrace,
+)
+
+forLoop = node("forLoop",
+    "for",
+    choice(expression, missingExpression),
+    choice("in", missingIn),
+    choice(
+        sequence(
+            expression,
+            maybe("\n")
+        ),
+        missingExpression
+    ),
+    block,
+    lineEnd
+)
+
+whileLoop = node("whileLoop",
+    choice(
+        sequence(
+            "do",
+            choice(
+                "while",
+                sequence(
+                    missingWhile,
+                    recover("{")
+                )
+            )
+        ),
+        "while"
+    ),
+    choice(
+        sequence(expression, maybe("\n")),
+        sequence(missingExpression, recover("{"))
+    ),
+    block,
+    lineEnd
+)
+
+ifStatement = node("ifStatement",
+    "if",
+    choice(
+        sequence(expression, maybe("\n")),
+        sequence(missingExpression, recover("{"))
+    ),
+    block,
+    zeroOrMore(
+        "else",
+        "if",
+        choice(
+            sequence(expression, maybe("\n")),
+            sequence(missingExpression, recover("{"))
+        ),
+        block
+    ),
+    maybe(
+        "else",
+        block
+    ),
+    lineEnd
+)
+
+continueStatement = node("continueStatement",
+    "continue",
+    lineEnd
+)
+
+breakStatement = node("breakStatement",
+    "break",
+    lineEnd
+)
+
+returnStatement = node("returnStatement",
+    "return",
+    choice(expression, missingExpression),
+    lineEnd
+)
+
+passStatement = node("passStatement",
+    "pass",
+    lineEnd
 )
 
 variableDefinition = node("variableDefinition",
@@ -721,6 +809,14 @@ programStatement.define(choice(
     structDefinition,
     functionDefinition,
     variableDefinition,
+    passStatement,
+    returnStatement,
+    breakStatement,
+    continueStatement,
+    ifStatement,
+    whileLoop,
+    forLoop,
+    block,
     assignment,
     sequence(
         expression,

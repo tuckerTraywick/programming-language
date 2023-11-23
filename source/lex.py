@@ -59,6 +59,7 @@ def lex(text: str) -> list[Token]:
         "while",
         "as",
         "is",
+        "isnot",
         "and",
         "or",
         "xor",

@@ -19,16 +19,15 @@
 
 highest
     literal
-    f(x) x[i] a.b
+    f(x) x[i] a.b x->f
     prefix + - & * ~ not
-    ->
-    as
     * / %
     + -
     << >>
     &
     | ^
-    is == != > >= < <=
+    as
+    is isnot == != > >= < <=
     and or xor
 lowest
 
