@@ -208,7 +208,6 @@ def expression(basicExpression, prefix, infix):
                 if error:
                     return (index, error, error)
                 children += [operator, result]
-                # children.append(Node("infixExpression", [children.pop(), operator, result]))
             elif infix[operator.type] < precedence:
                 index -= 1
                 break
@@ -259,6 +258,7 @@ syntaxError = error("Syntax error.")
 # Grammar
 structDefinition = ForwardDeclaration()
 type = ForwardDeclaration()
+programStatement = ForwardDeclaration()
 basicExpression = ForwardDeclaration()
 expression = expression(basicExpression, 
     {
@@ -471,8 +471,9 @@ variableDefinition = node("variableDefinition",
 )
 
 functionBody = node("functionBody",
-    "{",
-    choice("}", missingCloseBrace)
+    openBrace,
+    zeroOrMore(programStatement),
+    choice(closeBrace, missingCloseBrace)
 )
 
 functionParameter = node("functionParameter",
@@ -649,12 +650,16 @@ packageStatement = node("packageStatement",
     lineEnd
 )
 
-programStatement = choice(
+programStatement.define(choice(
     importStatement,
     structDefinition,
     functionDefinition,
     variableDefinition,
-)
+    sequence(
+        expression,
+        lineEnd
+    ),
+))
 
 program = node("program",
     maybe(packageStatement),
