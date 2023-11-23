@@ -1,1 +1,2 @@
-fun f(a int = +,) {}
+package main.hello.world
+import std

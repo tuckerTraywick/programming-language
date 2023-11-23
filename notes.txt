@@ -1,5 +1,3 @@
-# The bug is being caused by not returning an error on recovery?
-
 # No separate keyword for implementing a method because you will should be able to
 # implement a new method for an already compiled struct.
 
@@ -181,7 +179,7 @@ import std.operations
 import std.debug
 
 pub struct List[type T] {
-    impl std.operations.To[string]
+    impl std.operations.To[string], .From[[]T], .From[[_]T]
     impl std.operations.Arithmetic, .Bitwise, .Logical, .Comparison
     impl std.operations.Equality, .GetEelement, .SetElement
     priv elements owned []T
@@ -283,14 +281,17 @@ pub var pi float64
 pub var tau float64
 pub var e float64
 pub var inf float64
+pub var deg float64
+pub var rad float64
 
-pub fun abs(x impls Number) impls Number
-pub fun min[T impls Number](values []T) T
-pub fun max[T impls Number](values []T) T
+pub fun abs[type T impls Number](x T) T
+pub fun min[type T impls Number](values []T) T
+pub fun max[type T impls Number](values []T) T
 ...
 
-pub fun sin(x float64) float64
-pub fun cos(x float64) float64
+pub fun sinD(x float64) float64
+pub fun sinR(x float64) float64
+pub fun cosD(x float64) float64
 ...
 
 
@@ -317,19 +318,19 @@ priv var flags Map[string, Primitive]
 
 
 package add1
-from std import flags
+from std import *
 from std.io import printLine
 
 fun main() {
-    flags.description("Adds one to a number.")
-    flags.usage("add1 [options] --number=<integer>")
-    flags.parseFlags()
+    description("Adds one to a number.")
+    usage("add1 [options] --number=<integer>")
+    parseFlags()
     
-    var help = flags.flag[bool](["h", "help"], "Print this help message.")
-    var number = flags.flag[int]("number=<integer>", "The number to add 1 to.")
+    var help = flag[bool](["h", "help"], "Print this help message.")
+    var number = flag[int]("number=<integer>", "The number to add 1 to.")
     
     if help {
-        flags.printHelp()
+        printHelp()
     }
     
     if number {

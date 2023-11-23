@@ -60,45 +60,29 @@ class ForwardDeclaration:
 
 # Parses a token of the given type. Fails if it is not present.
 def token(type):
-    def parse(tokens, index, recovered):
+    def parse(tokens, index):
         if index >= len(tokens):
-            error = ParsingError(index, f"Expected {type}, but ran out of tokens.")
-            return (index, error, error, False)
-        
-        if recovered:
-            # Fastforward to the expected token or the end of the line.
-            # If neither is encountered, rewind to the previous index.
-            oldIndex = index
-            while index < len(tokens):
-                if tokens[index].type == type:
-                    break
-
-                if tokens[index].type == ";":
-                    break
-                index += 1
-            
-            if index == len(tokens):
-                index = oldIndex
+            error = ParsingError(index, f"Expected {repr(type)}, but ran out of tokens.")
+            return (index, error, error)
 
         if tokens[index].type != type:
-            error = ParsingError(index, f"Expected {type}, but got {tokens[index]}.")
-            return (index, error, error, False)
-        return (index + 1, tokens[index], None, False)
+            error = ParsingError(index, f"Expected {repr(type)}, but got {tokens[index]}.")
+            return (index, error, error)
+        return (index + 1, tokens[index], None)
     return parse
 
 
 # Parses a sequence of parsers. Fails if any of the given parsers fail.
 def sequence(*parsers):
     assert parsers
-    def parse(tokens, index, recovered):
-        children = []
+    def parse(tokens, index):
         oldIndex = index
+        children = []
         for parser in parsers:
-            oldIndex = index
             if isinstance(parser, str):
-                index, child, error, recovered = token(parser)(tokens, index, recovered)
-            else:
-                index, child, error, recovered = parser(tokens, index, recovered)
+                parser = token(parser)
+            index, child, error = parser(tokens, index)
+
 
             if isinstance(child, list):
                 children += child
@@ -106,25 +90,23 @@ def sequence(*parsers):
                 children.append(child)
 
             if error:
-                index = oldIndex
-                break
-        return (index, children, error, recovered)
+                return (oldIndex, children, error)
+        return (index, children, error)
     return parse
 
 
 # Parses any of the given choices. Returns the error of the last choice if all choices fail.
 def choice(*parsers):
     assert parsers
-    def parse(tokens, index, recovered):
+    def parse(tokens, index):
         for parser in parsers:
             if isinstance(parser, str):
-                newIndex, result, error, newRecovered = token(parser)(tokens, index, recovered)
-            else:
-                newIndex, result, error, newRecovered = parser(tokens, index, recovered)
+                parser = token(parser)
+            newIndex, result, error = parser(tokens, index)
             
             if not error:
-                return (newIndex, result, error, newRecovered)
-        return (index, result, error, False)
+                return (newIndex, result, error)
+        return (index, result, error)
     return parse
 
 
@@ -132,266 +114,98 @@ def choice(*parsers):
 # fail.
 def node(type, *parsers):
     assert parsers
-    def parse(tokens, index, recovered):
-        newIndex, children, error, recovered = sequence(*parsers)(tokens, index, recovered)
-        return (index if error else newIndex, Node(type, children), error, recovered)
+    def parse(tokens, index):
+        index, children, error = sequence(*parsers)(tokens, index)
+        return (index, Node(type, children), error)
     return parse
 
 
 # Tries the given parsers and just returns None if one fails.
 def maybe(*parsers):
     assert parsers
-    def parse(tokens, index, recovered):
-        newIndex, result, error, newRecovered = sequence(*parsers)(tokens, index, recovered)
+    def parse(tokens, index):
+        index, result, error = sequence(*parsers)(tokens, index)
         if error:
-            return (index, None, None, newRecovered)
-        return (newIndex, result, error, newRecovered)
+            return (index, None, None)
+        return (index, result, error)
     return parse
 
 
-# Tries the given parsers and recovers if one fails. Throws the given error message on failure
-# and just adds the error message to the parse tree.
-def recoverMessage(message, *parsers):
-    assert parsers
-    def parse(tokens, index, recovered):
-        oldRecovered = recovered
-        newIndex, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
-        if error:
-            print(index, newIndex, oldRecovered, result)
-            # TODO: Make this more legible.
-            if isinstance(result[-1], Node) and result[-1].children and isinstance(result[-1].children[0], ParsingError):
-                result[-1] = result[-1].children[0]
-            
-            if message:
-                error.message = message
-        return (index if error else newIndex, result, None, bool(error))
-    return parse
-
-
-# Tries the given parsers and recovers if one fails. Throws a default error message on failure
-# and just adds the error message to the parse tree.
-def recover(*parsers):
-    return recoverMessage(None, *parsers)
-
-
-# Tries the given parsers and replaces the error message if they fail.
-def errorMessage(message, *parsers):
-    def parse(tokens, index, recovered):
-        newIndex, result, error, recovered = sequence(*parsers)(tokens, index, recovered)
-        if error:
-            error = ParsingError(error.index, message)
-        return (index if error else newIndex, result, error, recovered)
+# Adds the given error message to the parse tree and recovers.
+def error(message):
+    def parse(tokens, index):
+        return (index, ParsingError(index, message), None)
     return parse
 
 
 # Skips tokens until `\n`.
-def lineEnd(tokens, index, recovered):
+def lineEnd(tokens, index):
     if index >= len(tokens):
         error = ParsingError(index, "Expected new line, but ran out of tokens.")
-        return (index, error, error, False)
+        return (index, error, error)
+    
+    if tokens[index].type == "\n":
+        return (index + 1, tokens[index], None)
 
-    found = False
-    oldIndex = index
+    error = ParsingError(index, "Expected end of statement.")
     while index < len(tokens):
         if tokens[index].type == "\n":
-            found = True
-            break
+            return (index + 1, [error, tokens[index]], None)
         index += 1
-
-    if found:
-        if recovered or index == oldIndex:
-            return (index + 1, tokens[index], None, False)
-        error = ParsingError(oldIndex, "Expected end of statement.")
-        return (index + 1, [error, tokens[index]], None, False)
-    
-    index = oldIndex
-    error = ParsingError(index, "Expected end of statement.")
-    return (index, error, error, False)
+    return (index, error, error)
 
 
 # Parses zero or more of the given sequence.
 def zeroOrMore(*parsers):
     assert parsers
-    def parse(tokens, index, recovered):
+    def parse(tokens, index):
         children = []
         while True:
-            newIndex, child, error, newRecovered = sequence(*parsers)(tokens, index, recovered)
+            index, child, error = sequence(*parsers)(tokens, index)
             if error:
                 break
-            index = newIndex
-            recovered = newRecovered
 
             if isinstance(child, list):
                 children += child
             else:
                 children.append(child)
-        return (index, children, None, recovered)
+        return (index, children, None)
     return parse
 
 
 # Error messages
-missingPackageName = "Expected package name."
-missingImportStatement = "Expected import statement."
-missingExpression = "Expected expression."
-missingCloseParenthesis = "Expected closing `)`."
-missingCloseBrace = "Expected closing `}`."
-missingVariableName = "Expected variable name."
-missingFunctionName = "Expected function name."
-missingFunctionParameters = "Expected function parameters."
-missingFunctionBody = "Expected function body."
-missingStructName = "Expected struct name."
-missingCaseName = "Expected case name."
-missingType = "Expected type."
-invalidPackageName = "Invalid package name. Expected identifier or `*`."
-syntaxError = "Syntax error."
+missingPackageName = error("Expected package name.")
+missingImportStatement = error("Expected import statement.")
+missingPackageNameList = error("Expected a list of package names.")
+missingExpression = error("Expected expression.")
+missingCloseParenthesis = error("Expected closing `)`.")
+missingCloseBrace = error("Expected closing `}`.")
+missingVariableName = error("Expected variable name.")
+missingFunctionName = error("Expected function name.")
+missingFunctionParameters = error("Expected function parameters.")
+missingFunctionBody = error("Expected function body.")
+missingStructName = error("Expected struct name.")
+missingCaseName = error("Expected case name.")
+missingType = error("Expected type.")
+invalidPackageName = error("Invalid package name. Expected identifier or `*`.")
+syntaxError = error("Syntax error.")
+# lineEnd = "\n"
 
 
 # Grammar
-structDefinition = ForwardDeclaration()
-
-openBrace = sequence(
-    maybe("\n"),
-    "{",
-    maybe("\n")
-)
-
-closeBrace = sequence(
-    maybe("\n"),
-    recoverMessage(missingCloseBrace, "}")
-)
-
-expression = node("expression",
-    recoverMessage(missingExpression, "number")
-)
-
-type = node("type",
-    "identifier"
-)
-
-accessModifier = maybe(
-    choice(
-        "pub",
-        "priv"
-    )
-)
-
-functionBody = node("functionBody",
-    openBrace,
-    recoverMessage(missingCloseBrace, closeBrace)
-)
-
-functionParameter = node("functionParameter",
-    "identifier",
-    choice(
-        sequence(
-            "=",
-            recoverMessage(missingExpression, expression)
-        ),
-        sequence(
-            recoverMessage(missingType, type),
-            maybe(
-                "=",
-                recoverMessage(missingExpression, expression)
-            )
-        )
-    )
-)
-
-functionParameters = node("functionParameters",
-    "(",
-    functionParameter,
-    ",",
-    recoverMessage(missingCloseParenthesis, ")")
-)
-
-functionHeader = node("functionHeader",
-    accessModifier,
-    "fun",
-    recoverMessage(missingFunctionName, "identifier"),
-    recoverMessage(missingFunctionParameters, functionParameters, maybe(type))
-)
-
-functionDefinition = node("functionDefiniton",
-    functionHeader,
-    recoverMessage(missingFunctionBody, functionBody),
-    lineEnd
-)
-
-variableDefinition = node("variableDefinition",
-    accessModifier,
-    "var",
-    recoverMessage(missingVariableName, "identifier"),
-    maybe(type),
-    maybe(
-        "=",
-        recoverMessage(missingExpression, expression)
-    ),
-    lineEnd
-)
-
-embedStatement = node("embedStatement",
-    "embed",
-    recoverMessage(missingType, type),
-    lineEnd
-)
-
-structCase = node("structCase",
-    choice(
-        embedStatement,
-        structDefinition,
-        sequence(
-            "case",
-            recoverMessage(missingCaseName, "identifier"),
-            maybe(
-                "=",
-                recoverMessage(missingExpression, expression)
-            ), 
-            lineEnd
-        )
-    )
-)
-
-structField = node("structField",
-    choice(
-        embedStatement,
-        variableDefinition,
-        sequence(
-            functionHeader,
-            lineEnd
-        )
-    )
-)
-
-structDefinition.define(node("structDefinition",
-    accessModifier,
-    "struct",
-    recoverMessage(missingStructName, "identifier"),
-    maybe(
-        openBrace,
-        zeroOrMore(structField),
-        closeBrace,
-    ),
-    maybe(
-        "cases", 
-        openBrace,
-        zeroOrMore(structCase),
-        closeBrace
-    ),
-    lineEnd
-))
-
 packageName = node("packageName",
     "identifier",
     zeroOrMore(".", "identifier"),
     maybe(
         ".",
-        recoverMessage(invalidPackageName, "*")
+        choice("*", invalidPackageName)
     )
 )
 
 packageNameList = sequence(
     packageName,
-    zeroOrMore(",",
+    zeroOrMore(
+        ",",
         maybe("\n"),
         packageName
     ),
@@ -402,43 +216,37 @@ importStatement = node("importStatement",
     choice(
         sequence(
             "from",
-            recoverMessage(missingPackageName, packageName),
-            recoverMessage(missingImportStatement,
-                "import", 
-                maybe("\n"),
-                packageNameList
+            choice(packageName, missingPackageName),
+            choice(
+                sequence(
+                    "import",
+                    choice(packageNameList, missingPackageNameList)
+                ),
+                missingImportStatement,
             ),
             lineEnd
         ),
         sequence(
             "import",
-            recoverMessage(missingPackageName, packageName),
+            choice(packageName, missingPackageName),
             lineEnd
         )
     )
 )
 
-programStatement = choice(
-    importStatement,
-    variableDefinition,
-    functionDefinition,
-    structDefinition
-)
-
 packageStatement = node("packageStatement",
     maybe("pub"),
     "package",
-    recoverMessage(missingPackageName, packageName),
+    choice(packageName, missingPackageName),
     lineEnd
 )
 
 program = node("program",
-    maybe(packageStatement),
-    programStatement,
-    zeroOrMore(programStatement)
+    packageStatement,
+    importStatement,
 )
 
 
 # Parses the given tokens into a syntax tree.
 def parse(tokens):
-    return program(tokens, 0, False)[1:3]
+    return program(tokens, 0)[1:3]
