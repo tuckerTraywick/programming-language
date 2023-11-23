@@ -114,7 +114,7 @@ form std.io import printLine
 from std.math import pi
 
 struct Shape {
-    color (3)uint8
+    color [3]uint8
     area(this) ufloat64
 } cases {
     struct Circle {

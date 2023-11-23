@@ -173,19 +173,29 @@ def zeroOrMore(*parsers):
     return parse
 
 
+# Parses an expression using the given operator precedences with the given literal parser.
+def expression(literal, operators):
+    def parse(tokens, index):
+        pass
+    return parse
+
+
 # Error messages
+missingCloseParenthesis = error("Expected a closing `)`.")
+missingCloseBrace = error("Expected a closing `}`.")
+missingCloseBracket = error("Expected a closing `]`.")
+missingIdentifier = error("Expected an identifier.")
 missingPackageName = error("Expected a package name.")
 missingImportStatement = error("Expected an import statement.")
 missingPackageNameList = error("Expected a list of package names or a `*`.")
 missingExpression = error("Expected an expression.")
-missingCloseParenthesis = error("Expected a closing `)`.")
-missingCloseBrace = error("Expected a closing `}`.")
 missingVariableName = error("Expected a variable name.")
 missingFunctionName = error("Expected a function name.")
 missingFunctionParameters = error("Expected function parameters.")
 missingTypeOrDefaultValue = error("Expected an argument type and/or default value.")
 missingFunctionBody = error("Expected a function body.")
 missingStructName = error("Expected a struct name.")
+missingStructCase = error("Expected a struct case.")
 missingCases = error("Expected struct cases.")
 missingCaseName = error("Expected a case name.")
 missingType = error("Expected a type.")
@@ -195,14 +205,62 @@ syntaxError = error("Syntax error.")
 
 # Grammar
 structDefinition = ForwardDeclaration()
-
-type = node("type",
-    "identifier",
-)
+type = ForwardDeclaration()
 
 expression = node("expression",
     "number"
 )
+
+basicType = node("basicType",
+    "identifier",
+    zeroOrMore(
+        ".",
+        choice("identifier", missingIdentifier)
+    )
+)
+
+tupleType = node("tupleType",
+    "(",
+    zeroOrMore(
+        type,
+        ","
+    ),
+    maybe(type),
+    choice(")", missingCloseParenthesis)
+)
+
+arrayType = node("arrayType",
+    "[",
+    maybe(expression),
+    choice("]", missingCloseBracket),
+    choice(type, missingType)
+)
+
+pointerType = node("pointerType",
+    "&",
+    choice(type, missingType),
+)
+
+mutType = node("mutType",
+    "mut",
+    choice(type, missingType)
+)
+
+constType = node("constType",
+    "const",
+    choice(type, missingType)
+)
+
+type.define(node("type",
+    choice(
+        constType,
+        mutType,
+        pointerType,
+        arrayType,
+        tupleType,
+        basicType,
+    )
+))
 
 accessModifier = maybe(
     choice(
@@ -333,7 +391,13 @@ structCases = node("structCases",
     openBrace,
     maybe(
         "default",
-        structCase
+        choice(
+            structCase,
+            sequence(
+                missingStructCase,
+                lineEnd
+            )
+        )
     ),
     zeroOrMore(structCase),
     choice(closeBrace, missingCloseBrace),
@@ -419,13 +483,11 @@ packageStatement = node("packageStatement",
     lineEnd
 )
 
-programStatement = node("programStatement",
-    choice(
-        importStatement,
-        structDefinition,
-        functionDefinition,
-        variableDefinition,
-    )
+programStatement = choice(
+    importStatement,
+    structDefinition,
+    functionDefinition,
+    variableDefinition,
 )
 
 program = node("program",

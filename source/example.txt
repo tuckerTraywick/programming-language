@@ -1,5 +1,1 @@
-struct Color cases {
-    struct Rgb {
-        var a int
-    }
-}
+
