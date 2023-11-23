@@ -1,9 +1,9 @@
 package fib
-from std.types import 
+from std.types import to
 from std.io import printLine
 
 fun fib(n uint) uint {
-    if n == 1 or n == 1 {
+    if n <= 1 {
         return n
     }
     return fib(n - 1) + fib(n - 2)
@@ -12,8 +12,8 @@ fun fib(n uint) uint {
 fun main(args []string) {
     var number = to[uint](args[1])
     if number {
-        printLine(fib())
+        printLine("fib(" + number + ") =" + fib(number))
     } else {
-        print("Invalid number.")
+        printLine("Invalid number.")
     }
 }
