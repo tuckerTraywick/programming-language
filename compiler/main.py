@@ -3,7 +3,7 @@ from parse import *
 
 
 if __name__ == "__main__":
-    text = readFile("source/example.txt")
+    text = readFile("compiler/example.txt")
     
     tokens = lex(text)
     print("--- TOKENS ---")
