@@ -20,101 +20,9 @@ def readFile(path: str) -> str:
 
 
 # Splits a string into tokens.
-def lex(text: str) -> list[Token]:
-    keywords = {
-        "package",
-        "from",
-        "import",
-        "pub",
-        "priv",
-        "const",
-        "mut",
-        "owned",
-        "shared",
-        "weak",
-        "var",
-        "fun",
-        "struct",
-        "alias",
-        "cases",
-        "embed",
-        "impl",
-        "pass",
-        "return",
-        "yield",
-        "break",
-        "continue",
-        "if",
-        "else",
-        "switch",
-        "case",
-        "default",
-        "fallthrough",
-        "for",
-        "in",
-        "until",
-        "thru",
-        "by",
-        "do",
-        "while",
-        "as",
-        "is",
-        "isnot",
-        "and",
-        "or",
-        "xor",
-        "not",
-        "true",
-        "false",
-    }
-    operators = {
-        # "++",
-        "+=",
-        "+",
-        # "--",
-        "-=",
-        "->",
-        "-",
-        "*=",
-        "*",
-        "/=",
-        "/",
-        "%=",
-        "%",
-        "&=",
-        "&",
-        "|=",
-        "|",
-        "^=",
-        "^",
-        "~=",
-        "~",
-        "<<=",
-        "<<",
-        "<=",
-        "<",
-        ">>=",
-        ">>",
-        ">=",
-        ">",
-        "==",
-        "=>",
-        "=",
-        "!=",
-        ".",
-        ",",
-        # ";",
-        "(",
-        ")",
-        "[",
-        "]",
-        "{",
-        "}",
-    }
+def lex(text: str, keywords, operators, lineComment) -> list[Token]:
     # Every non-alphanumeric character.
-    symbols = "`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?"
-    # The start of a line comment.
-    lineComment = "#"
+    symbols = "`~!@#$%^&*()-=+[{]}\\|;:'\",<.>/?"
 
     tokens: list[Token] = []
     i: int = 0
@@ -204,9 +112,3 @@ def lex(text: str) -> list[Token]:
     if not tokens or tokens[-1].type != "\n":
         tokens.append(Token("\n", "\n"))
     return tokens
-
-
-# Splits the file at `path` into tokens.
-def lexFile(path: str) -> list[Token]:
-    text = readFile(path)
-    return lex(text)

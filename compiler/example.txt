@@ -1,19 +1,13 @@
-package fib
-from std.types import to
-from std.io import printLine
 
-fun fib(n uint) uint {
-    if n <= 1 {
-        return n
-    }
-    return fib(n - 1) + fib(n - 2)
-}
 
-fun main(args []string) {
-    var number = to[uint](args[1])
-    if number {
-        printLine("fib(" + number + ") =" + fib(number))
-    } else {
-        printLine("Invalid number.")
-    }
-}
+.data:
+    array: u8 1 2 3
+    uninitialized: 3*u8 u8 2 3
+    "a string"
+
+.entry:
+    pushu8 1
+    halt
+
+
+

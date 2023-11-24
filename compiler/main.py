@@ -1,19 +1,20 @@
-from lex import *
-from parse import *
+from lexer import *
 from assembler import *
 
 
 if __name__ == "__main__":
     text = readFile("compiler/example.txt")
     
-    # tokens = lex(text)
-    # print("--- TOKENS ---")
-    # for i, token in enumerate(tokens):
-    #     print(f"{i:<3} {token}")
+    tokens = lex(text)
+    print("--- TOKENS ---")
+    for i, token in enumerate(tokens):
+        print(f"{i:<3} {token}")
 
-    # tree, error = parse(tokens)
-    # print("\n--- SYNTAX TREE ---")
-    # if error:
-    #     print(f"Error: {error.message}")
-    # if tree:
-    #     tree.prettyPrint()
+    tree, error = parse(tokens)
+    print("\n--- SYNTAX TREE ---")
+    if error:
+        print(f"Error: {error.message}")
+    if tree:
+        tree.prettyPrint()
+
+

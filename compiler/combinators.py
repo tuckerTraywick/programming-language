@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from lex import *
 
 
 # Represents a node in a parse tree. Can have zero or more children.
@@ -180,6 +179,11 @@ def zeroOrMore(*parsers):
                 children.append(child)
         return (index, children, None)
     return parse
+
+
+# Parses one or more of the given sequence.
+def oneOrMore(*parsers):
+    return sequence(sequence(*parsers), zeroOrMore(*parsers))
 
 
 # Parses an expression using the given operator precedences with the given literal parser.

@@ -1,4 +1,98 @@
+import lexer
 from combinators import *
+
+
+# Token types
+keywords = {
+    "package",
+    "from",
+    "import",
+    "pub",
+    "priv",
+    "const",
+    "mut",
+    "owned",
+    "shared",
+    "weak",
+    "var",
+    "fun",
+    "struct",
+    "alias",
+    "cases",
+    "embed",
+    "impl",
+    "pass",
+    "return",
+    "yield",
+    "break",
+    "continue",
+    "if",
+    "else",
+    "switch",
+    "case",
+    "default",
+    "fallthrough",
+    "for",
+    "in",
+    "until",
+    "thru",
+    "by",
+    "do",
+    "while",
+    "as",
+    "is",
+    "isnot",
+    "and",
+    "or",
+    "xor",
+    "not",
+    "true",
+    "false",
+}
+
+operators = {
+    "+=",
+    "+",
+    "-=",
+    "->",
+    "-",
+    "*=",
+    "*",
+    "/=",
+    "/",
+    "%=",
+    "%",
+    "&=",
+    "&",
+    "|=",
+    "|",
+    "^=",
+    "^",
+    "~=",
+    "~",
+    "<<=",
+    "<<",
+    "<=",
+    "<",
+    ">>=",
+    ">>",
+    ">=",
+    ">",
+    "==",
+    "=>",
+    "=",
+    "!=",
+    ".",
+    ",",
+    "(",
+    ")",
+    "[",
+    "]",
+    "{",
+    "}",
+}
+
+lineComment = "#"
 
 
 # Error messages
@@ -592,6 +686,11 @@ program = node("program",
     maybe(packageStatement),
     zeroOrMore(programStatement),
 )
+
+
+# Lexes the given text into tokens.
+def lex(text):
+    return lexer.lex(text, keywords, operators, lineComment)
 
 
 # Parses the given tokens into a syntax tree.

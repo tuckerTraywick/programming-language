@@ -20,14 +20,17 @@ fun main() {
 }
 
 add(a int32, b int32) int32:
-    load32l a
-    load32l b
+    load32 a
+    load32 b
     addi32
-    return32 sizeof(a) + sizeof(b)
+    store32 return
+    return sizeof(a) + sizeof(b)
 
 main():
-    push32i 1
-    push32i 2
+    pushi32
+    loads sizeof(int32) - 1
+    pushi32 1
+    pushi32 2
     call f
 
 high
@@ -37,6 +40,7 @@ fp
 ip
 2
 1
+0
 low
 
 
@@ -44,22 +48,19 @@ var a mut int = 1
 var b int = 2
 a = b
 
-push32 1
-push32 2
-load32l b
-store32l a
+pushi32 1
+pushi32 2
+load32 a
+store32 b
+
 
 var a mut int32 = 1
 var b &mut int32 = &a
 *b = 2
 
-push32 1 # a
-push64 # b
+pushi32 1 # a
+pushu64 # b
 loada a
-store64 b
-push32 2
-load64l b
-store32
 
 
 struct Thing {
@@ -69,38 +70,41 @@ struct Thing {
 var thing = Thing(1, 2)
 var b = thing.b
 
-push32 1
-push32 2
-push32
-load32l thing.b
-store32l b
+pushi32 1
+pushi32 2
+pushi32
+load32 thing.b
+store32 b
 
 
 var thing &Thing
 var b = thing.b
 
-push64 # a
-push32 # b
-load64l thing
-push64 offsetof(thing.b)
+pushu64 # a
+pushi32 # b
+load64 thing
+pushu64 offsetof(thing.b)
 addu64
 load32
-store32l b
+store32 b
 
 
 var a [3]int32 = [1, 2, 3]
 var i usize = 1
 var b int32 = a[i]
 
-push32 1 # a
-push32 2
-push32 3
-push32 1 # i
-push32 # b
+pushi32 1 # a
+pushi32 2
+pushi32 3
+pushu64 1 # i
+pushi32 # b
 loada a
-load64l i
+load64 i
 addu64
-store32l b 
+store32 b 
+
+
+
 
 
 
@@ -113,24 +117,20 @@ Instruction set:
 load
 load offset
 
+loada offset
+
+loads offset
+
 store
 store offset
+
+copy
+copy amount
 
 push value
 
 pop
 pop size
-
-dup
-dup size
-
-copy
-copy size
-copy offset
-copy size, offset
-copyimm
-copyimm size
-copyimm size, offset
 
 jump
 jump address
@@ -144,11 +144,8 @@ jumpf address
 call
 call address
 
-callr
-callr rvp
-callr address, rvp
-
-return retsize, argsize
+return
+return argsize
 
 pos
 neg
@@ -162,8 +159,13 @@ bnot
 band
 bor
 bxor
+
 lshift
 rshift
+not
+and
+or
+xor
 
 eq
 ne
@@ -171,6 +173,35 @@ gt
 gte
 lt
 lte
+
+
+
+
+
+
+
+
+pub package myPackage
+from std.io import printLine
+
+pub fun sayGreeting() int {
+    printLine(1)
+}
+
+
+myPackage:
+    link:
+        std.io.printLine:
+            sayGreeting+2
+
+    sayGreeting:
+        pushi32 1
+        call _
+
+
+
+
+
 
 
 
