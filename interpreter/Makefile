@@ -25,10 +25,10 @@ clean:
 
 binary/run: $(OBJECT_FILES)
 	@mkdir -p binary
-	$(CC) $(CFLAGS) $^ -o $@
+	@$(CC) $(CFLAGS) $^ -o $@
 
 build/%.o: source/%.c
 	@mkdir -p build
-	$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
 
 -include $(OBJECT_FILES:.o=.d)
