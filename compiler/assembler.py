@@ -8,10 +8,57 @@ keywords = {
     "i8", "i16", "i32", "i64",
     "uf", "uf32", "uf64",
     "f", "f32", "f64",
-    "halt",
+    "data",
+    "entry",
     "pushu8",
-    "push",
+    "pushu16",
+    "pushu32",
+    "pushu64",
+    "pushi8",
+    "pushi16",
+    "pushi32",
+    "pushi64",
+    "pushuf32",
+    "pushuf64",
+    "pushf32",
+    "pushf64",
+    "load8",
+    "load16",
+    "load32",
+    "load64",
+    "loada",
+    "loads",
+    "load",
+    "jump",
+    "jumpt",
+    "jumpf",
+    "call",
+    "return",
+    "halt",
     "print8",
+    "pos",
+    "neg",
+    "add",
+    "sub",
+    "mul",
+    "div",
+    "mod",
+    "lshift",
+    "rshift",
+    "not",
+    "and",
+    "or",
+    "xor",
+    "bnot",
+    "band",
+    "bor",
+    "bxor",
+    "eq",
+    "ne",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
 }
 
 operators = {
@@ -19,13 +66,10 @@ operators = {
     ".",
     "+",
     "-",
+    "*",
 }
 
 lineComment = "#"
-
-
-# Errors
-missingColon = error("Expected a colon.")
 
 
 # Grammar
@@ -43,10 +87,12 @@ numberLiteral = node("numberLiteral",
 literal = choice(
     numberLiteral,
     "string",
+    "character",
+    "identifier",
 )
 
 label = node("label",
-    maybe("."), "identifier", choice(":", missingColon), lineEnd
+    "identifier", ":"
 )
 
 opcodeWithOneArgument = choice(
@@ -81,7 +127,7 @@ instruction = node("instruction",
         sequence(opcodeWithOneArgument, maybe(literal)),
         sequence("push", oneOrMore(literal)),
         "halt",
-        "print8,"
+        "print8",
         "pos",
         "neg",
         "add",
@@ -106,22 +152,44 @@ instruction = node("instruction",
         "lt",
         "lte",
     ),
-    lineEnd
 )
 
-programStatement = choice(
+statement = choice(
     instruction,
     label
 )
 
+dataValue = node("dataValue", choice(
+    sequence("number", "*", numberSuffix),
+    sequence(numberSuffix, zeroOrMore(numberLiteral)),
+    "character",
+    "string"
+))
+
+dataStatement = choice(
+    label,
+    oneOrMore(dataValue),
+)
+
+entryPoint = node("entryPoint",
+    ".", "entry", ":"
+)
+
+dataSection = node("dataSection",
+    ".", "data", ":",
+    zeroOrMore(dataStatement)
+)
+
 program = node("program",
-    zeroOrMore(programStatement)
+    maybe(dataSection),
+    entryPoint,
+    zeroOrMore(statement)
 )
 
 
 # Lexes the given text into tokens.
 def lex(text):
-    return lexer.lex(text, keywords, operators, lineComment)
+    return lexer.lex(text, keywords, operators, lineComment, True)
 
 
 # Parses the given tokens into a syntax tree.

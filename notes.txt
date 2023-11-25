@@ -1,3 +1,88 @@
+Object/library file format:
+symbol table
+data
+types
+variables
+functions
+
+
+pub package myPackage
+from std.io import printLine
+
+pub struct Point {
+    pub var x, y int
+    var z int
+}
+
+pub var a int = 1
+
+pub fun f() {
+    printLine("Hello")
+}
+
+var b int = 1
+
+priv var c int = 1
+
+
+symbols:
+    myPackage
+        .Point: pub struct {
+            size = 12
+            alignment = 4
+            x: pub field {
+                size = 4
+                alignment = 4
+                offset = 0
+                type = int32
+            }
+            y: pub field {
+                size = 4
+                alignment = 4
+                offset = 4
+                type = int32
+            }
+            z: field {
+                size = 4
+                alignment = 4
+                offset = 8
+                type = int32
+            }
+        }
+        .a: pub var {
+            size = 4
+            alignment = 4
+            type = int32
+            address = 0x.. # Local to start of file.
+        }
+        .f: pub fun {
+            parameterTypes = ()
+            returnType = ()
+            address = 0x..
+        }
+        .b: var int32 {
+            size = 4
+            alignment = 4
+            type = int32
+            address = 0x..
+        }
+        .c: priv var int32 {
+            size = 4
+            alignment = 4
+            type = int32
+            address = 0x..
+        }
+...
+data:
+    hello: "Hello, world!"
+functions:
+    f:
+        pusha hello
+        call <std.io.printLine>
+
+
+
+
 - 64-bit stack machine
 - Load-store
 

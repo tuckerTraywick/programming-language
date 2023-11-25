@@ -20,7 +20,7 @@ def readFile(path: str) -> str:
 
 
 # Splits a string into tokens.
-def lex(text: str, keywords, operators, lineComment) -> list[Token]:
+def lex(text: str, keywords, operators, lineComment, ignoreNewlines=False) -> list[Token]:
     # Every non-alphanumeric character.
     symbols = "`~!@#$%^&*()-=+[{]}\\|;:'\",<.>/?"
 
@@ -29,7 +29,7 @@ def lex(text: str, keywords, operators, lineComment) -> list[Token]:
     while i < len(text):
         # Lex newlines.
         if text[i] == "\n":
-            if not tokens or tokens[-1].type != "\n":
+            if not tokens or (not ignoreNewlines and tokens[-1].type != "\n"):
                 tokens.append(Token("\n", "\n"))
             i += 1
         # Skip whitespace.
@@ -109,6 +109,6 @@ def lex(text: str, keywords, operators, lineComment) -> list[Token]:
             break
 
     # Append a '\n' to the end of the token stream to make parsing slightly easier.
-    if not tokens or tokens[-1].type != "\n":
+    if not tokens or (not ignoreNewlines and tokens[-1].type != "\n"):
         tokens.append(Token("\n", "\n"))
     return tokens

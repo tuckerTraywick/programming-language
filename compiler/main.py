@@ -16,5 +16,3 @@ if __name__ == "__main__":
         print(f"Error: {error.message}")
     if tree:
         tree.prettyPrint()
-
-
