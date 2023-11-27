@@ -1,5 +1,5 @@
 from lexer import *
-from assembler import *
+from assemblyparser import *
 
 
 if __name__ == "__main__":
