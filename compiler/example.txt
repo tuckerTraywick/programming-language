@@ -1,5 +1,15 @@
+.data:
+    u16 1 2 3
+
 .entry:
-    call fun
+    pushu64 fun
+    call
+    return0
 
 fun:
-    return
+    return0
+
+a:
+    pushu8 1
+    call
+    return64

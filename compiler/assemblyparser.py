@@ -3,13 +3,7 @@ from combinators import *
 
 
 # Token types
-keywords = {
-    "u", "u8", "u16", "u32", "u64",
-    "i8", "i16", "i32", "i64",
-    "uf", "uf32", "uf64",
-    "f", "f32", "f64",
-    "data",
-    "entry",
+pushInstructions = {
     "pushu8",
     "pushu16",
     "pushu32",
@@ -22,20 +16,67 @@ keywords = {
     "pushuf64",
     "pushf32",
     "pushf64",
-    "load8",
-    "load16",
-    "load32",
-    "load64",
-    "loada",
-    "loads",
-    "load",
+}
+
+instructions = {
+    "loada8",
+    "loada16",
+    "loada32",
+    "loada64",
+    "loadap",
+
+    "loads8",
+    "loads16",
+    "loads32",
+    "loads64",
+    "loadsp",
+
+    "storea8",
+    "storea16",
+    "storea32",
+    "storea64",
+    "storea",
+
+    "stores8",
+    "stores16",
+    "stores32",
+    "stores64",
+    "stores",
+
+    "storep8",
+    "storep16",
+    "storep32",
+    "storep64",
+    "storep",
+
+    "copy8",
+    "copy16",
+    "copy32",
+    "copy64",
+    "copy",
+
+    "malloc",
+    "calloc",
+    "realloc",
+    "free",
+
+    "noop",
+    "halt",
+    "call",
+    
+    "return0",
+    "return8",
+    "return16",
+    "return32",
+    "return64",
+    "return",
+
     "jump",
     "jumpt",
     "jumpf",
-    "call",
-    "return",
-    "halt",
+
     "print8",
+
     "pos",
     "neg",
     "add",
@@ -43,16 +84,19 @@ keywords = {
     "mul",
     "div",
     "mod",
+
     "lshift",
     "rshift",
     "not",
     "and",
     "or",
     "xor",
+
     "bnot",
     "band",
     "bor",
     "bxor",
+
     "eq",
     "ne",
     "gt",
@@ -60,6 +104,16 @@ keywords = {
     "lt",
     "lte",
 }
+
+keywords = {
+    "u", "u8", "u16", "u32", "u64",
+    "i8", "i16", "i32", "i64",
+    "uf", "uf32", "uf64",
+    "f", "f32", "f64",
+
+    "data",
+    "entry",
+}.union(pushInstructions, instructions)
 
 operators = {
     ":",
@@ -95,62 +149,19 @@ label = node("label",
     "identifier", ":"
 )
 
-opcodeWithOneArgument = choice(
-    "pushu8",
-    "pushu16",
-    "pushu32",
-    "pushu64",
-    "pushi8",
-    "pushi16",
-    "pushi32",
-    "pushi64",
-    "pushuf32",
-    "pushuf64",
-    "pushf32",
-    "pushf64",
-    "load8",
-    "load16",
-    "load32",
-    "load64",
-    "loada",
-    "loads",
-    "load",
-    "jump",
-    "jumpt",
-    "jumpf",
-    "call",
-    "return",
-)
+dataValue = node("dataValue", choice(
+    sequence("number", "*", numberSuffix),
+    sequence(numberSuffix, zeroOrMore(numberLiteral)),
+    "character",
+    "string"
+))
+
+pushInstruction = choice(*pushInstructions)
 
 instruction = node("instruction",
     choice(
-        sequence(opcodeWithOneArgument, maybe(literal)),
-        sequence("push", oneOrMore(literal)),
-        "halt",
-        "print8",
-        "pos",
-        "neg",
-        "add",
-        "sub",
-        "mul",
-        "div",
-        "mod",
-        "lshift",
-        "rshift",
-        "not",
-        "and",
-        "or",
-        "xor",
-        "bnot",
-        "band",
-        "bor",
-        "bxor",
-        "eq",
-        "ne",
-        "gt",
-        "gte",
-        "lt",
-        "lte",
+        sequence(pushInstruction, literal),
+        *instructions,
     ),
 )
 
@@ -159,19 +170,12 @@ statement = choice(
     label
 )
 
-dataValue = node("dataValue", choice(
-    sequence("number", "*", numberSuffix),
-    sequence(numberSuffix, zeroOrMore(numberLiteral)),
-    "character",
-    "string"
-))
-
 dataStatement = choice(
     label,
     oneOrMore(dataValue),
 )
 
-entryPoint = node("entryPoint",
+entryPoint = node("entrypoint",
     ".", "entry", ":"
 )
 

@@ -1,17 +1,17 @@
 #include <stddef.h> // size_t
-#include <stdbool.h> // bool
 #include <stdint.h> // int types
+#include <stdbool.h> // bool
 #include <assert.h> // assert()
 #include <stdlib.h> // malloc(), free()
 #include <stdio.h> // printf()
 #include "interpreter.h"
 
-// Sets up an interpreter and runs the given code.
 void run(char *code) {
+    // TODO: Figure out a smarter way to reserve the stack to avoid wasting memory.
     char *stack = malloc(STARTING_STACK_SIZE);
     char *ip = code;
-    char *fp = stack - 1;
-    char *sp = stack - 1;
+    char *fp = stack;
+    char *sp = stack;
     char *rp = NULL;
 
     bool keepRunning = true;
@@ -50,7 +50,6 @@ void run(char *code) {
                 // Move the stack pointer up 2 bytes.
                 sp += sizeof(uint16_t);
                 break;
-
             case LOAD8L:
                 // load8l ptrdiff_t frameOffset
                 // Push an 8-bit local variable or argument.

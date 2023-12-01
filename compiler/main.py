@@ -1,5 +1,6 @@
 from lexer import *
 from assemblyparser import *
+from assemblyvisitor import *
 
 
 if __name__ == "__main__":

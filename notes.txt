@@ -77,7 +77,7 @@ data:
     hello: "Hello, world!"
 functions:
     f:
-        pusha hello
+        pushu64 hello
         call <std.io.printLine>
 
 
@@ -85,6 +85,7 @@ functions:
 
 - 64-bit stack machine
 - Load-store
+- Operands always on the stack, besides the push instructions
 
 Registers:
     ip: instruction pointer
@@ -92,8 +93,10 @@ Registers:
     sp: stack pointer, points to the LAST byte of the stack
 
 Instructions:
-    opcode: 2 bytes
-    maybe operand: up to 8 bytes
+    opcode: 1 byte (aligned to 1 byte)
+    value to push: up to 8 bytes (also aligned to 1 byte)
+
+
 
 
 fun add(a, b int) int {
@@ -101,22 +104,27 @@ fun add(a, b int) int {
 }
 
 fun main() {
-    f(1, 2)
+    add(1, 2)
 }
 
 add(a int32, b int32) int32:
-    load32 a
-    load32 b
+    pushu64 offset(a)
+    loada32
+    pushu64 offset(b)
+    loada32
     addi32
-    store32 return
-    return sizeof(a) + sizeof(b)
+    pushu64 offset(return)
+    storea32
+    return64
 
 main():
     pushi32
-    loads sizeof(int32) - 1
     pushi32 1
     pushi32 2
-    call f
+    pushu64 &add
+    call
+    pop64
+    return0
 
 high
 rp
@@ -132,136 +140,154 @@ low
 var a mut int = 1
 var b int = 2
 a = b
-
+------
 pushi32 1
 pushi32 2
-load32 a
-store32 b
+pushu64 offset(b)
+loada32
+pushu64 offset(a)
+storea32
 
 
 var a mut int32 = 1
 var b &mut int32 = &a
 *b = 2
-
-pushi32 1 # a
-pushu64 # b
-loada a
+------
+pushi32 1
+pushu64 0
+pushu64 offset(a)
+loadap
+pushu64 offset(b)
+storea64
+pushi32 2
+pushu64 offset(b)
+loada64
+storep32
 
 
 struct Thing {
-    var a int
-    var b int
+    var a int32
+    var b int32
 }
-var thing = Thing(1, 2)
-var b = thing.b
-
+var thing Thing = (1, 2)
+var b int32 = thing.b
+------
 pushi32 1
 pushi32 2
-pushi32
-load32 thing.b
-store32 b
+pushi32 0
+pushu64 offset(thing.b)
+loada32
+pushu64 offset(b)
+store32
 
 
 var thing &Thing
 var b = thing.b
-
-pushu64 # a
-pushi32 # b
-load64 thing
-pushu64 offsetof(thing.b)
+------
+pushu64 0x...
+pushi32 0
+pushu64 offset(thing)
+loada64
+pushu64 offset(Thing.b)
 addu64
-load32
-store32 b
+loadp32
+pushu64 offset(b)
+storea32
 
 
 var a [3]int32 = [1, 2, 3]
 var i usize = 1
 var b int32 = a[i]
-
-pushi32 1 # a
+------
+pushi32 1
 pushi32 2
 pushi32 3
-pushu64 1 # i
-pushi32 # b
-loada a
-load64 i
+pushu64 1
+pushu64 0
+pushu64 offset(a)
+loadap
+pushu64 offset(i)
+loada64
 addu64
-store32 b 
-
-
-
-
-
-
-
+loadp32
+loadu64 offset(b)
+storea32
 
 
 
 
 Instruction set:
-load
-load offset
+push size, data
+pushN value
 
-loada offset
+<offset> loadaN
+<offset> <size> loada
+<offset> loadap
 
-loads offset
+<offset> loadsN
+<offset> <size> loads
+<offset> loadsp
 
-store
-store offset
+<pointer> loadpN
+<pointer> <size> loadp
 
-copy
-copy amount
+<value> <offset> storeaN
+<value> <offset> <size> storea
 
-push value
+<value> <offset> storesN
+<value> <offset> <size> stores
 
-pop
-pop size
+<value> <pointer> storepN
+<value> <pointer> <size> storep
 
-jump
-jump address
+<source pointer> <dest pointer> copyN
+<source pointer> <dest pointer> <size> copy
 
-jumpt
-jumpt address
+<size> malloc
 
-jumpf
-jumpf address
+<size> calloc
 
-call
-call address
+<pointer> <size> realloc
 
-return
-return argsize
+<pointer> free
 
-pos
-neg
-add
-sub
-mul
-div
-mod
+<address> jump
 
-bnot
-band
-bor
-bxor
+<condition> <address> jumpt
 
-lshift
-rshift
-not
-and
-or
-xor
+<condition> address> jumpf
 
-eq
-ne
-gt
-gte
-lt
-lte
+<address> call
 
+returnN
+<argSize> return
 
+<x> posT
+<x> negT
+<a> <b> addT
+<a> <b> subT
+<a> <b> mulT
+<a> <b> divT
+<a> <b> modT
 
+<x> bnotT
+<a> <b> bandT
+<a> <b> borT
+<a> <b> bxorT
 
+<a> <b> lshiftT
+<a> <b> rshiftT
+<x> notT
+<a> <b> andT
+<a> <b> orT
+<a> <b> xorT
+
+<a> <b> eqT
+<a> <b> neT
+<a> <b> gtT
+<a> <b> gteT
+<a> <b> ltT
+<a> <b> lteT
 
 
 
@@ -273,20 +299,14 @@ pub fun sayGreeting() int {
     printLine(1)
 }
 
-
 myPackage:
-    link:
+    unlinked symbols:
         std.io.printLine:
             sayGreeting+2
 
     sayGreeting:
         pushi32 1
         call _
-
-
-
-
-
 
 
 
@@ -421,7 +441,7 @@ struct Color {
 
 
 package shapes
-form std.io import printLine
+from std.io import printLine
 from std.math import pi
 
 struct Shape {
@@ -629,7 +649,7 @@ priv var flags Map[string, Primitive]
 
 
 package add1
-from std import *
+from std.flags import *
 from std.io import printLine
 
 fun main() {
