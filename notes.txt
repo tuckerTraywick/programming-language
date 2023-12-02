@@ -1,3 +1,7 @@
+
+
+
+
 Object/library file format:
 symbol table
 data
@@ -217,8 +221,10 @@ storea32
 
 
 Instruction set:
-push size, data
 pushN value
+
+popN
+<size> pop
 
 <offset> loadaN
 <offset> <size> loada

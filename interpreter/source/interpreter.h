@@ -9,29 +9,21 @@
 
 // Represents an opcode.
 enum Opcode {
+    NOOP,
     HALT,
-    PUSH8I,
-    PUSH8,
-    PUSH16I,
-    PUSH16,
-    PUSH32I,
-    PUSH32,
-    PUSH64I,
-    PUSH64,
-    LOAD8L,
-    LOAD8,
-    LOADA,
-    LOAD,
-    STORE8L,
-    STORE8,
-    STORE,
 
+    PUSH8,
+    PUSH16,
+    PUSH32,
+    PUSH64,
+    
+    
+    
     PRINT8,
     PRINT16,
 };
 
-// Sets up an interpreter and runs the given code.
-// Multi-byte values are little-endian.
+// Runs the given code. Multi-byte values are little-endian.
 void run(char *code);
 
 #endif // INTERPRETER_H
