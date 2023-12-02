@@ -1,13 +1,14 @@
 CC := gcc
 CFLAGS := -std=c17 -O -g -Wall -Wextra -Wpedantic
-INCLUDE := -Isource -Iinclude -Itest
+INCLUDE := -Isource -Iinclude
+TEST_INCLUDE := -Itest
 
-SOURCE_FILES := $(shell find source -name '*.c' -not -path "main.c")
-OBJECT_FILES := $(SOURCE_FILES:source/%.c=build/%.o)
-TEST_SOURCE_FILES := $(shell find test -name '*.c')
-TEST_OBJECT_FILES := $(TEST_SOURCE_FILES:test/%.c=build/%.o)
+SOURCE_FILES := $(shell find source -name '*.c' ! -name 'main.c')
+OBJECT_FILES := $(SOURCE_FILES:source/%.c=build/source/%.o)
+TEST_SOURCE_FILES := $(shell find test -name '*.c' ! -name 'main.c')
+TEST_OBJECT_FILES := $(TEST_SOURCE_FILES:test/%.c=build/test/%.o)
 
-.PRECIOUS: build/%.d
+.PRECIOUS: bild/source/%.d build/test/%.d
 
 .PHONY: buildsourceandtests
 buildsourceandtests: buildsource buildtests
@@ -48,20 +49,20 @@ test: buildtests
 clean:
 	@rm -rf build binary
 
-binary/run: $(OBJECT_FILES) build/main.o
+binary/run: $(OBJECT_FILES) build/source/main.o
 	@mkdir -p binary
-	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE) $^ -o $@
 
-binary/test: $(OBJECT_FILES) $(TEST_OBJECT_FILES)
+binary/test: $(OBJECT_FILES) $(TEST_OBJECT_FILES) build/test/main.o
 	@mkdir -p binary
-	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE) $(TEST_INCLUDE) $^ -o $@
 
-build/%.o: source/%.c source/main.c
-	@mkdir -p build
-	$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
+build/source/%.o: source/%.c
+	@mkdir -p build/source
+	@$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/source/$*.d $< -o $@
 
-build/%.o: test/%.c
-	@mkdir -p build
-	$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
+build/test/%.o: test/%.c
+	@mkdir -p build/test
+	@$(CC) $(CFLAGS) $(INCLUDE) $(TEST_INCLUDE) -c -MMD -MP -MT $@ -MF build/test/$*.d $< -o $@
 
 -include $(OBJECT_FILES:.o=.d)

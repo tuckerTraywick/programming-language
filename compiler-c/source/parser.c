@@ -16,12 +16,16 @@ char *readFile(FILE *file) {
     assert(fileSize >= 0 && "Something went wrong while finding file size.");
     printf("fileSize = %lu\n", fileSize);
 
-    // Allocate a string to store the text of the file (null-terminated).
-    char *text = malloc(fileSize);
+    // Allocate a string to store the text of the fil.
+    char *text = malloc(fileSize + 1); // `+ 1` to account for the null terminator.
     assert(text != NULL && "`malloc()` failed.");
 
-
-    return NULL;
+    // Read the file into the string and replace the EOF with a null terminator.
+    size_t bytesRead = fread(text, 1, fileSize + 1, file);
+    printf("bytesRead = %lu\n", bytesRead);
+    assert(bytesRead == fileSize && "Something went wrong while putting the file in a buffer.");
+    text[fileSize] = '\0';
+    return text;
 }
 
 char *openAndReadFile(char *path) {
