@@ -110,6 +110,7 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 token.column += token.textLength;
                 break;
             default:
+                // TODO: Remove this branch or make it generate an error.
                 ++token.index;
                 ++token.column;
         }
