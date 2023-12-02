@@ -6,8 +6,8 @@
 char *readFile(FILE *file) {
     // TODO: Check for file errors.
     // TODO: Figure out a portable way to get the size of the file.
-    // Find the size of the file.
     assert(file != NULL && "Must pass a valid file.");
+    // Find the size of the file.
     long startPosition = ftell(file);
     fseek(file, 0, SEEK_END);
     long endPosition = ftell(file);
@@ -16,12 +16,13 @@ char *readFile(FILE *file) {
     assert(fileSize >= 0 && "Something went wrong while finding file size.");
     printf("fileSize = %lu\n", fileSize);
 
-    // Allocate a string to store the text of the fil.
-    char *text = malloc(fileSize + 1); // `+ 1` to account for the null terminator.
+    // Allocate a string to store the text of the file.
+    size_t stringSize = fileSize + 1;
+    char *text = malloc(stringSize); // `+ 1` to account for the null terminator.
     assert(text != NULL && "`malloc()` failed.");
 
     // Read the file into the string and replace the EOF with a null terminator.
-    size_t bytesRead = fread(text, 1, fileSize + 1, file);
+    size_t bytesRead = fread(text, 1, stringSize, file);
     printf("bytesRead = %lu\n", bytesRead);
     assert(bytesRead == fileSize && "Something went wrong while putting the file in a buffer.");
     text[fileSize] = '\0';
@@ -30,5 +31,9 @@ char *readFile(FILE *file) {
 
 char *openAndReadFile(char *path) {
     assert(path != NULL && "Must pass a path.");
-    return NULL;
+    FILE *file = fopen(path, "r");
+    assert(file != NULL && "Failed to open file.");
+    char *text = readFile(file);
+    assert(text != NULL && "Failed to read file.");
+    return text;
 }

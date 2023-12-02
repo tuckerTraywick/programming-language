@@ -1,5 +1,6 @@
 CC := gcc
 CFLAGS := -std=c17 -O -g -Wall -Wextra -Wpedantic
+VFLAGS := --leak-check=yes
 INCLUDE := -Isource -Iinclude
 TEST_INCLUDE := -Itest
 
@@ -35,15 +36,33 @@ testandrun: buildsourceandtests
 	@echo "---- RUNNING ----"
 	@binary/run
 
+.PHONY: testandvalgrind
+testandvalgrind: buildsourceandtests
+	@echo "---- TESTING IN VALGRIND ----"
+	@valgrind $(VFLAGS) binary/test
+	@echo
+	@echo "---- RUNNING IN VALGRIND ----"
+	@valgrind $(VFLAGS) binary/run
+
 .PHONY: run
 run: buildsource
 	@echo "---- RUNNING ----"
 	@binary/run
 
+.PHONY: valgrind
+valgrind: buildsource
+	@echo "---- RUNNING IN VALGRIND ----"
+	@valgrind $(VFLAGS) binary/run
+
 .PHONY: test
 test: buildtests
 	@echo "---- TESTING ----"
 	@binary/test
+
+.PHONY: testinvalgrind
+testinvalgrind: buildtests
+	@echo "---- TESTING IN VALGRIND ----"
+	@valgrind $(VFLAGS) binary/test
 
 .PHONY: clean
 clean:
