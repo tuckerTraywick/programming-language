@@ -1,23 +1,48 @@
 CC := gcc
 CFLAGS := -std=c17 -O -g -Wall -Wextra -Wpedantic
-INCLUDE := -Isource
+INCLUDE := -Isource -Iinclude -Itest
 
 SOURCE_FILES := $(shell find source -name '*.c')
 OBJECT_FILES := $(SOURCE_FILES:source/%.c=build/%.o)
+TEST_SOURCE_FILES := $(shell find test -name '*.c')
+TEST_OBJECT_FILES := $(TEST_SOURCE_FILES:test/%.c=build/%.o)
 
 .PRECIOUS: build/%.d
 
-.PHONY: build
-build: buildmessage binary/run
+.PHONY: buildsourceandtests
+buildsourceandtests: buildsource buildtests
+
+.PHONY: buildsource
+buildsource: buildsourcemessage binary/run
 	@echo
 
-buildmessage:
-	@echo "---- BUILDING ----"
+.PHONY: buildtests
+buildtests: buildsource buildtestsmessage binary/test
+	@echo
 
-.PHONY: run
-run: build
+buildsourcemessage:
+	@echo "---- BUILDING SOURCE ----"
+
+buildtestsmessage:
+	@echo "---- BUILDING TESTS ----"
+
+.PHONY: testandrun
+testandrun: buildsourceandtests
+	@echo "---- TESTING ----"
+	@binary/test
+	@echo
 	@echo "---- RUNNING ----"
 	@binary/run
+
+.PHONY: run
+run: buildsource
+	@echo "---- RUNNING ----"
+	@binary/run
+
+.PHONY: test
+test: buildtests
+	@echo "---- TESTING ----"
+	@binary/test
 
 .PHONY: clean
 clean:
@@ -27,7 +52,15 @@ binary/run: $(OBJECT_FILES)
 	@mkdir -p binary
 	@$(CC) $(CFLAGS) $^ -o $@
 
+binary/test: $(TEST_OBJECT_FILES)
+	@mkdir -p binary
+	@$(CC) $(CFLAGS) $^ -o $@
+
 build/%.o: source/%.c
+	@mkdir -p build
+	@$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
+
+build/%.o: test/%.c
 	@mkdir -p build
 	@$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
 
