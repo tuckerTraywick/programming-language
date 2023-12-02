@@ -2,7 +2,6 @@
 #include <assert.h> // assert()
 #include <stdio.h> // FILE, fopen(), fclose(), fseek(), frewind(), ftell()
 #include <stdlib.h> // malloc(), realloc(), free()
-#include <string.h> // memset()
 #include <ctype.h> // isdigit(), isalpha(), isalnum()
 #include "parser.h"
 
@@ -30,6 +29,7 @@ char *readFile(FILE *file) {
     // TODO: Check for file errors.
     // TODO: Figure out a portable way to get the size of the file.
     assert(file != NULL && "Must pass a file.");
+   
     // Find the size of the file.
     long startPosition = ftell(file);
     fseek(file, 0, SEEK_END);
@@ -96,10 +96,12 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
             case '0'...'9':
                 // Lex a number.
                 token.type = NUMBER;
+                token.text = text + token.index;
                 token.textLength = 0;
                 while (isdigit(text[token.index])) {
                     ++token.index;
                     ++token.column;
+                    ++token.textLength;
                 }
                 token.index -= token.textLength;
                 token.column -= token.textLength;
