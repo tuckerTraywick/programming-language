@@ -2,7 +2,7 @@ CC := gcc
 CFLAGS := -std=c17 -O -g -Wall -Wextra -Wpedantic
 INCLUDE := -Isource -Iinclude -Itest
 
-SOURCE_FILES := $(shell find source -name '*.c')
+SOURCE_FILES := $(shell find source -name '*.c' -not -path "main.c")
 OBJECT_FILES := $(SOURCE_FILES:source/%.c=build/%.o)
 TEST_SOURCE_FILES := $(shell find test -name '*.c')
 TEST_OBJECT_FILES := $(TEST_SOURCE_FILES:test/%.c=build/%.o)
@@ -48,20 +48,20 @@ test: buildtests
 clean:
 	@rm -rf build binary
 
-binary/run: $(OBJECT_FILES)
+binary/run: $(OBJECT_FILES) build/main.o
 	@mkdir -p binary
-	@$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $@
 
-binary/test: $(TEST_OBJECT_FILES)
+binary/test: $(OBJECT_FILES) $(TEST_OBJECT_FILES)
 	@mkdir -p binary
-	@$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $@
 
-build/%.o: source/%.c
+build/%.o: source/%.c source/main.c
 	@mkdir -p build
-	@$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
 
 build/%.o: test/%.c
 	@mkdir -p build
-	@$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) -c -MMD -MP -MT $@ -MF build/$*.d $< -o $@
 
 -include $(OBJECT_FILES:.o=.d)

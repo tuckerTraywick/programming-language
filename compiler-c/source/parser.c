@@ -14,10 +14,12 @@ char *readFile(FILE *file) {
     fseek(file, startPosition, SEEK_SET);
     long fileSize = endPosition - startPosition;
     assert(fileSize >= 0 && "Something went wrong while finding file size.");
+    printf("fileSize = %lu\n", fileSize);
 
     // Allocate a string to store the text of the file (null-terminated).
     char *text = malloc(fileSize);
     assert(text != NULL && "`malloc()` failed.");
+
 
     return NULL;
 }
@@ -25,8 +27,4 @@ char *readFile(FILE *file) {
 char *openAndReadFile(char *path) {
     assert(path != NULL && "Must pass a path.");
     return NULL;
-}
-
-int main(void) {
-    return 0;
 }
