@@ -20,6 +20,9 @@ enum TokenType {
     STRING,
     IDENTIFIER,
     NEWLINE,
+
+    FROM,
+    IMPORT,
 };
 
 // Represents a token lexed from an input stream. Stores information about the token's contents and
@@ -31,6 +34,12 @@ struct Token {
     size_t index; // The index of the token in the string being lexed.
     size_t row; // The line number of the token in the string being lexed.
     size_t column; // The index of the token relative to the start of the line the token is on.
+};
+
+// Represents a mapping from an identifier to a token type.
+struct KeywordMapping {
+    const char *identifier; // The identifier that is a keyword.
+    enum TokenType type; // The type of the token representing that keyword.
 };
 
 // Represents the result of lexing. Stores a list of tokens and possibly a list of error messages.

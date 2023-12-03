@@ -1,8 +1,10 @@
 #include <stdbool.h> // bool
+#include <stdint.h> // SIZE_MAX
 #include <assert.h> // assert()
 #include <stdio.h> // FILE, fopen(), fclose(), fseek(), frewind(), ftell()
 #include <stdlib.h> // malloc(), realloc(), free()
 #include <ctype.h> // isdigit(), isalpha(), isalnum()
+#include <string.h> // strcmp()
 #include "parser.h"
 
 // Appends `token` to `tokens`. Updates `*tokens` `*tokensCapacity`, and `*tokensCount` as needed.
@@ -39,8 +41,8 @@ char *readFile(FILE *file) {
     assert(fileSize >= 0 && "Something went wrong while finding file size.");
 
     // Allocate a string to store the text of the file.
-    size_t stringSize = fileSize + 1;
-    char *text = malloc(stringSize); // `+ 1` to account for the null terminator.
+    size_t stringSize = fileSize + 1; // `+ 1` to account for the null terminator.
+    char *text = malloc(stringSize);
     assert(text != NULL && "`malloc()` failed.");
 
     // Read the file into the string and replace the EOF with a null terminator.
@@ -61,6 +63,13 @@ char *openAndReadFile(char *path) {
 }
 
 struct LexingResult lexString(char *text, bool ignoreNewlines) {
+    // A mapping of keyword identifiers to their token types.
+    static struct KeywordMapping keywords[] = {
+        {"from", FROM},
+        {"import", IMPORT},
+    };
+    static size_t keywordsCount = (sizeof keywords)/(sizeof keywords[0]);
+
     assert(text != NULL && "Must pass a string.");
     size_t tokensCapacity = TOKENS_INITIAL_CAPACITY;
     size_t tokensCount = 0;
@@ -98,13 +107,29 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 token.type = NUMBER;
                 token.text = text + token.index;
                 token.textLength = 0;
-                while (isdigit(text[token.index])) {
-                    ++token.index;
-                    ++token.column;
+                while (isdigit(text[token.index + token.textLength])) {
                     ++token.textLength;
                 }
-                token.index -= token.textLength;
-                token.column -= token.textLength;
+                appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+                token.index += token.textLength;
+                token.column += token.textLength;
+                break;
+            case 'A'...'Z':
+            case 'a'...'z':
+            case '_':
+                // Lex an identifier.
+                token.type = IDENTIFIER;
+                token.text = text + token.index;
+                token.textLength = 0;
+                while (isalnum(text[token.index + token.textLength])) {
+                    ++token.textLength;
+                }
+                // Check if it's a keyword and change its type if it is.
+                for (size_t i = 0; i < keywordsCount; ++i) {
+                    if (strcmp(token.text, keywords[i].identifier) == 0) {
+                        token.type = keywords[i].type;
+                    }
+                }
                 appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
                 token.index += token.textLength;
                 token.column += token.textLength;
