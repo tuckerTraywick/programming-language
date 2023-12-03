@@ -15,7 +15,10 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
     };
 
     for (size_t i = 0; i < tokensCount; ++i) {
-        char *type = types[tokens[i].type];
+        char *type = tokens[i].text;
+        if (tokens[i].type < FROM) {
+            type = types[tokens[i].type];
+        }
         char *text = tokens[i].text;
         size_t textLength = tokens[i].textLength;
         if (tokens[i].type == NEWLINE) {
@@ -27,26 +30,26 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
 }
 
 void testReadFile(void) {
-    puts("----");
+    // puts("----");
     FILE *file = fopen("test/example.txt", "r");
     test(file != NULL && "Failed to open file.");
     char *text = readFile(file);
     test(text != NULL && "Failed to read file.");
-    printf("file text:\n%s\n", text);
+    // printf("file text:\n%s\n", text);
 
     fclose(file);
     free(text);
-    puts("");
+    // puts("");
 }
 
 void testOpenAndReadFile(void) {
-    puts("----");
+    // puts("----");
     char *text = openAndReadFile("test/example.txt");
     test(text != NULL && "Failed to read file.");
-    printf("file text:\n%s\n", text);
+    // printf("file text:\n%s\n", text);
 
     free(text);
-    puts("");
+    // puts("");
 }
 
 void testLexString(void) {

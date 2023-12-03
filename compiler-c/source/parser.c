@@ -63,12 +63,98 @@ char *openAndReadFile(char *path) {
 }
 
 struct LexingResult lexString(char *text, bool ignoreNewlines) {
-    // A mapping of keyword identifiers to their token types.
-    static struct KeywordMapping keywords[] = {
-        {"from", FROM},
-        {"import", IMPORT},
+    // A mapping of keywords to their token types.
+    static char* keywords[] = {
+        "package",
+        "from",
+        "import",
+        "pub",
+        "priv",
+        "const",
+        "mut",
+        "owned",
+        "shared",
+        "weak",
+        "var",
+        "fun",
+        "struct",
+        "alias",
+        "cases",
+        "embed",
+        "impl",
+        "pass",
+        "return",
+        "yield",
+        "break",
+        "continue",
+        "if",
+        "else",
+        "switch",
+        "case",
+        "default",
+        "fallthrough",
+        "for",
+        "in",
+        "until",
+        "thru",
+        "by",
+        "do",
+        "while",
+        "as",
+        "is",
+        "isnot",
+        "and",
+        "or",
+        "xor",
+        "not",
+        "true",
+        "false",
     };
     static size_t keywordsCount = (sizeof keywords)/(sizeof keywords[0]);
+
+    // A mapping of operators to their token types.
+    static char *operators[] = {
+        "+=",
+        "+",
+        "-=",
+        "->",
+        "-",
+        "*=",
+        "*",
+        "/=",
+        "/",
+        "%=",
+        "%",
+        "&=",
+        "&",
+        "|=",
+        "|",
+        "^=",
+        "^",
+        "~=",
+        "~",
+        "<<=",
+        "<<",
+        "<=",
+        "<",
+        ">>=",
+        ">>",
+        ">=",
+        ">",
+        "==",
+        "=>",
+        "=",
+        "!=",
+        ".",
+        ",",
+        "(",
+        ")",
+        "[",
+        "]",
+        "{",
+        "}",
+    };
+    static size_t operatorsCount = (sizeof operators)/(sizeof operators[0]);
 
     assert(text != NULL && "Must pass a string.");
     size_t tokensCapacity = TOKENS_INITIAL_CAPACITY;
@@ -126,8 +212,8 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 }
                 // Check if it's a keyword and change its type if it is.
                 for (size_t i = 0; i < keywordsCount; ++i) {
-                    if (strcmp(token.text, keywords[i].identifier) == 0) {
-                        token.type = keywords[i].type;
+                    if (strcmp(token.text, keywords[i]) == 0) {
+                        token.type = i + PACKAGE;
                     }
                 }
                 appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
