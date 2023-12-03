@@ -1,0 +1,259 @@
+public package animals;
+from std.io import printLine;
+
+public abstract struct Animal {
+    public string name;
+    public uint age;
+}
+
+public struct Dog {
+    Animal;
+    public string tag;
+}
+
+public struct Cat {
+    Animal;
+    public string breed;
+}
+
+public void makeNoise(*Animal animal);
+
+public void makeNoise(*Dog dog) {
+    printLine("woof");
+}
+
+public void makeNoise(*Cat cat) {
+    printLine("meow");
+}
+
+void main() {
+    mut *Animal pet = &Dog();
+    makeNoise(pet);
+    pet = &Cat();
+    pet->makeNoise();
+}
+
+
+public package moreAnimals;
+import std.io.printLine;
+from animals import *;
+
+public struct Hamster {
+    Animal;
+    public float wheelSize;
+}
+
+public void makeNoise(*Hamster hamster) {
+    printLine("squeak");
+}
+
+public void walk(*Animal animal);
+
+public void walk(*Hamster hamster) {
+    printLine("running on wheel");
+}
+
+public void walk(*Dog dog) {
+    printLine("going on walk");
+}
+
+public void walk(*Cat cat) {
+    printLine("running around the house");
+}
+
+
+
+
+package Shapes;
+from std.math import pi, pow;
+
+struct Shape cases {
+    struct Rectangle {
+        ufloat64 width, height;
+    }
+
+    struct Triangle {
+        ufloat64 base, height;
+    }
+
+    struct Circle {
+        ufloat64 radius;
+    }
+}
+
+ufloat64 area(Shape shape);
+
+ufloat64 area(Shape.Rectangle rectangle) {
+    return rectangle.width*rectangle.height;
+}
+
+ufloat64 area(Shape.Triangle triangle) {
+    return 0.5*triangle.base*triangle.height;
+}
+
+ufloat64 area(Shape.Circle circle) {
+    return pi*pow(circle.radius, 2);
+}
+
+void main() {
+    mut Shape shape = .Rectangle(2, 5);
+    printLine(area(shape));
+    shape = .Triangle(2, 5);
+    printLine(area(shape));
+}
+
+
+
+
+public package physics;
+import std.operations;
+
+public struct Entity {
+    public Vector position, velocity, acceleration;
+} cases {
+    struct Circle {
+        public ufloat64 radius;
+    }
+
+    struct Mesh {
+        public owned []Vector vertices;
+    }
+}
+
+public struct Vector {
+    std.operations.Arithmetic, .Equality;
+    public float64 x, y, z;
+}
+
+public ufloat64 length(*Vector vector);
+
+public void update(*mut Entity entity);
+public void update(*mut Entity.Circle entity);
+public void update(*mut Entity.Mesh entity);
+
+
+
+
+public package std.math;
+
+public const ufloat64 pi;
+public const ufloat64 tau;
+public const ufloat64 e;
+public const ufloat64 inf;
+
+public T abs<type T: Number>(T x);
+public T min<type T: Number>([]T values);
+public T min<type T: Number>(T.. values);
+
+public float radToDeg(float x);
+public float64 radToDeg(float64 x);
+public float degToRad(float x);
+public float64 degToRad(float64 x);
+
+public float sin(float x);
+public float64 sin(float64 x);
+public float sinD(float x);
+public float64 sinD(float64 x);
+
+
+
+
+public package std.language;
+
+public struct TokenType cases {
+    default invalid,
+    newline, number, character, .string, identifier,
+}
+
+public struct Token {
+    public TokenType type;
+    public string text;
+    public usize index;
+    public usize row, column;
+}
+
+public struct LexingError {
+    error;
+    public string message;
+    public usize index;
+    public usize row, column;
+}
+
+public struct LexingResult = owned []Token or LexingError;
+
+public LexingResult or FileError lexFile(string path);
+public LexingResult or FileError lexFile(File file);
+public LexingResult lex(string text);
+
+
+
+
+public package std.flags;
+from std.io import printLine;
+
+void add() {
+    setDescription("Adds 1 or 2 numbers.");
+    setUsage("add [options] <number1> [number2]");
+    mut bool help;
+    mut int number1;
+    mut optional int number2 = .Some(1); // default value
+    addFlag(&help, {"h", "help"}, "Print this help message and exit.");
+    addFlag(&number1, "number1", "The first number to add.");
+    addFlag(&number2, "number2", "The second number to add. Default is 1.");
+
+    optional FlagParsingError error = parseFlags(args);
+    if error {
+        printLine(error.message);
+        return;
+    }
+}
+
+void gcc() {
+    mut []string files;
+    mut []string outputPath;
+    addArgs(&files, min=1);
+    addFlag(&outputPath, "o", "The path of the output.", count=1); // trailing argument
+    parseFlags();
+    string path = outputPath[0];
+}
+
+void git() {
+    mut bool help;
+    addFlag(&help, {"h", "help"});
+
+    mut bool clone;
+    mut []string cloneArgs;
+    mut optional int depth = 3;
+    addCommand(&clone, "clone");
+    addArgs(&cloneArgs, count=1);
+    addFlag(&depth, "depth");
+    
+    mut bool add;
+    mut []string addArgs;
+    addCommand(&add, "add");
+    addArgs(&addArgs, min=1);
+}
+
+
+
+
+struct Direction cases {
+    n, s, e, w,
+}
+
+struct Color {
+    uint8 r, g, b;
+} cases {
+    default struct Rgb,
+    red = (255, 0, 0),
+    green = (0, 255, 0),
+    blue = (0, 0, 255),
+}
+
+
+
+
+void generic<type T>();
+void generic<int>();
+void generic<(type T, type U): Trait>();
+void generic<&type T>

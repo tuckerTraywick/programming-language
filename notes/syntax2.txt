@@ -1,0 +1,108 @@
+package animals
+from std.io import printLine
+
+struct Animal {
+    name string
+    age uint
+}
+
+struct Dog {
+    Animal
+    tag string
+}
+
+struct Cat {
+    Animal
+    breed string
+}
+
+func makeNoise(animal &Animal)
+
+func makeNoise(dog &Cat) {
+    printLine("woof")
+}
+
+func makeNoise(cat &Cat) {
+    printLine("meow")
+}
+
+func main() {
+    var pet &Animal = &Dog()
+    makeNoise(pet)
+    pet = &Cat()
+    makeNoise(pet)
+}
+
+
+package moreAnimals
+from std.io import printLine
+from animals import *
+
+struct Hamster {
+    Animal
+    wheelRadius ufloat
+}
+
+func makeNoise(hamster &Hamster) {
+    printLine("squeak")
+}
+
+func exercise(animal &Animal)
+
+func exercise(hamser &Hamster) {
+    printLine("running on wheel")
+}
+
+func exercise(dog &Dog) {
+    printLine("walking")
+}
+
+func exercise(cat &Cat) {
+    printLine("playing with feather")
+}
+
+
+
+
+package stringify
+
+struct ToString
+func toString(object &ToString) string
+
+
+package test
+import stringify
+
+struct ToStringOrInt {
+    ToString
+}
+func toInt(object &ToStringOrInt) int
+
+struct Pair {
+    a, b int
+}
+
+func toString(pair &Pair) => f"({pair.a}, {pair.b})"
+
+func toInt(pair &Pair) => pair.a + pair.b
+
+
+
+
+package myLibrary
+struct Thing
+
+package plugin
+form myLibrary import *
+func foo(&Thing) {} // sizeof(&Thing) = 8
+
+package main
+from myLibrary import *
+from plugin import *
+func virtual(&Thing) // sizeof(&Thing) = 16
+func main() {
+    hotLoad(plugin)
+    var thing &Thing
+    foo(thing)
+    virtual(thing)
+}

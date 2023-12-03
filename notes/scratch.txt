@@ -1,0 +1,604 @@
+Object/library file format:
+symbol table
+data
+types
+variables
+functions
+
+
+public package myPackage
+import std.io.printLine
+
+public struct Point {
+    public var x, y int
+    var z int
+}
+
+public var a int = 1
+
+public func f() {
+    printLine("Hello")
+}
+
+var b int = 1
+
+priv var c int = 1
+
+
+symbols:
+    myPackage
+        .Point: public struct {
+            size = 12
+            alignment = 4
+            x: public field {
+                size = 4
+                alignment = 4
+                offset = 0
+                type = int32
+            }
+            y: public field {
+                size = 4
+                alignment = 4
+                offset = 4
+                type = int32
+            }
+            z: field {
+                size = 4
+                alignment = 4
+                offset = 8
+                type = int32
+            }
+        }
+        .a: public var {
+            size = 4
+            alignment = 4
+            type = int32
+            address = 0x.. # Local to start of file.
+        }
+        .f: public func {
+            parameterTypes = ()
+            returnType = ()
+            address = 0x..
+        }
+        .b: var int32 {
+            size = 4
+            alignment = 4
+            type = int32
+            address = 0x..
+        }
+        .c: priv var int32 {
+            size = 4
+            alignment = 4
+            type = int32
+            address = 0x..
+        }
+...
+data:
+    hello: "Hello, world!"
+functions:
+    f:
+        pushu64 hello
+        call <std.io.printLine>
+
+
+
+
+- 64-bit stack machine
+- Load-store
+- Operands always on the stack, besides the push instructions
+
+Registers:
+    ip: instruction pointer
+    fp: frame pointer, points to the FIRST byte of the frame
+    sp: stack pointer, points to the LAST byte of the stack
+
+Instructions:
+    opcode: 1 byte (aligned to 1 byte)
+    value to push: up to 8 bytes (also aligned to 1 byte)
+
+
+
+
+func add(a, b int) int {
+    return a + b
+}
+
+func main() {
+    add(1, 2)
+}
+
+add(a int32, b int32) int32:
+    pushu64 offset(a)
+    loada32
+    pushu64 offset(b)
+    loada32
+    addi32
+    pushu64 offset(return)
+    storea32
+    return64
+
+main():
+    pushi32
+    pushi32 1
+    pushi32 2
+    pushu64 &add
+    call
+    pop64
+    return0
+
+high
+rp
+sp
+fp
+ip
+2
+1
+0
+low
+
+
+var a mut int = 1
+var b int = 2
+a = b
+------
+pushi32 1
+pushi32 2
+pushu64 offset(b)
+loada32
+pushu64 offset(a)
+storea32
+
+
+var a mut int32 = 1
+var b &mut int32 = &a
+*b = 2
+------
+pushi32 1
+pushu64 0
+pushu64 offset(a)
+loadap
+pushu64 offset(b)
+storea64
+pushi32 2
+pushu64 offset(b)
+loada64
+storep32
+
+
+struct Thing {
+    var a int32
+    var b int32
+}
+var thing Thing = (1, 2)
+var b int32 = thing.b
+------
+pushi32 1
+pushi32 2
+pushi32 0
+pushu64 offset(thing.b)
+loada32
+pushu64 offset(b)
+store32
+
+
+var thing &Thing
+var b = thing.b
+------
+pushu64 0x...
+pushi32 0
+pushu64 offset(thing)
+loada64
+pushu64 offset(Thing.b)
+addu64
+loadp32
+pushu64 offset(b)
+storea32
+
+
+var a [3]int32 = [1, 2, 3]
+var i usize = 1
+var b int32 = a[i]
+------
+pushi32 1
+pushi32 2
+pushi32 3
+pushu64 1
+pushu64 0
+pushu64 offset(a)
+loadap
+pushu64 offset(i)
+loada64
+addu64
+loadp32
+loadu64 offset(b)
+storea32
+
+
+
+
+Instruction set:
+pushN value
+
+popN
+<size> pop
+
+<offset> loadaN
+<offset> <size> loada
+<offset> loadap
+
+<offset> loadsN
+<offset> <size> loads
+<offset> loadsp
+
+<pointer> loadpN
+<pointer> <size> loadp
+
+<value> <offset> storeaN
+<value> <offset> <size> storea
+
+<value> <offset> storesN
+<value> <offset> <size> stores
+
+<value> <pointer> storepN
+<value> <pointer> <size> storep
+
+<source pointer> <dest pointer> copyN
+<source pointer> <dest pointer> <size> copy
+
+<size> malloc
+
+<size> calloc
+
+<pointer> <size> realloc
+
+<pointer> free
+
+<address> jump
+
+<condition> <address> jumpt
+
+<condition> address> jumpf
+
+<address> call
+
+returnN
+<argSize> return
+
+<x> posT
+<x> negT
+<a> <b> addT
+<a> <b> subT
+<a> <b> mulT
+<a> <b> divT
+<a> <b> modT
+
+<x> bnotT
+<a> <b> bandT
+<a> <b> borT
+<a> <b> bxorT
+
+<a> <b> lshiftT
+<a> <b> rshiftT
+<x> notT
+<a> <b> andT
+<a> <b> orT
+<a> <b> xorT
+
+<a> <b> eqT
+<a> <b> neT
+<a> <b> gtT
+<a> <b> gteT
+<a> <b> ltT
+<a> <b> lteT
+
+
+
+
+public package myPackage
+import std.io.printLine
+
+public func sayGreeting() int {
+    printLine(1)
+}
+
+myPackage:
+    unlinked symbols:
+        std.io.printLine:
+            sayGreeting+2
+
+    sayGreeting:
+        pushi32 1
+        call _
+
+
+
+
+# No separate keyword for implementing a method because you will should be able to
+# implement a new method for an already compiled struct.
+
+# One implementation per method name per type, you cannot implement the same method differently
+# for different interfaces.
+
+# Is structural typing compatible with padding??
+# If a struct has compatible cases, can it be cast???
+
+# No structural typing, just "embed" and "in".
+
+# "embed/impl in" only works if the alignment is compatible.
+
+# No postfix operators because they're too hard to distinguish from infix ones.
+
+# Prefix operators are all higher precedence than infix operators (besides . [] ()).
+
+# No right associative operators.
+
+highest
+    literal
+    f(x) x[i] a.b x->f
+    prefix + - & * ~ not
+    * / %
+    + -
+    << >>
+    &
+    | ^
+    as
+    is isnot == != > >= < <=
+    and or xor
+lowest
+
+
+
+
+package animals
+import std.io.printLine
+
+struct Animal {
+    name string
+    age uint
+    makeNoise(this)
+}
+
+struct Dog {
+    Animal
+    tag string
+}
+
+struct Cat {
+    Animal
+    breed string
+}
+
+func makeNoise(dog &Dog) {
+    printLine("woof")
+}
+
+func makeNoise(cat &Cat) {
+    printLine("meow")
+}
+
+func main() {
+    var pet mut &Animal = &Dog("fido", 2, "123 doggy lane")
+    pet.makeNoise()
+    pet = &Cat("felix", 2, "tabby")
+    pet.makeNoise()
+}
+
+
+
+
+package colors
+
+struct Color {
+    r, g, b const uint8
+} cases {
+    default struct Rgb
+    black = (0, 0, 0)
+    white = (255, 255, 255)
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
+}
+
+
+
+
+package shapes
+import std.io.printLine
+import std.math.pi, .pow
+
+struct Shape {
+    color [3]uint8
+} cases {
+    struct Circle {
+        radius ufloat64
+    }
+
+    struct Rectangle {
+        width, height ufloat64
+    }
+
+    struct Triangle {
+        base, height ufloat64
+    }
+}
+
+func area(shape &Shape)
+
+func area(circle &Shape.Circle) {
+    return pi*pow(circle.radius, 2)
+}
+
+func area(rectangle &Shape.Rectanlge) {
+    return rectangle.width*rectangle.height
+}
+
+func area(triangle &Shape.Triangle) {
+    return 0.5*triangle.base*triangle.height
+}
+
+func main() {
+    var shape mut Shape = .Rectangle(2, 5)
+    printLine(shape.area()) # Prints "10".
+    shape = .Triangle(2, 5)
+    printLine(shpae.area()) # Prints "5".
+}
+
+
+
+
+public package physics
+
+public struct Entity {
+    public position, velocity acceleration Vector
+} cases {
+    struct Circle {
+        public radius ufloat64
+    }
+
+    struct Mesh {
+        public vertices owned []Vector
+    }
+}
+
+public func update(entity &mut Entity, delta ufloat64)
+public func update(entity &mut Entity.Circle, delta) {}
+public func update(entity &mut Entity.Mesh, delta) {}
+
+
+
+
+public package language
+
+public struct TokenType {
+    default invalid
+    newline, number, character, .string, identifier
+}
+
+public struct Token {
+    public text string
+    public index usize
+    public row, column usize
+}
+
+public struct LexingError {
+    error
+    public message string
+    public index usize
+    public row, column usize
+}
+
+public struct LexingResult = []Token or LexingError
+
+public func lexFile(path string) LexingResult or FileError
+public func lexFile(file File) LexingResult or FileError
+public func lex(text string) LexingResult
+
+
+public package language
+
+public struct NodeType {
+    program, importStatement, ...
+}
+
+public struct Node {
+    public type NodeType
+    public children [](owned &Node or Token)
+}
+
+public struct ParsingError {
+    error
+    public message string
+    public index usize
+}
+
+public struct ParsingResult = owned &Node or ParsingError
+
+public func parseFile(path string) ParsingResult or FileError
+public func parseFile(file File) ParsingResult or FileError
+public func parse(text string) ParsingResult
+
+
+
+
+package std.math
+import std.types.Number
+
+public var pi float64
+public var tau float64
+public var e float64
+public var inf float64
+public var deg float64
+public var rad float64
+
+public func abs<type T: Number>(x T) T
+public func min<type T: Number>(values []T) T
+public func max<type T: Number>(values []T) T
+...
+
+public func sinD(x float64) float64
+public func sinR(x float64) float64
+public func cosD(x float64) float64
+...
+
+
+
+
+public package std.flags
+import std.types.Primitive
+
+public func setDescription(message string)
+
+public func setUsage(message string)
+
+public func parseFlags()
+
+public func addFlag<type T: Primitive>(value &mut T, name string, description string)
+
+public func addFlag<type T: Primitive>(value &mut, names []string, description string)
+
+public func printHelp()
+
+private var flags map<string, Primitive>
+
+
+package add1
+import std.flags.*
+import std.io.printLine
+
+func main() {
+    setDescription("Adds one to a number.")
+    setUsage("add1 [options] --number=<integer>")
+    var help = addFlag<bool>(["h", "help"], "Print this help message.")
+    var number = addFlag<int>("number", "The number to add 1 to.")
+    var path = addFlag<bool>("p", "the path of the file")
+    var error = parseFlags()
+
+    if error {
+        printLine(error.message)
+        return
+    }
+
+    if help {
+        printHelp()
+        return
+    }
+    
+    printLine(f"{number} + 1 = {number + 1}")
+}
+
+
+
+
+public package std.io
+
+public struct SerializationError = error
+
+public struct DeserializationError = error
+
+public struct Serialize
+public func serialize(this &Serialize, file File) optional (SerializationError or FileWriteError)
+
+public struct Deserialize
+public func deSerialize(this &mut Deserialize, file File) optional (SerializationError or FileWriteError)
+
+public struct Serializeable = Serialize and Deserialize

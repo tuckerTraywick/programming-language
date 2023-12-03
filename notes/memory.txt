@@ -1,0 +1,78 @@
+public: outside package, private: only inside file, default: only inside package
+inline: macro, can't take address
+static: lives for entire runtime
+const, mut
+owned, shared, weak, static, local: lives on the stack (can't escape)
+
+*int f() {
+    local *int a = &1;
+    return a; // Lifetime error: Can't return a local pointer.
+}
+
+void f() {
+    void g(local *int x) {
+        printLine(*x);
+    }
+    int a = 1;
+    g(&a); // Allowed because `a` outlives `g()`'s scope.
+}
+
+void f() {
+    static int a = 1;
+}
+
+
+
+
+[]int array = {1, 2, 3};
+array.length // 3
+array.capacity // Attribute error: unowned slices do not have a capacity.
+
+owned []int array = new(3);
+array.length // 3
+array.capacity // std.memory.blockSize(array)/sizeof(int)
+
+package std.collections;
+public const ufloat arrayGrowthRate = 1.5;
+// You can append to a mutable owned or shared slice because heap blocks store their size.
+public void append<type T>(&mut owned []T array, T value, ufloat growthRate=arrayGrowthRate) {
+    // Reallocate `array` if the block it points to ran out of space.
+    if ((*array).length + 1)*sizeof(T) > std.memory.blockSize(*array) {
+        *array = new [array.length*arrayGrowthRate]T(*array);
+    }
+    std.memory.setLength(array, (*array).length + 1);
+    (*array)[array.length] = value;
+}
+
+
+
+
+public package language.heap;
+
+public const usize pageSize;
+
+public struct HeapBlockHeader {
+    public usize size;
+    public usize strongPointers;
+    public usize weakPointers;
+    *HeapBlockHeader previous, next;
+    // [data]
+}
+
+
+
+
+auto block = new struct {
+    int a = 1;
+    int b = 2;
+};
+printLine(block.a, block.b);
+drop block;
+
+
+
+
+var a owned &int = new(1) // new(value)
+var a owned []int = new(3) // new(length)
+var a owned []owned []int = new<owned []owned []int>(3, 4)
+var a owned []owned []int = new(3, 4)

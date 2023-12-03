@@ -7,11 +7,11 @@
 static void printTokens(struct Token *tokens, size_t tokensCount) {
     static char *types[] = {
         [INVALID] = "invalid",
+        [NEWLINE] = "\\n",
         [NUMBER] = "number",
         [CHARACTER] = "character",
         [STRING] = "string",
         [IDENTIFIER] = "identifier",
-        [NEWLINE] = "\\n",
     };
 
     for (size_t i = 0; i < tokensCount; ++i) {

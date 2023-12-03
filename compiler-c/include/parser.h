@@ -15,11 +15,11 @@
 // Represents the type of a token.
 enum TokenType {
     INVALID,
+    NEWLINE,
     NUMBER,
     CHARACTER,
     STRING,
     IDENTIFIER,
-    NEWLINE,
 
     PACKAGE,
     FROM,
