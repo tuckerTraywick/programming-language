@@ -72,7 +72,7 @@ drop block;
 
 
 
-var a owned &int = new(1) // new(value)
-var a owned []int = new(3) // new(length)
-var a owned []owned []int = new<owned []owned []int>(3, 4)
-var a owned []owned []int = new(3, 4)
+owned *int a = new(1); // new(value)
+owned []int a = new(3); // new(length)
+owned []owned []int a = new<owned []owned []int>(3, 4);
+owned []owned []int a = new(3, 4);

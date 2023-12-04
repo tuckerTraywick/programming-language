@@ -1,36 +1,35 @@
-package animals
+public package animals
 from std.io import printLine
 
-struct Animal {
-    name string
-    age uint
+public struct Animal {
+    public name string
+    public age uint
+    public makeNoise(this)
 }
 
-struct Dog {
+public struct Dog {
     Animal
-    tag string
+    public tag string
 }
 
-struct Cat {
+public struct Cat {
     Animal
-    breed string
+    public breed string
 }
 
-func makeNoise(animal &Animal)
-
-func makeNoise(dog &Cat) {
+public func makeNoise(dog &Cat) {
     printLine("woof")
 }
 
-func makeNoise(cat &Cat) {
+public func makeNoise(cat &Cat) {
     printLine("meow")
 }
 
-func main() {
+public func main() {
     var pet &Animal = &Dog()
-    makeNoise(pet)
+    pet.makeNoise()
     pet = &Cat()
-    makeNoise(pet)
+    pet.makeNoise()
 }
 
 
@@ -38,8 +37,12 @@ package moreAnimals
 from std.io import printLine
 from animals import *
 
+struct Pet {
+    walk(this)
+}
+
 struct Hamster {
-    Animal
+    Animal, Pet
     wheelRadius ufloat
 }
 
@@ -47,62 +50,14 @@ func makeNoise(hamster &Hamster) {
     printLine("squeak")
 }
 
-func exercise(animal &Animal)
-
-func exercise(hamser &Hamster) {
+func walk(hamser &Hamster) {
     printLine("running on wheel")
 }
 
-func exercise(dog &Dog) {
+func walk(dog &Dog) {
     printLine("walking")
 }
 
-func exercise(cat &Cat) {
-    printLine("playing with feather")
-}
-
-
-
-
-package stringify
-
-struct ToString
-func toString(object &ToString) string
-
-
-package test
-import stringify
-
-struct ToStringOrInt {
-    ToString
-}
-func toInt(object &ToStringOrInt) int
-
-struct Pair {
-    a, b int
-}
-
-func toString(pair &Pair) => f"({pair.a}, {pair.b})"
-
-func toInt(pair &Pair) => pair.a + pair.b
-
-
-
-
-package myLibrary
-struct Thing
-
-package plugin
-form myLibrary import *
-func foo(&Thing) {} // sizeof(&Thing) = 8
-
-package main
-from myLibrary import *
-from plugin import *
-func virtual(&Thing) // sizeof(&Thing) = 16
-func main() {
-    hotLoad(plugin)
-    var thing &Thing
-    foo(thing)
-    virtual(thing)
+func walk(cat &Cat) {
+    printLine("going to litterbox")
 }

@@ -295,7 +295,7 @@ returnN
 
 
 public package myPackage
-import std.io.printLine
+from std.io import printLine
 
 public func sayGreeting() int {
     printLine(1)
@@ -350,7 +350,7 @@ lowest
 
 
 package animals
-import std.io.printLine
+from std.io import printLine
 
 struct Animal {
     name string
@@ -404,7 +404,7 @@ struct Color {
 
 package shapes
 import std.io.printLine
-import std.math.pi, .pow
+from std.math import pi, pow
 
 struct Shape {
     color [3]uint8
@@ -450,6 +450,7 @@ public package physics
 
 public struct Entity {
     public position, velocity acceleration Vector
+    public update(mut this, delta ufloat64)
 } cases {
     struct Circle {
         public radius ufloat64
@@ -460,7 +461,6 @@ public struct Entity {
     }
 }
 
-public func update(entity &mut Entity, delta ufloat64)
 public func update(entity &mut Entity.Circle, delta) {}
 public func update(entity &mut Entity.Mesh, delta) {}
 
@@ -481,7 +481,7 @@ public struct Token {
 }
 
 public struct LexingError {
-    error
+    Error
     public message string
     public index usize
     public row, column usize
@@ -502,11 +502,11 @@ public struct NodeType {
 
 public struct Node {
     public type NodeType
-    public children [](owned &Node or Token)
+    public children owned [](owned &Node or Token)
 }
 
 public struct ParsingError {
-    error
+    Error
     public message string
     public index usize
 }
@@ -521,7 +521,7 @@ public func parse(text string) ParsingResult
 
 
 package std.math
-import std.types.Number
+from std.types import Number
 
 public var pi float64
 public var tau float64
@@ -544,7 +544,7 @@ public func cosD(x float64) float64
 
 
 public package std.flags
-import std.types.Primitive
+from std.types import Primitive
 
 public func setDescription(message string)
 
@@ -562,8 +562,8 @@ private var flags map<string, Primitive>
 
 
 package add1
-import std.flags.*
-import std.io.printLine
+from std.flags import *
+from std.io import printLine
 
 func main() {
     setDescription("Adds one to a number.")
@@ -591,14 +591,16 @@ func main() {
 
 public package std.io
 
-public struct SerializationError = error
+public struct SerializationError = Error
 
-public struct DeserializationError = error
+public struct DeserializationError = Error
 
-public struct Serialize
-public func serialize(this &Serialize, file File) optional (SerializationError or FileWriteError)
+public struct Serialize {
+    public serialize(this, file File) optional (SerializationError or FileWriteError)
+}
 
-public struct Deserialize
-public func deSerialize(this &mut Deserialize, file File) optional (SerializationError or FileWriteError)
+public struct Deserialize {
+    public deSerialize(mut this, file File) optional (SerializationError or FileWriteError)
+}
 
 public struct Serializeable = Serialize and Deserialize

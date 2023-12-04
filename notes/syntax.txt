@@ -1,9 +1,10 @@
 public package animals;
 from std.io import printLine;
 
-public abstract struct Animal {
+public struct Animal {
     public string name;
     public uint age;
+    public void makeNoise(*this);
 }
 
 public struct Dog {
@@ -16,8 +17,6 @@ public struct Cat {
     public string breed;
 }
 
-public void makeNoise(*Animal animal);
-
 public void makeNoise(*Dog dog) {
     printLine("woof");
 }
@@ -28,9 +27,9 @@ public void makeNoise(*Cat cat) {
 
 void main() {
     mut *Animal pet = &Dog();
-    makeNoise(pet);
+    pet.makeNoise();
     pet = &Cat();
-    pet->makeNoise();
+    pet.makeNoise();
 }
 
 
@@ -38,16 +37,19 @@ public package moreAnimals;
 import std.io.printLine;
 from animals import *;
 
-public struct Hamster {
+public struct Pet {
     Animal;
+    void walk(*this);
+}
+
+public struct Hamster {
+    Pet;
     public float wheelSize;
 }
 
 public void makeNoise(*Hamster hamster) {
     printLine("squeak");
 }
-
-public void walk(*Animal animal);
 
 public void walk(*Hamster hamster) {
     printLine("running on wheel");
@@ -67,7 +69,9 @@ public void walk(*Cat cat) {
 package Shapes;
 from std.math import pi, pow;
 
-struct Shape cases {
+struct Shape{
+    ufloat64 area(this);
+} cases {
     struct Rectangle {
         ufloat64 width, height;
     }
@@ -80,8 +84,6 @@ struct Shape cases {
         ufloat64 radius;
     }
 }
-
-ufloat64 area(Shape shape);
 
 ufloat64 area(Shape.Rectangle rectangle) {
     return rectangle.width*rectangle.height;
@@ -97,9 +99,9 @@ ufloat64 area(Shape.Circle circle) {
 
 void main() {
     mut Shape shape = .Rectangle(2, 5);
-    printLine(area(shape));
+    printLine(shape.area());
     shape = .Triangle(2, 5);
-    printLine(area(shape));
+    printLine(shape.area());
 }
 
 
@@ -110,6 +112,7 @@ import std.operations;
 
 public struct Entity {
     public Vector position, velocity, acceleration;
+    public void update(*mut this);
 } cases {
     struct Circle {
         public ufloat64 radius;
@@ -127,7 +130,6 @@ public struct Vector {
 
 public ufloat64 length(*Vector vector);
 
-public void update(*mut Entity entity);
 public void update(*mut Entity.Circle entity);
 public void update(*mut Entity.Mesh entity);
 
@@ -173,7 +175,7 @@ public struct Token {
 }
 
 public struct LexingError {
-    error;
+    Error;
     public string message;
     public usize index;
     public usize row, column;
