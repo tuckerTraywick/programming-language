@@ -1,1 +1,1 @@
-12 34 asdf 5 vara from
+var a int = 1

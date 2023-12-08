@@ -1,8 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include <stdio.h> // stdout
+#include "parser.h"
 #define TEST_IMPL
 #include "test.h"
-#include "parser.h"
+#include "log.h"
 
 static void printTokens(struct Token *tokens, size_t tokensCount) {
     static char *types[] = {
@@ -25,39 +25,31 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
             text = "\\n";
             textLength = 2;
         }
-        printf("%zu %s '%.*s' length=%zu, index=%zu\n", i, type, (int)textLength, text, tokens[i].textLength, tokens[i].index);
+        logfDebug("%zu %s '%.*s' length=%zu, index=%zu", i, type, (int)textLength, text, tokens[i].textLength, tokens[i].index);
     }
 }
 
 void testReadFile(void) {
-    // puts("----");
     FILE *file = fopen("test/example.txt", "r");
-    test(file != NULL && "Failed to open file.");
+    assert(file != NULL && "Failed to open file.");
     char *text = readFile(file);
-    test(text != NULL && "Failed to read file.");
-    // printf("file text:\n%s\n", text);
-
+    assert(text != NULL && "Failed to read file.");
     fclose(file);
     free(text);
-    // puts("");
 }
 
 void testOpenAndReadFile(void) {
-    // puts("----");
     char *text = openAndReadFile("test/example.txt");
-    test(text != NULL && "Failed to read file.");
-    // printf("file text:\n%s\n", text);
-
+    assert(text != NULL && "Failed to read file.");
+    logfDebug("\nfile text:\n%s", text);
     free(text);
-    // puts("");
 }
 
 void testLexString(void) {
-    puts("----");
     char *text = openAndReadFile("test/example.txt");
-    test(text != NULL && "Failed to read file.");
+    assert(text != NULL && "Failed to read file.");
     struct LexingResult result = lexString(text, false);
-    printf("tokens = %p, tokensCount = %zu, errorMessages = %p, errorMessagesCount = %zu\n",
+    logfDebug("tokens=%p, tokensCount=%zu, errorMessages=%p, errorMessagesCount=%zu",
         (void*)result.tokens,
         result.tokensCount,
         (void*)result.errorMessages,
@@ -67,14 +59,15 @@ void testLexString(void) {
 
     free(text);
     destroyLexingResult(&result);
-    puts("");
 }
 
 int main(void) {
+    suiteOut = testOut = assertOut = resultsOut = stdout;
+    debugOut = stdout;
     beginTesting();
-        testReadFile();
-        testOpenAndReadFile();
-        testLexString();
+        runSuite(testReadFile);
+        runSuite(testOpenAndReadFile);
+        runSuite(testLexString);
     endTesting();
     return 0;
 }

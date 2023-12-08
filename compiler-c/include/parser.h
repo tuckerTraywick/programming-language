@@ -108,21 +108,21 @@ enum TokenType {
 // Represents a token lexed from an input stream. Stores information about the token's contents and
 // its position in the string being lexed.
 struct Token {
-    enum TokenType type; // The type of the token.
-    char *text; // The text of the token. NOT null-terminated. UNOWNED, DO NOT FREE.
-    size_t textLength; // The number of characters in the token.
-    size_t index; // The index of the token in the string being lexed.
-    size_t row; // The line number of the token in the string being lexed.
-    size_t column; // The index of the token relative to the start of the line the token is on.
+    enum TokenType type;
+    char *text; // NOT null-terminated. UNOWNED, DO NOT FREE.
+    size_t textLength;
+    size_t index;
+    size_t row; // Line number.
+    size_t column; // Index relative to line start.
 };
 
 // Represents the result of lexing. Stores a list of tokens and possibly a list of error messages.
 // Must be destroyed by `destroyLexingResult()` after use.
 struct LexingResult {
-    struct Token *tokens; // The tokens lexed. `NULL` if no tokens were lexed.
-    size_t tokensCount; // The number of tokens lexed. 0 if no tokens were lexed.
-    char **errorMessages; // The error messages generated while lexing. `NULL` if no errors were encountered.
-    size_t errorMessagesCount; // The number of errors encountered. Can be 0.
+    struct Token *tokens; // `NULL` if no tokens were lexed.
+    size_t tokensCount;
+    char **errorMessages; // `NULL` if no errors were encountered.
+    size_t errorMessagesCount;
 };
 
 // Represents the type of a node.
@@ -133,17 +133,17 @@ enum NodeType {
 
 // Represents a node in a parse tree.
 struct Node {
-    enum NodeType type; // The type of the node.
-    struct Node *children; // The node's children. `NULL` if the node has no children.
-    size_t childrenCount; // The number of children the node has. Can be 0.
+    enum NodeType type;
+    struct Node *children; // `NULL` if the node has no children.
+    size_t childrenCount;
 };
 
 // Represents the result of parsing. Stores a parse tree and possibly a list of error messages. Must
 // be destroyed by `destroyParsingResult()` after use.
 struct ParsingResult {
-    struct Node *tree; // The top node of the syntax tree parsed from the string. `NULL` if a tree wasn't able to be parsed.
-    char **errorMessages; // The error messages generated during parsing. `NULL` if no errors were encountered.
-    size_t errorMessagesCount; // The number of errors encountered. Can be 0.
+    struct Node *tree; // `NULL` if a tree wasn't able to be parsed.
+    char **errorMessages; // `NULL` if no errors were encountered.
+    size_t errorMessagesCount;
 };
 
 // Allocates a string and reads the contents of `file` into it. Returns `NULL` if an error occurred
@@ -179,4 +179,3 @@ void destroyLexingResult(struct LexingResult *result);
 
 // Destroys a `ParsingResult` and deallocates its memory.
 void destroyParsingResult(struct ParsingResult *result);
-

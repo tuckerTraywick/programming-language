@@ -3,7 +3,7 @@
 #include <assert.h> // assert()
 #include <stdio.h> // FILE, fopen(), fclose(), fseek(), frewind(), ftell()
 #include <stdlib.h> // malloc(), realloc(), free()
-#include <ctype.h> // isdigit(), isalpha(), isalnum()
+#include <ctype.h> // isdigit(), isalpha(), isalnum(), ispunct()
 #include <string.h> // strcmp()
 #include "parser.h"
 
@@ -14,15 +14,14 @@ size_t *tokensCount) {
     assert(tokensCapacity != NULL && "Must pass a capacity.");
     assert(tokensCount != NULL && "Must pass a count.");
 
+    // Extend the array if needed.
     if (*tokensCount >= *tokensCapacity) {
-        // Extend the array if needed.
         *tokensCapacity += TOKENS_CAPACITY_INCREMENT;
         struct Token *newTokens = realloc(*tokens, *tokensCapacity);
         assert(newTokens != NULL && "`realloc()` failed.");
         *tokens = newTokens;
     }
 
-    // Append the token to the end of the array.
     (*tokens)[*tokensCount] = *token;
     ++*tokensCount;
 }
@@ -40,14 +39,13 @@ char *readFile(FILE *file) {
     long fileSize = endPosition - startPosition;
     assert(fileSize >= 0 && "Something went wrong while finding file size.");
 
-    // Allocate a string to store the text of the file.
     size_t stringSize = fileSize + 1; // `+ 1` to account for the null terminator.
     char *text = malloc(stringSize);
     assert(text != NULL && "`malloc()` failed.");
 
-    // Read the file into the string and replace the EOF with a null terminator.
     size_t bytesRead = fread(text, 1, stringSize, file);
     assert(bytesRead == fileSize && "Something went wrong while putting the file in a buffer.");
+    // Replace the EOF.
     text[fileSize] = '\0';
     return text;
 }
@@ -162,8 +160,9 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
     struct Token *tokens = malloc(tokensCapacity*(sizeof *tokens));
     assert(tokens != NULL && "`malloc()` failed.");
     struct Token token = {0};
+    bool keepLexing = true;
 
-    while (text[token.index] != '\0') {
+    while (keepLexing && text[token.index] != '\0') {
         char ch = text[token.index];
         switch (ch) {
             case ' ':
@@ -210,20 +209,42 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 while (isalnum(text[token.index + token.textLength])) {
                     ++token.textLength;
                 }
-                // Check if it's a keyword and change its type if it is.
+
                 for (size_t i = 0; i < keywordsCount; ++i) {
                     if (strcmp(token.text, keywords[i]) == 0) {
                         token.type = i + PACKAGE;
+                        break;
                     }
                 }
                 appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
                 token.index += token.textLength;
                 token.column += token.textLength;
                 break;
+            case '!'...'/':
+            case ':'...'@':
+            case '['...'^':
+            case '`':
+            case '{'...'~':
+                // Lex an operator.
+                keepLexing = false;
+                for (size_t i = 0; i < operatorsCount; ++i) {
+                    if (strcmp(token.text, keywords[i]) == 0) {
+                        token.type = i + PLUS_EQUAL;
+                        token.textLength = strlen(keywords[i]);
+                        appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+                        token.index += token.textLength;
+                        token.column += token.textLength;
+                        keepLexing = true;
+                        break;
+                    }
+                }
+                break;
             default:
-                // TODO: Remove this branch or make it generate an error.
-                ++token.index;
-                ++token.column;
+                token.type = INVALID;
+                token.text = text + token.index;
+                token.textLength = 0;
+                appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+                keepLexing = false;
         }
     }
 
