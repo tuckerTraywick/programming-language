@@ -19,7 +19,7 @@ buildsource: buildsourcemessage binary/run
 	@echo
 
 .PHONY: buildtests
-buildtests: buildsource buildtestsmessage binary/test
+buildtests: buildtestsmessage binary/test
 	@echo
 
 buildsourcemessage:

@@ -13,20 +13,20 @@
 void beginTesting(void);
 void endTesting(void);
 
-long *suitesRun;
-long *suitesPassed;
+extern long *suitesRun;
+extern long *suitesPassed;
 
-long *testsRun;
-long *testsPassed;
+extern long *testsRun;
+extern long *testsPassed;
 
-long *assertionsRun;
-long *assertionsPassed;
+extern long *assertionsRun;
+extern long *assertionsPassed;
 
 // These variables need to be set by code that uses this header. Leave unset for no output.
-FILE *suiteOut;
-FILE *testOut;
-FILE *assertOut;
-FILE *resultsOut;
+extern FILE *suiteOut;
+extern FILE *testOut;
+extern FILE *assertOut;
+extern FILE *resultsOut;
 
 #endif // TEST_H
 
@@ -48,7 +48,21 @@ FILE *resultsOut;
 typedef void (*TestFunction)(void);
 
 // Points to the shared memory that holds all of the counters.
-long *testCounters;
+static long *testCounters;
+
+long *suitesRun;
+long *suitesPassed;
+
+long *testsRun;
+long *testsPassed;
+
+long *assertionsRun;
+long *assertionsPassed;
+
+FILE *suiteOut;
+FILE *testOut;
+FILE *assertOut;
+FILE *resultsOut;
 
 __attribute__((unused))
 void beginTesting(void) {

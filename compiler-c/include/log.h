@@ -35,9 +35,21 @@
 #define printfError(string, ...) if (errorOut != NULL) {fprintf(debugOut, (string), __VA_ARGS__);}
 
 // Global variables need to be set by code that uses this header.
+extern FILE *debugOut;
+extern FILE *infoOut;
+extern FILE *warningOut;
+extern FILE *errorOut;
+
+#endif // LOG_H
+
+
+// Implementation
+#ifdef LOG_IMPL
+#undef LOG_IMPL
+
 FILE *debugOut;
 FILE *infoOut;
 FILE *warningOut;
 FILE *errorOut;
 
-#endif // LOG_H
+#endif // LOG_IMPL

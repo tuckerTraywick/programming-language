@@ -1,6 +1,7 @@
 #include <stdio.h> // stdout
 #define TEST_IMPL
 #include "test.h"
+#define LOG_IMPL
 #include "log.h"
 #include "parser.h"
 
@@ -21,7 +22,12 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
             text = "\\n";
             textLength = 2;
         }
-        logfDebug("%zu %d '%.*s' length=%zu, index=%zu", i, tokens[i].type, (int)textLength, text, textLength, tokens[i].index);
+
+        if (tokens[i].type < PACKAGE) {
+            logfDebug("%zu %s '%.*s' length=%zu, index=%zu", i, types[tokens[i].type], (int)textLength, text, textLength, tokens[i].index);
+        } else {
+            logfDebug("%zu '%.*s' length=%zu, index=%zu", i, (int)textLength, text, textLength, tokens[i].index);
+        }
     }
 }
 
