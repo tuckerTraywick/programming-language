@@ -1,8 +1,8 @@
 #include <stdio.h> // stdout
-#include "parser.h"
 #define TEST_IMPL
 #include "test.h"
 #include "log.h"
+#include "parser.h"
 
 static void printTokens(struct Token *tokens, size_t tokensCount) {
     static char *types[] = {
@@ -15,17 +15,13 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
     };
 
     for (size_t i = 0; i < tokensCount; ++i) {
-        char *type = tokens[i].text;
-        if (tokens[i].type < FROM) {
-            type = types[tokens[i].type];
-        }
         char *text = tokens[i].text;
         size_t textLength = tokens[i].textLength;
         if (tokens[i].type == NEWLINE) {
             text = "\\n";
             textLength = 2;
         }
-        logfDebug("%zu %s '%.*s' length=%zu, index=%zu", i, type, (int)textLength, text, tokens[i].textLength, tokens[i].index);
+        logfDebug("%zu %d '%.*s' length=%zu, index=%zu", i, tokens[i].type, (int)textLength, text, textLength, tokens[i].index);
     }
 }
 

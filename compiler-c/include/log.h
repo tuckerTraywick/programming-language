@@ -1,10 +1,14 @@
+// Definition
 #ifndef LOG_H
 #define LOG_H
 
 #include <stdbool.h> // bool
 #include <stdio.h> // FILE, fputs(), fprintf()
 
-#define LOG_FORMAT " %s:%d:%s: "
+// Format arguments are file name, line number, and function name.
+#ifndef LOG_FORMAT
+    #define LOG_FORMAT " %s:%d:%s: "
+#endif
 
 #define logDebug(string) if (debugOut != NULL) {fprintf(debugOut, "[DEBUG]" LOG_FORMAT string "\n", __FILE__, __LINE__, __func__);}
 #define logfDebug(string, ...) if (debugOut != NULL) {fprintf(debugOut, "[DEBUG]" LOG_FORMAT string "\n", __FILE__, __LINE__, __func__, __VA_ARGS__);}
@@ -31,9 +35,9 @@
 #define printfError(string, ...) if (errorOut != NULL) {fprintf(debugOut, (string), __VA_ARGS__);}
 
 // Global variables need to be set by code that uses this header.
-FILE* debugOut = NULL;
-FILE *infoOut = NULL;
-FILE *warningOut = NULL;
-FILE *errorOut = NULL;
+FILE *debugOut;
+FILE *infoOut;
+FILE *warningOut;
+FILE *errorOut;
 
 #endif // LOG_H

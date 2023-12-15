@@ -5,9 +5,11 @@
 #include <stdlib.h> // malloc(), realloc(), free()
 #include <ctype.h> // isdigit(), isalpha(), isalnum(), ispunct()
 #include <string.h> // strcmp()
+#include "log.h"
 #include "parser.h"
 
 // Appends `token` to `tokens`. Updates `*tokens` `*tokensCapacity`, and `*tokensCount` as needed.
+// Helper for `lexString()`.
 static void appendToken(struct Token* token, struct Token **tokens, size_t *tokensCapacity,
 size_t *tokensCount) {
     assert(tokens != NULL && "Must pass an array of tokens.");
@@ -24,6 +26,14 @@ size_t *tokensCount) {
 
     (*tokens)[*tokensCount] = *token;
     ++*tokensCount;
+}
+
+// Returns the max of `a` and `b`. Helper for `lexString()`.
+static size_t max(size_t a, size_t b) {
+    if (a >= b) {
+        return a;
+    }
+    return b;
 }
 
 char *readFile(FILE *file) {
@@ -211,8 +221,11 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 }
 
                 for (size_t i = 0; i < keywordsCount; ++i) {
-                    if (strcmp(token.text, keywords[i]) == 0) {
+                    // TODO: Get rid of `strlen` here and store the lengths of each keyword in the
+                    // array.
+                    if (strncmp(keywords[i], token.text, max(token.textLength, strlen(keywords[i]))) == 0) {
                         token.type = i + PACKAGE;
+                        logfDebug("Found token %s, token length %ld", keywords[i], token.textLength);
                         break;
                     }
                 }
@@ -226,10 +239,14 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
             case '`':
             case '{'...'~':
                 // Lex an operator.
+                token.type = INVALID;
+                token.text = text + token.index;
+                token.textLength = 0;
                 keepLexing = false;
                 for (size_t i = 0; i < operatorsCount; ++i) {
                     if (strcmp(token.text, keywords[i]) == 0) {
                         token.type = i + PLUS_EQUAL;
+                        // TODO: Get rid of `strlen()`.
                         token.textLength = strlen(keywords[i]);
                         appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
                         token.index += token.textLength;
