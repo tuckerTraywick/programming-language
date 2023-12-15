@@ -1,2 +1,16 @@
-var a int = 1
-var b int = 2
+public package hello
+from std.io import printLine
+
+struct Animal {
+    name string
+    age uint
+}
+
+struct Dog {
+    impl Animal
+    tag string
+}
+
+func makeNoise(dog &Dog) {
+    printLine(dog.name)
+}

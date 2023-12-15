@@ -8,7 +8,6 @@
 static void printTokens(struct Token *tokens, size_t tokensCount) {
     static char *types[] = {
         [INVALID] = "invalid",
-        [NEWLINE] = "\\n",
         [NUMBER] = "number",
         [CHARACTER] = "character",
         [STRING] = "string",
@@ -23,7 +22,7 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
             textLength = 2;
         }
 
-        if (tokens[i].type < PACKAGE) {
+        if (tokens[i].type < NEWLINE) {
             logfDebug("%zu %s '%.*s' length=%zu, index=%zu", i, types[tokens[i].type], (int)textLength, text, textLength, tokens[i].index);
         } else {
             logfDebug("%zu '%.*s' length=%zu, index=%zu", i, (int)textLength, text, textLength, tokens[i].index);
@@ -41,10 +40,12 @@ void testReadFile(void) {
 }
 
 void testOpenAndReadFile(void) {
+    debugOut = NULL;
     char *text = openAndReadFile("test/example.txt");
     assert(text != NULL && "Failed to read file.");
     logfDebug("\nfile text:\n%s", text);
     free(text);
+    debugOut = stdout;
 }
 
 void testLexString(void) {
@@ -58,7 +59,6 @@ void testLexString(void) {
         result.errorMessagesCount
     );
     printTokens(result.tokens, result.tokensCount);
-
     free(text);
     destroyLexingResult(&result);
 }

@@ -4,7 +4,7 @@
 #include <stdio.h> // FILE, fopen(), fclose(), fseek(), frewind(), ftell()
 #include <stdlib.h> // malloc(), realloc(), free()
 #include <ctype.h> // isdigit(), isalpha(), isalnum(), ispunct()
-#include <string.h> // strcmp()
+#include <string.h> // strncmp()
 #include "log.h"
 #include "parser.h"
 
@@ -30,10 +30,7 @@ size_t *tokensCount) {
 
 // Returns the max of `a` and `b`. Helper for `lexString()`.
 static size_t max(size_t a, size_t b) {
-    if (a >= b) {
-        return a;
-    }
-    return b;
+    return (a >= b) ? a : b;
 }
 
 char *readFile(FILE *file) {
@@ -187,7 +184,7 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 break;
             case '\n':
                 // Maybe lex a newline.
-                if (!ignoreNewlines) {
+                if (!ignoreNewlines && token.type != NEWLINE) {
                     token.type = NEWLINE;
                     token.text = text + token.index;
                     token.textLength = 1;
@@ -196,6 +193,13 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 ++token.index;
                 ++token.row;
                 token.column = 0;
+                break;
+            case '#':
+                // Skip line comments
+                while (text[token.index] && text[token.index] != '\n') {
+                    ++token.index;
+                    ++token.column;
+                }
                 break;
             case '0'...'9':
                 // Lex a number.
@@ -221,17 +225,20 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 }
 
                 for (size_t i = 0; i < keywordsCount; ++i) {
-                    // TODO: Get rid of `strlen` here and store the lengths of each keyword in the
+                    // TODO: Get rid of `strlen()` here and store the lengths of each keyword in the
                     // array.
                     if (strncmp(keywords[i], token.text, max(token.textLength, strlen(keywords[i]))) == 0) {
                         token.type = i + PACKAGE;
-                        logfDebug("Found token %s, token length %ld", keywords[i], token.textLength);
                         break;
                     }
                 }
                 appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
                 token.index += token.textLength;
                 token.column += token.textLength;
+                break;
+            case '"':
+                break;
+            case '\'':
                 break;
             case '!'...'/':
             case ':'...'@':
@@ -244,10 +251,11 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 token.textLength = 0;
                 keepLexing = false;
                 for (size_t i = 0; i < operatorsCount; ++i) {
-                    if (strcmp(token.text, keywords[i]) == 0) {
+                    // TODO: Get rid of `strlen()`.
+                    size_t length = strlen(operators[i]);
+                    if (strncmp(operators[i], token.text, length) == 0) {
                         token.type = i + PLUS_EQUAL;
-                        // TODO: Get rid of `strlen()`.
-                        token.textLength = strlen(keywords[i]);
+                        token.textLength = length;
                         appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
                         token.index += token.textLength;
                         token.column += token.textLength;

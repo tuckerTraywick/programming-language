@@ -78,7 +78,7 @@ data:
 functions:
     f:
         pushu64 hello
-        call <std.io.printLine>
+        call [std.io.printLine]
 
 
 
@@ -220,76 +220,76 @@ Instruction set:
 pushN value
 
 popN
-<size> pop
+[size] pop
 
-<offset> loadaN
-<offset> <size> loada
-<offset> loadap
+[offset] loadaN
+[offset] [size] loada
+[offset] loadap
 
-<offset> loadsN
-<offset> <size> loads
-<offset> loadsp
+[offset] loadsN
+[offset] [size] loads
+[offset] loadsp
 
-<pointer> loadpN
-<pointer> <size> loadp
+[pointer] loadpN
+[pointer] [size] loadp
 
-<value> <offset> storeaN
-<value> <offset> <size> storea
+[value] [offset] storeaN
+[value] [offset] [size] storea
 
-<value> <offset> storesN
-<value> <offset> <size> stores
+[value] [offset] storesN
+[value] [offset] [size] stores
 
-<value> <pointer> storepN
-<value> <pointer> <size> storep
+[value] [pointer] storepN
+[value] [pointer] [size] storep
 
-<source pointer> <dest pointer> copyN
-<source pointer> <dest pointer> <size> copy
+[source pointer] [dest pointer] copyN
+[source pointer] [dest pointer] [size] copy
 
-<size> malloc
+[size] malloc
 
-<size> calloc
+[size] calloc
 
-<pointer> <size> realloc
+[pointer] [size] realloc
 
-<pointer> free
+[pointer] free
 
-<address> jump
+[address] jump
 
-<condition> <address> jumpt
+[condition] [address] jumpt
 
-<condition> address> jumpf
+[condition] [address] jumpf
 
-<address> call
+[address] call
 
 returnN
-<argSize> return
+[argSize] return
 
-<x> posT
-<x> negT
-<a> <b> addT
-<a> <b> subT
-<a> <b> mulT
-<a> <b> divT
-<a> <b> modT
+[x] posT
+[x] negT
+[a] [b] addT
+[a] [b] subT
+[a] [b] mulT
+[a] [b] divT
+[a] [b] modT
 
-<x> bnotT
-<a> <b> bandT
-<a> <b> borT
-<a> <b> bxorT
+[x] bnotT
+[a] [b] bandT
+[a] [b] borT
+[a] [b] bxorT
 
-<a> <b> lshiftT
-<a> <b> rshiftT
-<x> notT
-<a> <b> andT
-<a> <b> orT
-<a> <b> xorT
+[a] [b] lshiftT
+[a] [b] rshiftT
+[x] notT
+[a] [b] andT
+[a] [b] orT
+[a] [b] xorT
 
-<a> <b> eqT
-<a> <b> neT
-<a> <b> gtT
-<a> <b> gteT
-<a> <b> ltT
-<a> <b> lteT
+[a] [b] eqT
+[a] [b] neT
+[a] [b] gtT
+[a] [b] gteT
+[a] [b] ltT
+[a] [b] lteT
 
 
 
@@ -313,18 +313,18 @@ myPackage:
 
 
 
-# No separate keyword for implementing a method because you will should be able to
-# implement a new method for an already compiled struct.
+# No separate keyword for extendsementing a method because you will should be able to
+# extendsement a new method for an already compiled struct.
 
-# One implementation per method name per type, you cannot implement the same method differently
+# One extendsementation per method name per type, you cannot extendsement the same method differently
 # for different interfaces.
 
 # Is structural typing compatible with padding??
 # If a struct has compatible cases, can it be cast???
 
-# No structural typing, just "embed" and "in".
+# No structural typing, just "extend" and "in".
 
-# "embed/impl in" only works if the alignment is compatible.
+# "extend/extends in" only works if the alignment is compatible.
 
 # No postfix operators because they're too hard to distinguish from infix ones.
 
@@ -338,7 +338,7 @@ highest
     prefix + - & * ~ not
     * / %
     + -
-    << >>
+    [[ ]]
     &
     | ^
     as
@@ -350,21 +350,21 @@ lowest
 
 
 package animals
-from std.io import printLine
+import std.io.printLine
 
 struct Animal {
     name string
     age uint
-    makeNoise(this)
 }
+func makeNoise(animal &Animal)
 
 struct Dog {
-    Animal
+    extend Animal
     tag string
 }
 
 struct Cat {
-    Animal
+    extend Animal
     breed string
 }
 
@@ -378,9 +378,9 @@ func makeNoise(cat &Cat) {
 
 func main() {
     var pet mut &Animal = &Dog("fido", 2, "123 doggy lane")
-    pet.makeNoise()
+    makeNoise(pet)
     pet = &Cat("felix", 2, "tabby")
-    pet.makeNoise()
+    pet->makeNoise()
 }
 
 
@@ -404,7 +404,7 @@ struct Color {
 
 package shapes
 import std.io.printLine
-from std.math import pi, pow
+import std.math.pi, .pow
 
 struct Shape {
     color [3]uint8
@@ -422,25 +422,25 @@ struct Shape {
     }
 }
 
-func area(shape &Shape)
+func area(shape Shape)
 
-func area(circle &Shape.Circle) {
+func area(circle Shape.Circle) {
     return pi*pow(circle.radius, 2)
 }
 
-func area(rectangle &Shape.Rectanlge) {
+func area(rectangle Shape.Rectanlge) {
     return rectangle.width*rectangle.height
 }
 
-func area(triangle &Shape.Triangle) {
+func area(triangle Shape.Triangle) {
     return 0.5*triangle.base*triangle.height
 }
 
 func main() {
     var shape mut Shape = .Rectangle(2, 5)
-    printLine(shape.area()) # Prints "10".
+    printLine(area(shape)) # Prints "10".
     shape = .Triangle(2, 5)
-    printLine(shpae.area()) # Prints "5".
+    printLine(shape->area()) # Prints "5".
 }
 
 
@@ -450,7 +450,6 @@ public package physics
 
 public struct Entity {
     public position, velocity acceleration Vector
-    public update(mut this, delta ufloat64)
 } cases {
     struct Circle {
         public radius ufloat64
@@ -460,6 +459,7 @@ public struct Entity {
         public vertices owned []Vector
     }
 }
+public update(entity &mut Entity, delta ufloat64)
 
 public func update(entity &mut Entity.Circle, delta) {}
 public func update(entity &mut Entity.Mesh, delta) {}
@@ -471,7 +471,7 @@ public package language
 
 public struct TokenType {
     default invalid
-    newline, number, character, .string, identifier
+    newline, number, character, string, identifier
 }
 
 public struct Token {
@@ -481,7 +481,7 @@ public struct Token {
 }
 
 public struct LexingError {
-    Error
+    extend Error
     public message string
     public index usize
     public row, column usize
@@ -506,7 +506,7 @@ public struct Node {
 }
 
 public struct ParsingError {
-    Error
+    extend Error
     public message string
     public index usize
 }
@@ -521,7 +521,7 @@ public func parse(text string) ParsingResult
 
 
 package std.math
-from std.types import Number
+import std.types.Number
 
 public var pi float64
 public var tau float64
@@ -530,9 +530,9 @@ public var inf float64
 public var deg float64
 public var rad float64
 
-public func abs<type T: Number>(x T) T
-public func min<type T: Number>(values []T) T
-public func max<type T: Number>(values []T) T
+public func abs[type T extends Number](x T) T
+public func min[type T extends Number](values []T) T
+public func max[type T extends Number](values []T) T
 ...
 
 public func sinD(x float64) float64
@@ -544,7 +544,7 @@ public func cosD(x float64) float64
 
 
 public package std.flags
-from std.types import Primitive
+import std.types.Primitive
 
 public func setDescription(message string)
 
@@ -552,29 +552,30 @@ public func setUsage(message string)
 
 public func parseFlags()
 
-public func addFlag<type T: Primitive>(value &mut T, name string, description string)
+public func addFlag[type T extends Primitive](value &mut T, name string, description string)
 
-public func addFlag<type T: Primitive>(value &mut, names []string, description string)
+public func addFlag[type T extends Primitive](value &mut, names []string, description string)
 
 public func printHelp()
 
-private var flags Map<string, Primitive>
+private var flags Map[string, Primitive]
 
 
 package add1
-from std.flags import *
-from std.io import printLine
+import std.io.printLine
+import std.operations.to
+import std.flags.*
 
 func main() {
     setDescription("Adds one to a number.")
-    setUsage("add1 [options] --number=<integer>")
-    var help = addFlag<bool>(["h", "help"], "Print this help message.")
-    var number = addFlag<int>("number", "The number to add 1 to.")
-    var path = addFlag<bool>("p", "the path of the file")
+    setUsage("add1 [options] --number=[integer]")
+    var help = addFlag[bool](["h", "help"], "Print this help message.")
+    var number = addFlag[int]("number", "The number to add 1 to.")
+    var path = addFlag[bool]("p", "the path of the file")
     var error = parseFlags()
 
     if error {
-        printLine(error.message)
+        printLine(error->to[string]())
         return
     }
 
@@ -589,18 +590,19 @@ func main() {
 
 
 
-public package std.io
+public package std.builtin
+import std.operations.To
 
-public struct SerializationError = Error
+public struct None
 
-public struct DeserializationError = Error
-
-public struct Serialize {
-    public serialize(this, file File) optional (SerializationError or FileWriteError)
+public struct Error {
+    extend To[string]
 }
 
-public struct Deserialize {
-    public deSerialize(mut this, file File) optional (SerializationError or FileWriteError)
+public struct And[type T..] {
+    extend T
 }
 
-public struct Serializeable = Serialize and Deserialize
+public struct Or[type T..] cases {
+    extend T
+}

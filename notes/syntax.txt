@@ -1,21 +1,22 @@
 public package animals;
-from std.io import printLine;
+import std.io.printLine;
 
 public struct Animal {
     public string name;
     public uint age;
-    public void makeNoise(*this);
 }
 
 public struct Dog {
-    Animal;
+    extend Animal;
     public string tag;
 }
 
 public struct Cat {
-    Animal;
+    extend Animal;
     public string breed;
 }
+
+public void makeNoise(*Animal animal);
 
 public void makeNoise(*Dog dog) {
     printLine("woof");
@@ -35,21 +36,23 @@ void main() {
 
 public package moreAnimals;
 import std.io.printLine;
-from animals import *;
+import animals.*;
 
 public struct Pet {
-    Animal;
-    void walk(*this);
+    extend Animal;
+    abstract Dog, Cat;
 }
 
 public struct Hamster {
-    Pet;
+    extend Pet;
     public float wheelSize;
 }
 
 public void makeNoise(*Hamster hamster) {
     printLine("squeak");
 }
+
+public void walk(*Pet pet);
 
 public void walk(*Hamster hamster) {
     printLine("running on wheel");
@@ -67,11 +70,9 @@ public void walk(*Cat cat) {
 
 
 package Shapes;
-from std.math import pi, pow;
+import std.math.pi, .pow;
 
-struct Shape{
-    ufloat64 area(this);
-} cases {
+struct Shape cases {
     struct Rectangle {
         ufloat64 width, height;
     }
@@ -84,6 +85,8 @@ struct Shape{
         ufloat64 radius;
     }
 }
+
+ufloat64 area(Shape shape);
 
 ufloat64 area(Shape.Rectangle rectangle) {
     return rectangle.width*rectangle.height;
@@ -99,9 +102,9 @@ ufloat64 area(Shape.Circle circle) {
 
 void main() {
     mut Shape shape = .Rectangle(2, 5);
-    printLine(shape.area());
+    printLine(shape->area());
     shape = .Triangle(2, 5);
-    printLine(shape.area());
+    printLine(shape->area());
 }
 
 
@@ -112,7 +115,6 @@ import std.operations;
 
 public struct Entity {
     public Vector position, velocity, acceleration;
-    public void update(*mut this);
 } cases {
     struct Circle {
         public ufloat64 radius;
@@ -122,15 +124,17 @@ public struct Entity {
         public owned []Vector vertices;
     }
 }
+public void udpate(*mut Entity entity);
 
 public struct Vector {
-    std.operations.Arithmetic, .Equality;
+    extend std.operations.Arithmetic, .Equality;
     public float64 x, y, z;
 }
 
 public ufloat64 length(*Vector vector);
 
 public void update(*mut Entity.Circle entity);
+
 public void update(*mut Entity.Mesh entity);
 
 
@@ -138,14 +142,14 @@ public void update(*mut Entity.Mesh entity);
 
 public package std.math;
 
-public const ufloat64 pi;
-public const ufloat64 tau;
-public const ufloat64 e;
-public const ufloat64 inf;
+public ufloat64 pi;
+public ufloat64 tau;
+public ufloat64 e;
+public ufloat64 inf;
 
-public T abs<type T: Number>(T x);
-public T min<type T: Number>([]T values);
-public T min<type T: Number>(T.. values);
+public T abs<type T Number>(T x);
+public T min<type T Number>([]T values);
+public T min<type T Number>(T.. values);
 
 public float radToDeg(float x);
 public float64 radToDeg(float64 x);
@@ -163,8 +167,8 @@ public float64 sinD(float64 x);
 public package std.language;
 
 public struct TokenType cases {
-    default invalid,
-    newline, number, character, .string, identifier,
+    default invalid;
+    newline, number, character, string, identifier;
 }
 
 public struct Token {
@@ -175,7 +179,7 @@ public struct Token {
 }
 
 public struct LexingError {
-    Error;
+    extend Error;
     public string message;
     public usize index;
     public usize row, column;
@@ -191,19 +195,20 @@ public LexingResult lex(string text);
 
 
 public package std.flags;
-from std.io import printLine;
+import std.io.printLine;
 
 void add() {
     setDescription("Adds 1 or 2 numbers.");
     setUsage("add [options] <number1> [number2]");
+    
     mut bool help;
     mut int number1;
     mut optional int number2 = .Some(1); // default value
     addFlag(&help, {"h", "help"}, "Print this help message and exit.");
     addFlag(&number1, "number1", "The first number to add.");
     addFlag(&number2, "number2", "The second number to add. Default is 1.");
-
     optional FlagParsingError error = parseFlags(args);
+
     if error {
         printLine(error.message);
         return;
@@ -240,22 +245,73 @@ void git() {
 
 
 struct Direction cases {
-    n, s, e, w,
+    n, s, e, w;
 }
 
 struct Color {
     uint8 r, g, b;
 } cases {
-    default struct Rgb,
-    red = (255, 0, 0),
-    green = (0, 255, 0),
-    blue = (0, 0, 255),
+    default struct Rgb;
+    red = (255, 0, 0);
+    green = (0, 255, 0);
+    blue = (0, 0, 255);
 }
 
 
 
 
-void generic<type T>();
-void generic<int>();
-void generic<(type T, type U): Trait>();
-void generic<&type T>
+struct Trait;
+void method(*Trait this);
+void foo<type T Trait>(T x) {
+    [auto]T arr = {x};
+    method(x);
+}
+
+public package std.operations;
+public struct To<type T>;
+public T to<type T>(&To<T> x);
+public T to<type T, type U To<T>>(U x);
+
+import std.operations.To->;
+string s = "1";
+int n = to<int>(s);
+
+int(int) f = (x) => x + 1;
+var f = int(int x, y) => x + y;
+
+
+
+
+public package std.builtin;
+import std.operations;
+
+public struct string {
+    extend []char;
+    extend std.operations.Add, .Multiply;
+    extend std.operations.GetElement, .SetElement, .Slice;
+}
+
+
+
+
+// animals.txt
+public package animals;
+#bind("C")
+public struct Animal {
+    string name;
+    uint age;
+}
+
+// animals.h
+#include "types.h"
+struct Animal {
+    struct string name;
+    unsigned int age;
+}
+
+// main.c
+#include <stdio.h>
+#include "animals.h"
+void foo(struct Animal *animal) {
+    printf("%s %d", animal.name.text, animal.age);
+}
