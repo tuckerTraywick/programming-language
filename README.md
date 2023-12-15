@@ -1,2 +1,2 @@
-# programming-language-python
+# programming-language
 Programming language.
