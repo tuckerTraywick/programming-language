@@ -313,10 +313,10 @@ myPackage:
 
 
 
-# No separate keyword for extendsementing a method because you will should be able to
-# extendsement a new method for an already compiled struct.
+# No separate keyword for ementing a method because you will should be able to
+# ement a new method for an already compiled struct.
 
-# One extendsementation per method name per type, you cannot extendsement the same method differently
+# One ementation per method name per type, you cannot ement the same method differently
 # for different interfaces.
 
 # Is structural typing compatible with padding??
@@ -324,7 +324,7 @@ myPackage:
 
 # No structural typing, just "extend" and "in".
 
-# "extend/extends in" only works if the alignment is compatible.
+# "extend/ in" only works if the alignment is compatible.
 
 # No postfix operators because they're too hard to distinguish from infix ones.
 
@@ -355,16 +355,16 @@ import std.io.printLine
 struct Animal {
     name string
     age uint
+    makeNoise(this)
 }
-func makeNoise(animal &Animal)
 
 struct Dog {
-    extend Animal
+    Animal
     tag string
 }
 
 struct Cat {
-    extend Animal
+    Animal
     breed string
 }
 
@@ -378,9 +378,9 @@ func makeNoise(cat &Cat) {
 
 func main() {
     var pet mut &Animal = &Dog("fido", 2, "123 doggy lane")
-    makeNoise(pet)
+    pet.makeNoise()
     pet = &Cat("felix", 2, "tabby")
-    pet->makeNoise()
+    pet.makeNoise()
 }
 
 
@@ -403,11 +403,12 @@ struct Color {
 
 
 package shapes
-import std.io.printLine
-import std.math.pi, .pow
+import std.io: printLine
+import std.math: pi, pow
 
 struct Shape {
     color [3]uint8
+    area(this)
 } cases {
     struct Circle {
         radius ufloat64
@@ -421,8 +422,6 @@ struct Shape {
         base, height ufloat64
     }
 }
-
-func area(shape Shape)
 
 func area(circle Shape.Circle) {
     return pi*pow(circle.radius, 2)
@@ -438,9 +437,9 @@ func area(triangle Shape.Triangle) {
 
 func main() {
     var shape mut Shape = .Rectangle(2, 5)
-    printLine(area(shape)) # Prints "10".
+    printLine(shape.area()) # Prints "10".
     shape = .Triangle(2, 5)
-    printLine(shape->area()) # Prints "5".
+    printLine(shape.area()) # Prints "5".
 }
 
 
@@ -450,6 +449,7 @@ public package physics
 
 public struct Entity {
     public position, velocity acceleration Vector
+    public update(mut this, delta ufloat64)
 } cases {
     struct Circle {
         public radius ufloat64
@@ -459,9 +459,9 @@ public struct Entity {
         public vertices owned []Vector
     }
 }
-public update(entity &mut Entity, delta ufloat64)
 
 public func update(entity &mut Entity.Circle, delta) {}
+
 public func update(entity &mut Entity.Mesh, delta) {}
 
 
@@ -469,7 +469,7 @@ public func update(entity &mut Entity.Mesh, delta) {}
 
 public package language
 
-public struct TokenType {
+public struct TokenType cases {
     default invalid
     newline, number, character, string, identifier
 }
@@ -481,7 +481,7 @@ public struct Token {
 }
 
 public struct LexingError {
-    extend Error
+    Error
     public message string
     public index usize
     public row, column usize
@@ -490,13 +490,15 @@ public struct LexingError {
 public struct LexingResult = owned []Token or LexingError
 
 public func lexFile(path string) LexingResult or FileError
+
 public func lexFile(file File) LexingResult or FileError
+
 public func lex(text string) LexingResult
 
 
 public package language
 
-public struct NodeType {
+public struct NodeType cases {
     program, importStatement, ...
 }
 
@@ -506,7 +508,7 @@ public struct Node {
 }
 
 public struct ParsingError {
-    extend Error
+    Error
     public message string
     public index usize
 }
@@ -514,7 +516,9 @@ public struct ParsingError {
 public struct ParsingResult = owned &Node or ParsingError
 
 public func parseFile(path string) ParsingResult or FileError
+
 public func parseFile(file File) ParsingResult or FileError
+
 public func parse(text string) ParsingResult
 
 
@@ -530,9 +534,9 @@ public var inf float64
 public var deg float64
 public var rad float64
 
-public func abs[type T extends Number](x T) T
-public func min[type T extends Number](values []T) T
-public func max[type T extends Number](values []T) T
+public func abs[T Number](x T) T
+public func min[T Number](values []T) T
+public func max[T Number](values []T) T
 ...
 
 public func sinD(x float64) float64
@@ -552,19 +556,19 @@ public func setUsage(message string)
 
 public func parseFlags()
 
-public func addFlag[type T extends Primitive](value &mut T, name string, description string)
+public func addFlag[T Primitive](value &mut T, name string, description string)
 
-public func addFlag[type T extends Primitive](value &mut, names []string, description string)
+public func addFlag[T Primitive](value &mut, names []string, description string)
 
 public func printHelp()
 
-private var flags Map[string, Primitive]
+var flags Map[string, Primitive]
 
 
 package add1
-import std.io.printLine
-import std.operations.to
-import std.flags.*
+import std.io: printLine
+import std.operations: to
+import std.flags: *
 
 func main() {
     setDescription("Adds one to a number.")
@@ -591,18 +595,18 @@ func main() {
 
 
 public package std.builtin
-import std.operations.To
+import std.operations: To
 
 public struct None
 
 public struct Error {
-    extend To[string]
+    To[string]
 }
 
-public struct And[type T..] {
-    extend T
+public struct And[T..] {
+    T
 }
 
-public struct Or[type T..] cases {
-    extend T
+public struct Or[T..] cases {
+    T
 }

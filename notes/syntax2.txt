@@ -1,0 +1,73 @@
+public package animals
+import std.io: printLine
+
+public struct Animal {
+    public name string
+    public age uint
+    public makeNoise()
+}
+
+public struct Dog {
+    Animal
+    public tag string
+}
+
+struct Cat {
+    Animal
+    public breed string
+}
+
+public func makeNoise(dog &Dog) {
+    printLine("woof")
+}
+
+public func makeNoise(cat &Cat) {
+    printLine("meow")
+}
+
+
+public package moreAnimals
+import std.io: printLine
+import animals: *
+
+public struct Pet {
+    public walk()
+} cases {
+    Dog, Cat, ...
+}
+
+public struct Hamster {
+    Animal, Pet
+    public wheelRadius uint
+}
+
+public func walk(dog &Dog) {}
+
+public func walk(cat &Cat) {}
+
+public func walk(hasmter &Hamster) {}
+
+public func makeNoise(hamster &Hamster) {}
+
+
+
+
+struct Node[T] {
+    next mut optional owned &Node[T]
+    previous mut optional &Node[T]
+    value mut T
+}
+
+public struct List[T] {
+    first mut optional owned &Node[T]
+    last mut optional &Node[T]
+    length mut usize
+}
+
+
+
+var a mut owned []int = new [5]int
+std.collections.append(&a, 1)
+
+package std.collections
+func append[T](array &mut owned []T, value T)

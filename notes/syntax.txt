@@ -1,22 +1,21 @@
 public package animals;
-import std.io.printLine;
+import std.io: printLine;
 
 public struct Animal {
     public string name;
     public uint age;
+    public void makeNoise(*this);
 }
 
 public struct Dog {
-    extend Animal;
+    Animal;
     public string tag;
 }
 
 public struct Cat {
-    extend Animal;
+    Animal;
     public string breed;
 }
-
-public void makeNoise(*Animal animal);
 
 public void makeNoise(*Dog dog) {
     printLine("woof");
@@ -35,24 +34,23 @@ void main() {
 
 
 public package moreAnimals;
-import std.io.printLine;
-import animals.*;
+import std.io: printLine;
+import animals: *;
 
 public struct Pet {
-    extend Animal;
-    abstract Dog, Cat;
+    public void walk(*this);
+} cases {
+    Dog, Cat, ...;
 }
 
 public struct Hamster {
-    extend Pet;
+    Pet;
     public float wheelSize;
 }
 
 public void makeNoise(*Hamster hamster) {
     printLine("squeak");
 }
-
-public void walk(*Pet pet);
 
 public void walk(*Hamster hamster) {
     printLine("running on wheel");
@@ -70,9 +68,11 @@ public void walk(*Cat cat) {
 
 
 package Shapes;
-import std.math.pi, .pow;
+import std.math: pi, pow;
 
-struct Shape cases {
+struct Shape {
+    ufloat64 area(this);
+} cases {
     struct Rectangle {
         ufloat64 width, height;
     }
@@ -85,8 +85,6 @@ struct Shape cases {
         ufloat64 radius;
     }
 }
-
-ufloat64 area(Shape shape);
 
 ufloat64 area(Shape.Rectangle rectangle) {
     return rectangle.width*rectangle.height;
@@ -102,9 +100,9 @@ ufloat64 area(Shape.Circle circle) {
 
 void main() {
     mut Shape shape = .Rectangle(2, 5);
-    printLine(shape->area());
+    printLine(shape.area());
     shape = .Triangle(2, 5);
-    printLine(shape->area());
+    printLine(shape.area());
 }
 
 
@@ -115,6 +113,7 @@ import std.operations;
 
 public struct Entity {
     public Vector position, velocity, acceleration;
+    public void udpate(*mut this);
 } cases {
     struct Circle {
         public ufloat64 radius;
@@ -124,10 +123,9 @@ public struct Entity {
         public owned []Vector vertices;
     }
 }
-public void udpate(*mut Entity entity);
 
 public struct Vector {
-    extend std.operations.Arithmetic, .Equality;
+    std.operations.Arithmetic, .Equality;
     public float64 x, y, z;
 }
 
@@ -147,9 +145,9 @@ public ufloat64 tau;
 public ufloat64 e;
 public ufloat64 inf;
 
-public T abs<type T Number>(T x);
-public T min<type T Number>([]T values);
-public T min<type T Number>(T.. values);
+public T abs<T Number>(T x);
+public T min<T Number>([]T values);
+public T min<T Number>(T.. values);
 
 public float radToDeg(float x);
 public float64 radToDeg(float64 x);
@@ -179,7 +177,7 @@ public struct Token {
 }
 
 public struct LexingError {
-    extend Error;
+    Error;
     public string message;
     public usize index;
     public usize row, column;
@@ -188,58 +186,10 @@ public struct LexingError {
 public struct LexingResult = owned []Token or LexingError;
 
 public LexingResult or FileError lexFile(string path);
+
 public LexingResult or FileError lexFile(File file);
+
 public LexingResult lex(string text);
-
-
-
-
-public package std.flags;
-import std.io.printLine;
-
-void add() {
-    setDescription("Adds 1 or 2 numbers.");
-    setUsage("add [options] <number1> [number2]");
-    
-    mut bool help;
-    mut int number1;
-    mut optional int number2 = .Some(1); // default value
-    addFlag(&help, {"h", "help"}, "Print this help message and exit.");
-    addFlag(&number1, "number1", "The first number to add.");
-    addFlag(&number2, "number2", "The second number to add. Default is 1.");
-    optional FlagParsingError error = parseFlags(args);
-
-    if error {
-        printLine(error.message);
-        return;
-    }
-}
-
-void gcc() {
-    mut []string files;
-    mut []string outputPath;
-    addArgs(&files, min=1);
-    addFlag(&outputPath, "o", "The path of the output.", count=1); // trailing argument
-    parseFlags();
-    string path = outputPath[0];
-}
-
-void git() {
-    mut bool help;
-    addFlag(&help, {"h", "help"});
-
-    mut bool clone;
-    mut []string cloneArgs;
-    mut optional int depth = 3;
-    addCommand(&clone, "clone");
-    addArgs(&cloneArgs, count=1);
-    addFlag(&depth, "depth");
-    
-    mut bool add;
-    mut []string addArgs;
-    addCommand(&add, "add");
-    addArgs(&addArgs, min=1);
-}
 
 
 
@@ -260,58 +210,67 @@ struct Color {
 
 
 
-struct Trait;
-void method(*Trait this);
-void foo<type T Trait>(T x) {
-    [auto]T arr = {x};
-    method(x);
-}
-
-public package std.operations;
-public struct To<type T>;
-public T to<type T>(&To<T> x);
-public T to<type T, type U To<T>>(U x);
-
-import std.operations.To->;
-string s = "1";
-int n = to<int>(s);
-
-int(int) f = (x) => x + 1;
-var f = int(int x, y) => x + y;
-
-
-
-
-public package std.builtin;
+public package list;
 import std.operations;
 
-public struct string {
-    extend []char;
-    extend std.operations.Add, .Multiply;
-    extend std.operations.GetElement, .SetElement, .Slice;
+public struct List<T> {
+    std.operations.GetElement, SetElement;
+    mut optional owned *Node<T> start;
+    mut optional *Node<T> end;
+    mut usize length;
+}
+
+public usize .length(*List list) => auto;
+
+public void append<T>(*mut List<T> list, T value) {
+    auto next = new Node<T>(value, previous=list.end, next=None);
+    if list.end {
+        list.end.next = next;
+    } else {
+        list.start = next;
+    }
+    list.end = next;
+}
+
+private struct Node<T> {
+    private mut T value;
+    private mut optional owned *This next;
+    private mut optional *This previous;
 }
 
 
 
 
-// animals.txt
-public package animals;
-#bind("C")
-public struct Animal {
-    string name;
-    uint age;
+package textEditor;
+
+struct Editor {
+    owned []Tab tabs;
+    usize currentTabIndex;
+    owned []Clipboard clipboards;
+    usize currentClipboardIndex;
 }
 
-// animals.h
-#include "types.h"
-struct Animal {
-    struct string name;
-    unsigned int age;
+struct Tab {
+    owned *Buffer buffer;
+    owned []Cursor cursors;
 }
 
-// main.c
-#include <stdio.h>
-#include "animals.h"
-void foo(struct Animal *animal) {
-    printf("%s %d", animal.name.text, animal.age);
+struct Buffer {
+    owned []string rows;
+}
+
+struct Cursor {
+    usize row, column;
+}
+
+struct Clipboard {
+    owned []string rows;
+}
+
+
+
+
+struct Union cases {
+    int a;
+    [4]char b;
 }
