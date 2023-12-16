@@ -7,7 +7,7 @@ struct Animal {
 }
 
 struct Dog {
-    impl Animal
+    extend Animal
     tag string
 }
 
