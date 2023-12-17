@@ -1,0 +1,67 @@
+package animals
+
+struct Animal {
+    name string
+    age uint
+    makeNoise()
+}
+
+struct Dog {
+    extend Animal
+    tag string
+}
+
+struct Cat {
+    extend Animal
+    breed string
+}
+
+func makeNoise(dog &Dog)
+
+func makeNoise(cat &Cat)
+
+
+package moreAnimals
+from animals import *
+
+struct Pet {
+    abstract Dog, Cat
+    walk()
+}
+
+struct Hamster {
+    extend Animal, Pet
+    wheelRadius uint
+}
+
+func makeNoise(hamster &Hamster)
+
+func walk(hamster &Hamster)
+
+func walk(dog &Dog)
+
+func walk(cat &Cat)
+
+
+
+
+struct ColorData {
+    r, g, b uint8
+}
+
+enum Color of ColorData {
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
+}
+
+struct ColorAData {
+    extend ColorData
+    a uint8
+}
+
+enum ColorA of ColorAData {
+    abstract Color
+    red, blue
+}
+

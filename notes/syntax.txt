@@ -1,5 +1,5 @@
 public package animals;
-import std.io: printLine;
+from std.io import printLine;
 
 public struct Animal {
     public string name;
@@ -8,12 +8,12 @@ public struct Animal {
 }
 
 public struct Dog {
-    Animal;
+    embed Animal;
     public string tag;
 }
 
 public struct Cat {
-    Animal;
+    embed Animal;
     public string breed;
 }
 
@@ -34,17 +34,17 @@ void main() {
 
 
 public package moreAnimals;
-import std.io: printLine;
-import animals: *;
+from std.io import printLine;
+from animals import *;
 
 public struct Pet {
     public void walk(*this);
 } cases {
-    Dog, Cat, ...;
+    embed Dog, Cat, ...;
 }
 
 public struct Hamster {
-    Pet;
+    embed Pet;
     public float wheelSize;
 }
 
@@ -68,7 +68,7 @@ public void walk(*Cat cat) {
 
 
 package Shapes;
-import std.math: pi, pow;
+from std.math import pi, pow;
 
 struct Shape {
     ufloat64 area(this);
@@ -125,7 +125,7 @@ public struct Entity {
 }
 
 public struct Vector {
-    std.operations.Arithmetic, .Equality;
+    embed std.operations.Arithmetic, .Equality;
     public float64 x, y, z;
 }
 
@@ -177,7 +177,7 @@ public struct Token {
 }
 
 public struct LexingError {
-    Error;
+    embed Error;
     public string message;
     public usize index;
     public usize row, column;
@@ -190,6 +190,32 @@ public LexingResult or FileError lexFile(string path);
 public LexingResult or FileError lexFile(File file);
 
 public LexingResult lex(string text);
+
+
+public package language;
+
+public struct NodeType cases {
+    program, importStatement, ...;
+}
+
+public struct Node {
+    public NodeType type;
+    public owned [](owned *Node or Token) children;
+}
+
+public struct ParsingError {
+    embed Error;
+    public string message;
+    public usize index;
+}
+
+public struct ParsingResult = owned *Node or ParsingError;
+
+public ParsingResult or FileError parseFile(string path);
+
+public ParsingResult or FileError parseFile(File file);
+
+public ParsingResult parse(string text);
 
 
 
@@ -214,7 +240,7 @@ public package list;
 import std.operations;
 
 public struct List<T> {
-    std.operations.GetElement, SetElement;
+    embed std.operations.GetElement, SetElement;
     mut optional owned *Node<T> start;
     mut optional *Node<T> end;
     mut usize length;
@@ -223,7 +249,7 @@ public struct List<T> {
 public usize .length(*List list) => auto;
 
 public void append<T>(*mut List<T> list, T value) {
-    auto next = new Node<T>(value, previous=list.end, next=None);
+    var next = new Node<T>(value, previous=list.end, next=None);
     if list.end {
         list.end.next = next;
     } else {
@@ -231,6 +257,10 @@ public void append<T>(*mut List<T> list, T value) {
     }
     list.end = next;
 }
+
+public T or IndexOutOfBoundsError getElement<T>(*List<T> list, usize index);
+
+public optional IndexOutOfBoundsError setElement<T>(*mut List<T> list, usize index, T value);
 
 private struct Node<T> {
     private mut T value;
@@ -274,3 +304,41 @@ struct Union cases {
     int a;
     [4]char b;
 }
+
+
+
+
+owned *int a = new 1;
+owned *mut int b = move a;
+
+shared *int a = new 1;
+shared *mut int b = a;
+
+weak *int a = new 1;
+weak *mut int b = move a;
+
+
+
+
+for uint i in 0..10 // exclusive
+for uint i in 0...10 // inclusive
+
+for string i in {"hello", "world", "goodbye"}
+for var i in 0..10 // type inference (i is usize)
+for usize i, char x in std.iterators.enumerate("abc")
+
+char x;
+for usize i; x in std.iterators.enumerate("abc") // use `x` from above
+
+
+
+
+[10]char array = {1 = 'a'};
+Map<string, int> map = (("a", 1), ("b", 2));
+struct Point {int x, y;}
+Point a = (1, 2);
+var b = Point(x = 1, y = 2);
+[4]Point points = {0=(x=1), 3=(y=2)};
+(int, string) a = (1, "hi");
+
+Map<T, U>(*this, (T, V)... entries);

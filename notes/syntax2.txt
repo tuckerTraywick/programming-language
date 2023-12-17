@@ -1,5 +1,5 @@
 public package animals
-import std.io: printLine
+from std.io import printLine
 
 public struct Animal {
     public name string
@@ -8,12 +8,12 @@ public struct Animal {
 }
 
 public struct Dog {
-    Animal
+    embed Animal
     public tag string
 }
 
-struct Cat {
-    Animal
+public struct Cat {
+    embed Animal
     public breed string
 }
 
@@ -27,17 +27,17 @@ public func makeNoise(cat &Cat) {
 
 
 public package moreAnimals
-import std.io: printLine
-import animals: *
+from std.io import printLine
+from animals import *
 
 public struct Pet {
     public walk()
 } cases {
-    Dog, Cat, ...
+    embed Dog, Cat, ...
 }
 
 public struct Hamster {
-    Animal, Pet
+    embed Animal, Pet
     public wheelRadius uint
 }
 

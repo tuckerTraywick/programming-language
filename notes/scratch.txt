@@ -350,7 +350,7 @@ lowest
 
 
 package animals
-import std.io.printLine
+from std.io import printLine
 
 struct Animal {
     name string
@@ -359,12 +359,12 @@ struct Animal {
 }
 
 struct Dog {
-    Animal
+    embed Animal
     tag string
 }
 
 struct Cat {
-    Animal
+    embed Animal
     breed string
 }
 
@@ -389,7 +389,7 @@ func main() {
 package colors
 
 struct Color {
-    r, g, b const uint8
+    r, g, b uint8
 } cases {
     default struct Rgb
     black = (0, 0, 0)
@@ -403,8 +403,8 @@ struct Color {
 
 
 package shapes
-import std.io: printLine
-import std.math: pi, pow
+from std.io import printLine
+from std.math import pi, pow
 
 struct Shape {
     color [3]uint8
@@ -481,7 +481,7 @@ public struct Token {
 }
 
 public struct LexingError {
-    Error
+    embed Error
     public message string
     public index usize
     public row, column usize
@@ -508,7 +508,7 @@ public struct Node {
 }
 
 public struct ParsingError {
-    Error
+    embed Error
     public message string
     public index usize
 }
@@ -525,7 +525,7 @@ public func parse(text string) ParsingResult
 
 
 package std.math
-import std.types.Number
+from std.types import Number
 
 public var pi float64
 public var tau float64
@@ -548,7 +548,7 @@ public func cosD(x float64) float64
 
 
 public package std.flags
-import std.types.Primitive
+from std.types import Primitive
 
 public func setDescription(message string)
 
@@ -566,9 +566,9 @@ var flags Map[string, Primitive]
 
 
 package add1
-import std.io: printLine
-import std.operations: to
-import std.flags: *
+from std.io import printLine
+from std.operations import to
+from std.flags import *
 
 func main() {
     setDescription("Adds one to a number.")
@@ -595,18 +595,18 @@ func main() {
 
 
 public package std.builtin
-import std.operations: To
+from std.operations import To
 
 public struct None
 
 public struct Error {
-    To[string]
+    embed To[string]
 }
 
 public struct And[T..] {
-    T
+    embed T
 }
 
 public struct Or[T..] cases {
-    T
+    embed T
 }
