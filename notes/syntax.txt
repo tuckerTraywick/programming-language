@@ -346,3 +346,25 @@ void drop(*Map map); // destructor
 
 void f<int n>(); // static expression.
 void f<T: Trait>(); // type constraint.
+
+
+
+
+public struct BlockHeader {
+    // <next, previous>
+    public usize strongReferences;
+    public usize weakReferences;
+    public usize size;
+    // <data>
+}
+
+public struct Block {
+    public *Block next, previous;
+    embed BlockHeader;
+    public [0]byte data;
+}
+
+public struct Allocator<T> {
+    public owned *T allocate(*mut this); // The returned pointer must include a BlockHeader above it.
+    public void deallocate(*mut this, owned *T value);
+}
