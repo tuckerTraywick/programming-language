@@ -1,16 +1,11 @@
 #include <stdbool.h>
 #include <stddef.h> // size_t
 #include <stdio.h> // FILE
+#include "list.h"
 
-// The initial number of tokens to allocate when lexing a file.
-#ifndef TOKENS_INITIAL_CAPACITY
-    #define TOKENS_INITIAL_CAPACITY 3000
-#endif
-
-// The number of additional tokens to allocate when the lexer runs out of space for new tokens.
-#ifndef TOKENS_CAPACITY_INCREMENT
-    #define TOKENS_CAPACITY_INCREMENT 1000
-#endif
+typedef struct List TokenList;
+typedef struct List NodeList;
+typedef struct List ErrorList;
 
 // Represents the type of a token.
 enum TokenType {
@@ -115,66 +110,12 @@ struct Token {
     size_t column; // Index relative to line start.
 };
 
-// Represents the result of lexing. Stores a list of tokens and possibly a list of error messages.
-// Must be destroyed by `destroyLexingResult()` after use.
-struct LexingResult {
-    struct Token *tokens; // `NULL` if no tokens were lexed.
-    size_t tokensCount;
-    char **errorMessages; // `NULL` if no errors were encountered.
-    size_t errorMessagesCount;
-};
-
-// Represents the type of a node.
-enum NodeType {
-    PROGRAM,
-    PACKAGE_STATEMENT,
-};
-
-// Represents a node in a parse tree.
-struct Node {
-    enum NodeType type;
-    struct Node *children; // `NULL` if the node has no children.
-    size_t childrenCount;
-};
-
-// Represents the result of parsing. Stores a parse tree and possibly a list of error messages. Must
-// be destroyed by `destroyParsingResult()` after use.
-struct ParsingResult {
-    struct Node *tree; // `NULL` if a tree wasn't able to be parsed.
-    char **errorMessages; // `NULL` if no errors were encountered.
-    size_t errorMessagesCount;
-};
-
-// Allocates a string and reads the contents of `file` into it. Returns `NULL` if an error occurred
-// while allocating the string or reading the file. Returns a pointer to the string on success. The
-// string must be deallocated with `free()` after use. Does NOT change `file`'s stream position or
-// close it.
+// Reads a file into a string. The string must be deallocated with `free()` after use.
 char *readFile(FILE *file);
 
-// Opens the file at `path` then allocates a string and reads the contents of the file into it.
-// Returns `NULL` if an error occurred while allocating the string or opening or reading the file.
-// Returns a pointer to the string on success. The string must be deallocated with `free()` after
-// use.
+// Reads the file at `path` into a string. The string must be deallocated with `free()` after use.
 char *openAndReadFile(char *path);
 
-// Tries to lex `text` into tokens. `text` must be null terminated. Does not produce tokens for
-// newline characters if `ignoreNewlines` is true. 
-struct LexingResult lexString(char *text, bool ignoreNewlines);
-
-struct LexingResult lexFile(FILE *file);
-
-struct LexingResult openAndLexFile(char *path);
-
-struct ParsingResult parseTokens(struct Token *tokens, size_t tokensLength);
-
-struct ParsingResult parseString(char *text);
-
-struct ParsingResult parseFile(FILE *file);
-
-struct ParsingResult openAndParseFile(char *path);
-
-// Destroys a `LexingResult` and deallocates its memory.
-void destroyLexingResult(struct LexingResult *result);
-
-// Destroys a `ParsingResult` and deallocates its memory.
-void destroyParsingResult(struct ParsingResult *result);
+// Lexes a string. `tokens` and `errors` do not need to be initialized. The caller is responsible
+// for freeing them. Returns true if no errors were encountered.
+bool lexString(char *text, TokenList *tokens, ErrorList *errors);

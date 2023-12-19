@@ -145,9 +145,9 @@ public ufloat64 tau;
 public ufloat64 e;
 public ufloat64 inf;
 
-public T abs<T Number>(T x);
-public T min<T Number>([]T values);
-public T min<T Number>(T.. values);
+public T abs<T: Number>(T x);
+public T min<T: Number>([]T values);
+public T min<T: Number>(T.. values);
 
 public float radToDeg(float x);
 public float64 radToDeg(float64 x);
@@ -341,4 +341,8 @@ var b = Point(x = 1, y = 2);
 [4]Point points = {0=(x=1), 3=(y=2)};
 (int, string) a = (1, "hi");
 
-void Map<T, U>(*this, (T, V)... entries);
+void new(*Map map); // constructor
+void drop(*Map map); // destructor
+
+void f<int n>(); // static expression.
+void f<T: Trait>(); // type constraint.

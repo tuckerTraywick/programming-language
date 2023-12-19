@@ -1,6 +1,6 @@
+#include <assert.h> // assert()
 #include <stdbool.h> // bool
 #include <stdint.h> // SIZE_MAX
-#include <assert.h> // assert()
 #include <stdio.h> // FILE, fopen(), fclose(), fseek(), frewind(), ftell()
 #include <stdlib.h> // malloc(), realloc(), free()
 #include <ctype.h> // isdigit(), isalpha(), isalnum(), ispunct()
@@ -8,25 +8,11 @@
 #include "log.h"
 #include "parser.h"
 
-// Appends `token` to `tokens`. Updates `*tokens` `*tokensCapacity`, and `*tokensCount` as needed.
-// Helper for `lexString()`.
-static void appendToken(struct Token* token, struct Token **tokens, size_t *tokensCapacity,
-size_t *tokensCount) {
-    assert(tokens != NULL && "Must pass an array of tokens.");
-    assert(tokensCapacity != NULL && "Must pass a capacity.");
-    assert(tokensCount != NULL && "Must pass a count.");
+#define TOKENS_INITIAL_CAPACITY 3000
+#define TOKENS_CAPACITY_INCREMENT 1500
 
-    // Extend the array if needed.
-    if (*tokensCount >= *tokensCapacity) {
-        *tokensCapacity += TOKENS_CAPACITY_INCREMENT;
-        struct Token *newTokens = realloc(*tokens, *tokensCapacity);
-        assert(newTokens != NULL && "`realloc()` failed.");
-        *tokens = newTokens;
-    }
-
-    (*tokens)[*tokensCount] = *token;
-    ++*tokensCount;
-}
+#define ERRORS_INITIAL_CAPACITY 1000
+#define ERRORS_CAPACITY_INCREMENT 500
 
 // Returns the max of `a` and `b`. Helper for `lexString()`.
 static size_t max(size_t a, size_t b) {
@@ -51,7 +37,7 @@ char *readFile(FILE *file) {
     assert(text != NULL && "`malloc()` failed.");
 
     size_t bytesRead = fread(text, 1, stringSize, file);
-    assert(bytesRead == fileSize && "Something went wrong while putting the file in a buffer.");
+    assert((long)bytesRead == fileSize && "Something went wrong while putting the file in a buffer.");
     // Replace the EOF.
     text[fileSize] = '\0';
     return text;
@@ -67,7 +53,7 @@ char *openAndReadFile(char *path) {
     return text;
 }
 
-struct LexingResult lexString(char *text, bool ignoreNewlines) {
+bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
     // A mapping of keywords to their token types.
     static char* keywords[] = {
         "package",
@@ -161,27 +147,14 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
     static size_t operatorsCount = (sizeof operators)/(sizeof operators[0]);
 
     assert(text != NULL && "Must pass a string.");
-    size_t tokensCapacity = TOKENS_INITIAL_CAPACITY;
-    size_t tokensCount = 0;
-    struct Token *tokens = malloc(tokensCapacity*(sizeof *tokens));
-    assert(tokens != NULL && "`malloc()` failed.");
+    listInitialize(tokens, sizeof(struct Token), TOKENS_INITIAL_CAPACITY, TOKENS_CAPACITY_INCREMENT);
+    listInitialize(errors, sizeof(char*), ERRORS_INITIAL_CAPACITY, ERRORS_CAPACITY_INCREMENT);
     struct Token token = {0};
     bool foundOperator = true;
 
     while (text[token.index]) {
         char ch = text[token.index];
-        if (ch == '\n') {
-            // Maybe lex a newline.
-            if (!ignoreNewlines && token.type != NEWLINE) {
-                token.type = NEWLINE;
-                token.text = text + token.index;
-                token.textLength = 1;
-                appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
-            }
-            ++token.index;
-            ++token.row;
-            token.column = 0;
-        } else if (isspace(ch)) {
+        if (isspace(ch)) {
             // Skip whitespace.
             ++token.index;
             ++token.column;
@@ -200,7 +173,7 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 ++token.textLength;
                 ++token.column;
             }
-            appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            listAppend(tokens, (char*)(&token));
             token.index += token.textLength;
         } else if (isalpha(ch) || ch == '_') {
             // Lex an identifier or a keyword.
@@ -220,7 +193,7 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                     break;
                 }
             }
-            appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            listAppend(tokens, (char*)(&token));
             token.index += token.textLength;
         } else if (ch == '\'') {
             // Lex a character literal.
@@ -236,7 +209,7 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
             // TODO: Handle unclosed '.
             // if (text[token.index + token.textLength] != '\'') {
             // }
-            appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            listAppend(tokens, (char*)(&token));
             token.index += token.textLength + 1;
         } else if (ch == '"') {
             // Lex a string literal.
@@ -252,7 +225,7 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
             // TODO: Handle unclosed ".
             // if (text[token.index + token.textLength] != '"') {
             // }
-            appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            listAppend(tokens, (char*)(&token));
             token.index += token.textLength + 1;
         } else {
             // Try to lex an operator.
@@ -266,7 +239,7 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 if (strncmp(operators[i], token.text, length) == 0) {
                     token.type = i + PLUS_EQUAL;
                     token.textLength = length;
-                    appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+                    listAppend(tokens, (char*)(&token));
                     token.index += token.textLength;
                     token.column += token.textLength;
                     foundOperator = true;
@@ -279,27 +252,15 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
                 token.type = INVALID;
                 token.text = text + token.index;
                 token.textLength = 0;
-                while (!isspace(text[token.index + token.textLength])) {
+                while (text[token.index + token.textLength] && !isspace(text[token.index + token.textLength])) {
                     ++token.textLength;
                     ++token.column;
                 }
-                appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+                listAppend(tokens, (char*)(&token));
                 token.index += token.textLength;
             }
         }
     }
 
-    return (struct LexingResult) {
-        .tokens = tokens,
-        .tokensCount = tokensCount,
-        .errorMessages = NULL,
-        .errorMessagesCount = 0,
-    };
-}
-
-void destroyLexingResult(struct LexingResult *result) {
-    assert(result != NULL && "Must pass a result.");
-    free(result->tokens);
-    free(result->errorMessages);
-    *result = (struct LexingResult) {0};
+    return true;
 }
