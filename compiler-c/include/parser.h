@@ -4,12 +4,12 @@
 
 // The initial number of tokens to allocate when lexing a file.
 #ifndef TOKENS_INITIAL_CAPACITY
-    #define TOKENS_INITIAL_CAPACITY 1000
+    #define TOKENS_INITIAL_CAPACITY 3000
 #endif
 
 // The number of additional tokens to allocate when the lexer runs out of space for new tokens.
 #ifndef TOKENS_CAPACITY_INCREMENT
-    #define TOKENS_CAPACITY_INCREMENT 100
+    #define TOKENS_CAPACITY_INCREMENT 1000
 #endif
 
 // Represents the type of a token.
@@ -24,20 +24,18 @@ enum TokenType {
     PACKAGE,
     FROM,
     IMPORT,
-    PUB,
-    PRIV,
+    PUBLIC,
+    PRIVATE,
     CONST,
     MUT,
     OWNED,
     SHARED,
     WEAK,
+    AUTO,
     VAR,
-    FUN,
     STRUCT,
-    ALIAS,
     CASES,
     EMBED,
-    IMPL,
     PASS,
     RETURN,
     YIELD,
@@ -51,9 +49,6 @@ enum TokenType {
     FALLTHROUGH,
     FOR,
     IN,
-    UNTIL,
-    THRU,
-    BY,
     DO,
     WHILE,
     AS,
@@ -95,8 +90,12 @@ enum TokenType {
     FAT_ARROW,
     ASSIGN,
     NOT_EQUAL,
+    TRIPLE_DOT,
+    DOUBLE_DOT,
     DOT,
     COMMA,
+    COLON,
+    SEMICOLON,
     LEFT_PARENTHESIS,
     RIGHT_PARENTHESIS,
     LEFT_BRACKET,

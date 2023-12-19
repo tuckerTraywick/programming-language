@@ -341,4 +341,4 @@ var b = Point(x = 1, y = 2);
 [4]Point points = {0=(x=1), 3=(y=2)};
 (int, string) a = (1, "hi");
 
-Map<T, U>(*this, (T, V)... entries);
+void Map<T, U>(*this, (T, V)... entries);

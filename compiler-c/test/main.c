@@ -51,7 +51,7 @@ void testOpenAndReadFile(void) {
 void testLexString(void) {
     char *text = openAndReadFile("test/example.txt");
     assert(text != NULL && "Failed to read file.");
-    struct LexingResult result = lexString(text, false);
+    struct LexingResult result = lexString(text, true);
     logfDebug("tokens=%p, tokensCount=%zu, errorMessages=%p, errorMessagesCount=%zu",
         (void*)result.tokens,
         result.tokensCount,
@@ -65,7 +65,7 @@ void testLexString(void) {
 
 int main(void) {
     suiteOut = testOut = assertOut = resultsOut = stdout;
-    debugOut = stdout;
+    debugOut = infoOut = warningOut = errorOut = stdout;
     beginTesting();
         runSuite(testReadFile);
         runSuite(testOpenAndReadFile);

@@ -1,16 +1,35 @@
-public package hello
-from std.io import printLine
+//hello
+#asdf
+public package hello;
+from std.io import printLine;
 
 struct Animal {
-    name string
-    age uint
+    string name;
+    uint age;
+    void makeNoise(*this);
 }
 
 struct Dog {
-    extend Animal
-    tag string
+    embed Animal;
+    string tag;
 }
 
-func makeNoise(dog &Dog) {
-    printLine(dog.name)
+struct Cat {
+    embed Animal;
+    string breed;
+}
+
+void makeNoise(*Dog dog) {
+    printLine("woof");
+}
+
+void makeNoise(*Cat cat) {
+    printLine("meow");
+}
+
+void main() {
+    mut *Animal pet = &Dog();
+    pet.makeNoise()
+    pet = &Cat();
+    pet.makeNoise()
 }

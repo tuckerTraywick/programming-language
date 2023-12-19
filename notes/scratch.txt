@@ -610,3 +610,29 @@ public struct And[T..] {
 public struct Or[T..] cases {
     embed T
 }
+
+
+
+
+// myApi.txt
+public package myApi;
+@description "Returns 1."
+@returnValue "Always 1."
+int f() => 1;
+
+// shell
+$ compile("myApi.txt")
+$ list()
+myApi.txt myApi.obj
+$ load("myApi.obj")
+$ help(myApi.f)
+myApi.f
+SIGNATURE
+    package myApi;
+    public int f();
+DESCRIPTION
+    Returns 1.
+RETURN VALUE
+    Always returns 1.
+$ myApi.f()
+1

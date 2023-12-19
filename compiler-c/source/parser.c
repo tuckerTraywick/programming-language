@@ -73,20 +73,18 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
         "package",
         "from",
         "import",
-        "pub",
-        "priv",
+        "public",
+        "private",
         "const",
         "mut",
         "owned",
         "shared",
         "weak",
+        "auto",
         "var",
-        "fun",
         "struct",
-        "alias",
         "cases",
         "embed",
-        "impl",
         "pass",
         "return",
         "yield",
@@ -100,9 +98,6 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
         "fallthrough",
         "for",
         "in",
-        "until",
-        "thru",
-        "by",
         "do",
         "while",
         "as",
@@ -150,8 +145,12 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
         "=>",
         "=",
         "!=",
+        "...",
+        "..",
         ".",
         ",",
+        ":",
+        ";",
         "(",
         ")",
         "[",
@@ -167,109 +166,126 @@ struct LexingResult lexString(char *text, bool ignoreNewlines) {
     struct Token *tokens = malloc(tokensCapacity*(sizeof *tokens));
     assert(tokens != NULL && "`malloc()` failed.");
     struct Token token = {0};
-    bool keepLexing = true;
+    bool foundOperator = true;
 
-    while (keepLexing && text[token.index] != '\0') {
+    while (text[token.index]) {
         char ch = text[token.index];
-        switch (ch) {
-            case ' ':
-            case '\t':
-                // Skip whitespace.
+        if (ch == '\n') {
+            // Maybe lex a newline.
+            if (!ignoreNewlines && token.type != NEWLINE) {
+                token.type = NEWLINE;
+                token.text = text + token.index;
+                token.textLength = 1;
+                appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            }
+            ++token.index;
+            ++token.row;
+            token.column = 0;
+        } else if (isspace(ch)) {
+            // Skip whitespace.
+            ++token.index;
+            ++token.column;
+        }  else if (ch == '/' && text[token.index + 1] && text[token.index + 1] == '/') {
+            // Skip line comments.
+            while (text[token.index] && text[token.index] != '\n') {
                 ++token.index;
                 ++token.column;
-                break;
-            case '\r':
-                // Skip whitespace.
-                ++token.index;
-                break;
-            case '\n':
-                // Maybe lex a newline.
-                if (!ignoreNewlines && token.type != NEWLINE) {
-                    token.type = NEWLINE;
-                    token.text = text + token.index;
-                    token.textLength = 1;
-                    appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            }
+        } else if (isdigit(ch)) {
+            // Lex a number.
+            token.type = NUMBER;
+            token.text = text + token.index;
+            token.textLength = 0;
+            while (isdigit(text[token.index + token.textLength])) {
+                ++token.textLength;
+                ++token.column;
+            }
+            appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            token.index += token.textLength;
+        } else if (isalpha(ch) || ch == '_') {
+            // Lex an identifier or a keyword.
+            token.type = IDENTIFIER;
+            token.text = text + token.index;
+            token.textLength = 0;
+            while (isalnum(text[token.index + token.textLength])) {
+                ++token.textLength;
+                ++token.column;
+            }
+
+            for (size_t i = 0; i < keywordsCount; ++i) {
+                // TODO: Get rid of `strlen()` here and store the lengths of each keyword in the
+                // array.
+                if (strncmp(keywords[i], token.text, max(token.textLength, strlen(keywords[i]))) == 0) {
+                    token.type = i + PACKAGE;
+                    break;
                 }
-                ++token.index;
-                ++token.row;
-                token.column = 0;
-                break;
-            case '#':
-                // Skip line comments
-                while (text[token.index] && text[token.index] != '\n') {
-                    ++token.index;
+            }
+            appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            token.index += token.textLength;
+        } else if (ch == '\'') {
+            // Lex a character literal.
+            token.type = CHARACTER;
+            token.text = text + token.index;
+            token.textLength = 0;
+            // TODO: Check length and lex escape sequences.
+            do {
+                ++token.textLength;
+                ++token.column;
+            } while (text[token.index + token.textLength] != '\'');
+            ++token.textLength;
+            // TODO: Handle unclosed '.
+            // if (text[token.index + token.textLength] != '\'') {
+            // }
+            appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            token.index += token.textLength + 1;
+        } else if (ch == '"') {
+            // Lex a string literal.
+            token.type = STRING;
+            token.text = text + token.index;
+            token.textLength = 0;
+            // TODO: Lex escape sequences.
+            do {
+                ++token.textLength;
+                ++token.column;
+            } while (text[token.index + token.textLength] != '"');
+            ++token.textLength;
+            // TODO: Handle unclosed ".
+            // if (text[token.index + token.textLength] != '"') {
+            // }
+            appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+            token.index += token.textLength + 1;
+        } else {
+            // Try to lex an operator.
+            token.type = INVALID;
+            token.text = text + token.index;
+            token.textLength = 0;
+            foundOperator = false;
+            for (size_t i = 0; i < operatorsCount; ++i) {
+                // TODO: Get rid of `strlen()`.
+                size_t length = strlen(operators[i]);
+                if (strncmp(operators[i], token.text, length) == 0) {
+                    token.type = i + PLUS_EQUAL;
+                    token.textLength = length;
+                    appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
+                    token.index += token.textLength;
+                    token.column += token.textLength;
+                    foundOperator = true;
+                    break;
+                }
+            }
+            
+            // If that fails, append and invalid token and skip whitespace.
+            if (!foundOperator) {
+                token.type = INVALID;
+                token.text = text + token.index;
+                token.textLength = 0;
+                while (!isspace(text[token.index + token.textLength])) {
+                    ++token.textLength;
                     ++token.column;
                 }
-                break;
-            case '0'...'9':
-                // Lex a number.
-                token.type = NUMBER;
-                token.text = text + token.index;
-                token.textLength = 0;
-                while (isdigit(text[token.index + token.textLength])) {
-                    ++token.textLength;
-                }
                 appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
                 token.index += token.textLength;
-                token.column += token.textLength;
-                break;
-            case 'A'...'Z':
-            case 'a'...'z':
-            case '_':
-                // Lex an identifier.
-                token.type = IDENTIFIER;
-                token.text = text + token.index;
-                token.textLength = 0;
-                while (isalnum(text[token.index + token.textLength])) {
-                    ++token.textLength;
-                }
-
-                for (size_t i = 0; i < keywordsCount; ++i) {
-                    // TODO: Get rid of `strlen()` here and store the lengths of each keyword in the
-                    // array.
-                    if (strncmp(keywords[i], token.text, max(token.textLength, strlen(keywords[i]))) == 0) {
-                        token.type = i + PACKAGE;
-                        break;
-                    }
-                }
-                appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
-                token.index += token.textLength;
-                token.column += token.textLength;
-                break;
-            case '"':
-                break;
-            case '\'':
-                break;
-            case '!'...'/':
-            case ':'...'@':
-            case '['...'^':
-            case '`':
-            case '{'...'~':
-                // Lex an operator.
-                token.type = INVALID;
-                token.text = text + token.index;
-                token.textLength = 0;
-                keepLexing = false;
-                for (size_t i = 0; i < operatorsCount; ++i) {
-                    // TODO: Get rid of `strlen()`.
-                    size_t length = strlen(operators[i]);
-                    if (strncmp(operators[i], token.text, length) == 0) {
-                        token.type = i + PLUS_EQUAL;
-                        token.textLength = length;
-                        appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
-                        token.index += token.textLength;
-                        token.column += token.textLength;
-                        keepLexing = true;
-                        break;
-                    }
-                }
-                break;
-            default:
-                token.type = INVALID;
-                token.text = text + token.index;
-                token.textLength = 0;
-                appendToken(&token, &tokens, &tokensCapacity, &tokensCount);
-                keepLexing = false;
+            }
         }
     }
 
