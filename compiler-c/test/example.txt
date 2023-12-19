@@ -1,1 +1,35 @@
-package# hello#;# a
+#
+// an example
+package animals;
+from std.io import printLine;
+
+struct Animal {
+    string name;
+    uint age;
+    void makeNoise(*this);
+}
+#
+struct Dog {
+    embed Animal;
+    string tag;
+}
+
+struct Cat {
+    embed Animal;
+    string breed;
+}
+
+void makeNoise(*Dog dog) {
+    printLine("woof");
+}
+
+void makeNoise(*Cat cat) {
+    printLine("meow");
+}
+
+void main() {
+    mut *Animal pet = &Dog();
+    pet.makeNoise();
+    pet = &Cat();
+    pet.makeNoise();
+}

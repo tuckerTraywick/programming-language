@@ -148,13 +148,18 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
 
     assert(text != NULL && "Must pass a string.");
     listInitialize(tokens, sizeof(struct Token), TOKENS_INITIAL_CAPACITY, TOKENS_CAPACITY_INCREMENT);
-    listInitialize(errors, sizeof(char*), ERRORS_INITIAL_CAPACITY, ERRORS_CAPACITY_INCREMENT);
+    listInitialize(errors, sizeof(struct LexingError), ERRORS_INITIAL_CAPACITY, ERRORS_CAPACITY_INCREMENT);
     struct Token token = {0};
     bool foundOperator = true;
 
     while (text[token.index]) {
         char ch = text[token.index];
-        if (isspace(ch)) {
+        if (ch == '\n') {
+            // Skip newlines.
+            ++token.index;
+            ++token.row;
+            token.column = 0;
+        } else if (isspace(ch)) {
             // Skip whitespace.
             ++token.index;
             ++token.column;
@@ -252,15 +257,23 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
                 token.type = INVALID;
                 token.text = text + token.index;
                 token.textLength = 0;
+                listAppend(tokens, (char*)(&token));
+                struct LexingError error = {
+                    .message="Invalid token.",
+                    .index=token.index,
+                    .row=token.row,
+                    .column=token.column,
+                };
+                
                 while (text[token.index + token.textLength] && !isspace(text[token.index + token.textLength])) {
                     ++token.textLength;
                     ++token.column;
                 }
-                listAppend(tokens, (char*)(&token));
+                listAppend(errors, (char*)(&error));
                 token.index += token.textLength;
             }
         }
     }
 
-    return true;
+    return !errors->count;
 }

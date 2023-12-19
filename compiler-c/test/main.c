@@ -32,6 +32,15 @@ static void printTokens(TokenList *tokens) {
     }
 }
 
+static void printLexingErrors(ErrorList *errors) {
+    if (errors->count) {
+        for (size_t i = 0; i < errors->count; ++i) {
+            struct LexingError *error = (struct LexingError*)listGet(errors, i);
+            logfDebug("Lexing error (%zu:%zu): %s", error->row + 1, error->column + 1, error->message);
+        }
+    }
+}
+
 void testList(void) {
     struct List list;
     struct Token token = {
@@ -74,6 +83,7 @@ void testLexString(void) {
     ErrorList errors = {0};
     lexString(text, &tokens, &errors);
     logfDebug("tokensCount=%zu, errorMessagesCount=%zu", tokens.count, errors.count);
+    printLexingErrors(&errors);
     printTokens(&tokens);
     
     free(text);

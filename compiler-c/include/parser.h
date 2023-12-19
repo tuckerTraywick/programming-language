@@ -7,6 +7,14 @@ typedef struct List TokenList;
 typedef struct List NodeList;
 typedef struct List ErrorList;
 
+// Represents an error encountered during lexing.
+struct LexingError {
+    char *message; // Unowned, don't free.
+    size_t index;
+    size_t row; // Line number.
+    size_t column; // Index relative to line start.
+};
+
 // Represents the type of a token.
 enum TokenType {
     INVALID,
