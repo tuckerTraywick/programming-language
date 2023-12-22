@@ -19,18 +19,6 @@ static size_t max(size_t a, size_t b) {
     return (a >= b) ? a : b;
 }
 
-// Returns true if the string is a valid escape sequence.
-// static bool isEscape(char *string) {
-//     return string[0] == '\\' && (
-//         string[1] == 'n'
-//         || string[1] == 'r' 
-//         || string[1] == 't'
-//         || string[1] == '\\'
-//         || string[1] == '\''
-//         || string[1] == '"'
-//     );
-// }
-
 char *readFile(FILE *file) {
     // TODO: Check for file errors.
     // TODO: Figure out a portable way to get the size of the file.
