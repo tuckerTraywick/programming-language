@@ -1,8 +1,5 @@
-public package animals;
-from std.io import printLine;
-
 public struct Animal {
-    pubilc string name;
+    public string name;
     public uint age;
     public void makeNoise(*this);
 }
@@ -10,4 +7,24 @@ public struct Animal {
 public struct Dog {
     embed Animal;
     public string tag;
+}
+
+public struct Cat {
+    embed Animal;
+    public string breed;
+}
+
+public void makeNoise(*Dog dog) {
+    printLine("woof");
+}
+
+public void makeNoise(*Cat cat) {
+    printLine("meow");
+}
+
+void main() {
+    mut *Animal pet = &Dog();
+    pet.makeNoise();
+    pet = &Cat();
+    pet.makeNoise();
 }
