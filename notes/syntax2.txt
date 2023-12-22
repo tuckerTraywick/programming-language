@@ -52,17 +52,20 @@ public func makeNoise(hamster &Hamster) {}
 
 
 
-struct Node[T] {
-    next mut optional owned &Node[T]
-    previous mut optional &Node[T]
-    value mut T
-}
+public package std.collections
 
 public struct List[T] {
     first mut optional owned &Node[T]
     last mut optional &Node[T]
     length mut usize
 }
+
+private struct Node[T] {
+    private next mut optional owned &Node[T]
+    private previous mut optional &Node[T]
+    private value mut T
+}
+
 
 
 

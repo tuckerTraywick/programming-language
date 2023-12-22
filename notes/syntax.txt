@@ -125,7 +125,7 @@ public struct Entity {
 }
 
 public struct Vector {
-    embed std.operations.Arithmetic, .Equality;
+    from std.operations embed Arithmetic, Equality;
     public float64 x, y, z;
 }
 
@@ -240,10 +240,10 @@ public package list;
 import std.operations;
 
 public struct List<T> {
-    embed std.operations.GetElement, SetElement;
-    mut optional owned *Node<T> start;
-    mut optional *Node<T> end;
-    mut usize length;
+    from std.operations embed GetElement, SetElement;
+    private mut optional owned *Node<T> start;
+    private mut optional *Node<T> end;
+    private mut usize length;
 }
 
 public usize .length(*List list) => auto;
@@ -286,7 +286,7 @@ struct Tab {
 }
 
 struct Buffer {
-    owned []string rows;
+    owned []owned string rows;
 }
 
 struct Cursor {
@@ -294,15 +294,15 @@ struct Cursor {
 }
 
 struct Clipboard {
-    owned []string rows;
+    owned []owned string rows;
 }
 
 
 
 
 struct Union cases {
-    int a;
-    [4]char b;
+    float a;
+    [4]uint8 b;
 }
 
 
@@ -351,20 +351,49 @@ void f<T: Trait>(); // type constraint.
 
 
 public struct BlockHeader {
-    // <next, previous>
     public usize strongReferences;
     public usize weakReferences;
     public usize size;
-    // <data>
 }
 
 public struct Block {
     public *Block next, previous;
     embed BlockHeader;
-    public [0]byte data;
+    public [0]byte data; // Flexible array field.
 }
 
 public struct Allocator<T> {
     public owned *T allocate(*mut this); // The returned pointer must include a BlockHeader above it.
     public void deallocate(*mut this, owned *T value);
 }
+
+
+
+
+mut string foo;
+[]mut char foo;
+owned string foo;
+
+struct string = string;
+struct mut string = mut []mut char;
+mut string foo; // Same as `mut []mut char foo;`.
+
+
+
+
+// Crash if you free data while it still has weak pointers?
+owned *int a = new 1;
+weak *int b = a;
+drop a;
+>>> Memory error: ...
+
+// Or only crash if you dereference a weak pointer after the data is freed?
+owned *int a = new 1;
+weak *int b = a;
+drop a;
+if a->isAlive() {
+    printLine("a is alive");
+} else {
+    printLine("a is dead");
+}
+>>> a is dead

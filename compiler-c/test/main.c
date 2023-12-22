@@ -55,7 +55,7 @@ void testList(void) {
     listAppend(&list, (char*)&token);
     listAppend(&list, (char*)&token);
     struct Token *item = (struct Token*)listGet(&list, 1);
-    logfDebug("%zu", item->textLength);
+    test(item->textLength == 2 && item->type == IDENTIFIER);
 }
 
 void testReadFile(void) {
@@ -95,7 +95,7 @@ int main(void) {
     suiteOut = testOut = assertOut = resultsOut = stdout;
     debugOut = infoOut = warningOut = errorOut = stdout;
     beginTesting();
-        // runSuite(testList);
+        runSuite(testList);
         runSuite(testReadFile);
         runSuite(testOpenAndReadFile);
         runSuite(testLexString);

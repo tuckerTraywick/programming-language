@@ -617,7 +617,7 @@ public struct Or[T..] cases {
 // myApi.txt
 public package myApi;
 @description "Returns 1."
-@returnValue "Always 1."
+@return "Always 1."
 int f() => 1;
 
 // shell
@@ -629,9 +629,11 @@ $ help(myApi.f)
 myApi.f
 SIGNATURE
     package myApi;
-    public int f();
+    int f();
+
 DESCRIPTION
     Returns 1.
+
 RETURN VALUE
     Always returns 1.
 $ myApi.f()
