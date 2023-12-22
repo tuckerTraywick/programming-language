@@ -19,6 +19,18 @@ static size_t max(size_t a, size_t b) {
     return (a >= b) ? a : b;
 }
 
+// Returns true if the string is a valid escape sequence.
+// static bool isEscape(char *string) {
+//     return string[0] == '\\' && (
+//         string[1] == 'n'
+//         || string[1] == 'r' 
+//         || string[1] == 't'
+//         || string[1] == '\\'
+//         || string[1] == '\''
+//         || string[1] == '"'
+//     );
+// }
+
 char *readFile(FILE *file) {
     // TODO: Check for file errors.
     // TODO: Figure out a portable way to get the size of the file.
@@ -150,7 +162,6 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
     listInitialize(tokens, sizeof(struct Token), TOKENS_INITIAL_CAPACITY, TOKENS_CAPACITY_INCREMENT);
     listInitialize(errors, sizeof(struct LexingError), ERRORS_INITIAL_CAPACITY, ERRORS_CAPACITY_INCREMENT);
     struct Token token = {0};
-    bool foundOperator = true;
 
     while (text[token.index]) {
         char ch = text[token.index];
@@ -205,31 +216,54 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             token.type = CHARACTER;
             token.text = text + token.index;
             token.textLength = 0;
-            // TODO: Check length and lex escape sequences.
             do {
                 ++token.textLength;
-                ++token.column;
-            } while (text[token.index + token.textLength] != '\'');
-            ++token.textLength;
-            // TODO: Handle unclosed '.
-            // if (text[token.index + token.textLength] != '\'') {
-            // }
+            } while (text[token.index + token.textLength] && text[token.index + token.textLength] != '\''
+                     && text[token.index + token.textLength] != '\n');
+
+            // Handle unclosed quote.
+            if (text[token.index + token.textLength] == '\'') {
+                ++token.textLength;
+            } else {
+                token.type = INVALID;
+                struct LexingError error = {
+                    .message = "Unclosed '.",
+                    .index=token.index,
+                    .row=token.row,
+                    .column=token.column,
+                };
+                listAppend(errors, (char*)(&error));
+            }
+
+            // TODO: Check for an escape sequence.
             listAppend(tokens, (char*)(&token));
-            token.index += token.textLength + 1;
+            token.index += token.textLength;
+            token.column += token.textLength;
         } else if (ch == '"') {
             // Lex a string literal.
             token.type = STRING;
             token.text = text + token.index;
             token.textLength = 0;
-            // TODO: Lex escape sequences.
             do {
                 ++token.textLength;
-                ++token.column;
-            } while (text[token.index + token.textLength] != '"');
-            ++token.textLength;
-            // TODO: Handle unclosed ".
-            // if (text[token.index + token.textLength] != '"') {
-            // }
+            } while (text[token.index + token.textLength] && text[token.index + token.textLength] != '"'
+                     && text[token.index + token.textLength] != '\n');
+
+            // Handle unclosed quote.
+            if (text[token.index + token.textLength] == '"') {
+                ++token.textLength;
+            } else {
+                token.type = INVALID;
+                struct LexingError error = {
+                    .message = "Unclosed \".",
+                    .index=token.index,
+                    .row=token.row,
+                    .column=token.column,
+                };
+                listAppend(errors, (char*)(&error));
+            }
+
+            // TODO: Check for escape sequences.
             listAppend(tokens, (char*)(&token));
             token.index += token.textLength + 1;
         } else {
@@ -237,7 +271,7 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             token.type = INVALID;
             token.text = text + token.index;
             token.textLength = 0;
-            foundOperator = false;
+            bool foundOperator = false;
             for (size_t i = 0; i < operatorsCount; ++i) {
                 // TODO: Get rid of `strlen()`.
                 size_t length = strlen(operators[i]);

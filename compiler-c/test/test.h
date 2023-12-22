@@ -6,6 +6,7 @@
 
 // Runs `testFunction` in a child process and reports if it crashes or exits abnormally.
 #define runSuite(testFunction) runSuiteImpl((testFunction), #testFunction, __FILE__, __LINE__, __func__)
+
 #define test(expression) testImpl((expression), #expression, __FILE__, __LINE__, __func__)
 #undef assert
 #define assert(expression) assertImpl((expression), #expression, __FILE__, __LINE__, __func__)

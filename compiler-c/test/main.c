@@ -25,9 +25,9 @@ static void printTokens(TokenList *tokens) {
         }
 
         if (token->type < NEWLINE) {
-            logfDebug("%zu %s '%.*s' length=%zu, index=%zu", i, types[token->type], (int)textLength, text, textLength, token->index);
+            logfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu", i, types[token->type], (int)textLength, text, textLength, token->index, token->row, token->column);
         } else {
-            logfDebug("%zu '%.*s' length=%zu, index=%zu", i, (int)textLength, text, textLength, token->index);
+            logfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu", i, (int)textLength, text, textLength, token->index, token->row, token->column);
         }
     }
 }
