@@ -107,6 +107,7 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
         "not",
         "true",
         "false",
+        "this",
     };
     static size_t keywordsCount = (sizeof keywords)/(sizeof keywords[0]);
 
@@ -198,7 +199,6 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             token.textLength = 0;
             do {
                 ++token.textLength;
-                ++token.column;
             } while (isalnum(text[token.index + token.textLength]));
 
             for (size_t i = 0; i < keywordsCount; ++i) {
@@ -211,6 +211,7 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             }
             listAppend(tokens, (char*)(&token));
             token.index += token.textLength;
+            token.column += token.textLength;
         } else if (ch == '\'') {
             // Lex a character literal.
             token.type = CHARACTER;
@@ -221,7 +222,7 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             } while (text[token.index + token.textLength] && text[token.index + token.textLength] != '\''
                      && text[token.index + token.textLength] != '\n');
 
-            // Handle unclosed quote.
+            // Handle an unclosed quote.
             if (text[token.index + token.textLength] == '\'') {
                 ++token.textLength;
             } else {
@@ -249,7 +250,7 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             } while (text[token.index + token.textLength] && text[token.index + token.textLength] != '"'
                      && text[token.index + token.textLength] != '\n');
 
-            // Handle unclosed quote.
+            // Handle an unclosed quote.
             if (text[token.index + token.textLength] == '"') {
                 ++token.textLength;
             } else {
@@ -265,7 +266,8 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
 
             // TODO: Check for escape sequences.
             listAppend(tokens, (char*)(&token));
-            token.index += token.textLength + 1;
+            token.index += token.textLength;
+            token.column += token.textLength;
         } else {
             // Try to lex an operator.
             token.type = INVALID;
@@ -291,20 +293,20 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
                 token.type = INVALID;
                 token.text = text + token.index;
                 token.textLength = 0;
-                listAppend(tokens, (char*)(&token));
                 struct LexingError error = {
                     .message="Invalid token.",
                     .index=token.index,
                     .row=token.row,
                     .column=token.column,
                 };
+                listAppend(errors, (char*)(&error));
                 
                 do {
                     ++token.textLength;
-                    ++token.column;
                 } while (text[token.index + token.textLength] && !isspace(text[token.index + token.textLength]));
-                listAppend(errors, (char*)(&error));
+                listAppend(tokens, (char*)(&token));
                 token.index += token.textLength;
+                token.column += token.textLength;
             }
         }
     }

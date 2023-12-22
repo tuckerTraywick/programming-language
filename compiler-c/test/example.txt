@@ -1,4 +1,13 @@
-'\'
-'ab'c
-"abcd
-a
+public package animals;
+from std.io import printLine;
+
+public struct Animal {
+    pubilc string name;
+    public uint age;
+    public void makeNoise(*this);
+}
+
+public struct Dog {
+    embed Animal;
+    public string tag;
+}

@@ -63,6 +63,7 @@ enum TokenType {
     NOT,
     T,
     F,
+    THIS,
 
     PLUS_EQUAL,
     MINUS_EQUAL,
