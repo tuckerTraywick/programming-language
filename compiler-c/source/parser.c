@@ -176,19 +176,19 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             ++token.column;
         }  else if (ch == '/' && text[token.index + 1] && text[token.index + 1] == '/') {
             // Skip line comments.
-            while (text[token.index] && text[token.index] != '\n') {
+            do {
                 ++token.index;
                 ++token.column;
-            }
+            } while (text[token.index] && text[token.index] != '\n');
         } else if (isdigit(ch)) {
             // Lex a number.
             token.type = NUMBER;
             token.text = text + token.index;
             token.textLength = 0;
-            while (isdigit(text[token.index + token.textLength])) {
+            do {
                 ++token.textLength;
                 ++token.column;
-            }
+            } while (isdigit(text[token.index + token.textLength]));            
             listAppend(tokens, (char*)(&token));
             token.index += token.textLength;
         } else if (isalpha(ch) || ch == '_') {
@@ -196,10 +196,10 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             token.type = IDENTIFIER;
             token.text = text + token.index;
             token.textLength = 0;
-            while (isalnum(text[token.index + token.textLength])) {
+            do {
                 ++token.textLength;
                 ++token.column;
-            }
+            } while (isalnum(text[token.index + token.textLength]));
 
             for (size_t i = 0; i < keywordsCount; ++i) {
                 // TODO: Get rid of `strlen()` here and store the lengths of each keyword in the
@@ -299,10 +299,10 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
                     .column=token.column,
                 };
                 
-                while (text[token.index + token.textLength] && !isspace(text[token.index + token.textLength])) {
+                do {
                     ++token.textLength;
                     ++token.column;
-                }
+                } while (text[token.index + token.textLength] && !isspace(text[token.index + token.textLength]));
                 listAppend(errors, (char*)(&error));
                 token.index += token.textLength;
             }
