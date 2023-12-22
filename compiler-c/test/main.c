@@ -3,7 +3,7 @@
 #include "test.h"
 #define LOG_IMPL
 #include "log.h"
-#include "parser.h"
+#include "lexer.h"
 #include "list.h"
 
 static void printTokens(TokenList *tokens) {

@@ -12,6 +12,9 @@ struct List {
     size_t capacityIncrement;
 };
 
+// Indicates a `List` of `LexingError`s or `ParsingErrors`.
+typedef struct List ErrorList;
+
 // Sets up a new list. Must be destroyed after use with `listDestroy()`.
 void listInitialize(struct List *list, size_t itemSize, size_t capacity, size_t capacityIncrement);
 
