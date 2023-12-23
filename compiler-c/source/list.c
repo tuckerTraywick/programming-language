@@ -42,3 +42,8 @@ char *listGetImpl(size_t elementSize, struct List *list, size_t index) {
     assert(index < list->count && "Index out of bounds.");
     return list->elements + index*elementSize;
 }
+
+char *listLastImpl(size_t elementSize, struct List *list) {
+    assert(list != NULL && "Must pass a list.");
+    return list->elements + list->count*elementSize;
+}

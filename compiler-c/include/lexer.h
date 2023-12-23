@@ -36,7 +36,7 @@ enum TokenType {
     STRUCT,
     CASES,
     EMBED,
-    PASS,
+    EMBEDS,
     RETURN,
     YIELD,
     BREAK,
@@ -127,6 +127,24 @@ struct LexingResult {
     struct LexingError *errors;
     size_t errorsCount;
 };
+
+// enum LexingAction {
+//     REJECT,
+//     ACCEPT,
+//     GOTO,
+//     RECOVER,
+// };
+
+// struct LexingTransition {
+//     enum LexingAction action;
+//     union {
+//         enum TokenType type; // Used when `action == ACCEPT`.
+//         char *message; // Used when `action == RECOVER`. Unowned, don't free.
+//         size_t next; // Used when `action == GOTO`.
+//     };
+// };
+
+// typedef struct LexingTransition (*LexingTable)[256];
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyLexingResult(struct LexingResult *result);

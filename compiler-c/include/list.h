@@ -12,6 +12,9 @@
 // Gets the element at the given index in the list.
 #define listGet(type, list, index) ((type*) listGetImpl(sizeof (type), (list), (index)))
 
+// Gets the last element of the list.
+#define listLast(type, list) ((type*) listLastImpl(sizeof (type), (list)))
+
 // Represents a dynamic array that can be grown as needed.
 struct List {
     char *elements;
@@ -30,5 +33,8 @@ void listAppendImpl(struct List *list, char *element, size_t elementSize, size_t
 
 // Implementation of `listGet()`.
 char *listGetImpl(size_t elementSize, struct List *list, size_t index);
+
+// Implementation of `listLast()`.
+char *listLastImpl(size_t elementSize, struct List *list);
 
 #endif // LIST_H

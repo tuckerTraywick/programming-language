@@ -76,7 +76,7 @@ struct LexingResult lexString(char *text) {
         "struct",
         "cases",
         "embed",
-        "pass",
+        "embeds",
         "return",
         "yield",
         "break",
@@ -310,9 +310,9 @@ struct LexingResult lexString(char *text) {
     }
 
     return (struct LexingResult) {
-        .tokens = (struct Token*)tokens.elements,
+        .tokens = (struct Token*) tokens.elements,
         .tokensCount = tokens.count,
-        .errors = (struct LexingError*)errors.elements,
+        .errors = (struct LexingError*) errors.elements,
         .errorsCount = errors.count,
     };
 }

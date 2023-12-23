@@ -1,5 +1,6 @@
 #include <assert.h> // assert()
 #include <stddef.h> // size_t
+#include <stdbool.h> // bool
 #include <stdlib.h> // malloc(), free()
 #include "parser.h"
 #include "lexer.h"
@@ -22,8 +23,9 @@ void destroyParsingResult(struct ParsingResult *result) {
 }
 
 struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
-    struct ParsingTransition transitions[][NODE_TYPE_COUNT] = {
-        {[NUMBER] = {.action=END_NODE}},
+    struct ParsingTransition transitions[][TOKEN_TYPE_COUNT] = {
+        {[NUMBER]={.action=GOTO, .next=1}},
+        {[IDENTIFIER]={.action=REJECT}},
     };
 
     assert(tokens != NULL && "Must pass an array of tokens.");
@@ -31,31 +33,49 @@ struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
     struct List errors = listCreate(struct ParsingError, ERRORS_INITIAL_CAPACITY);
     struct List states = listCreate(size_t, STACK_INITIAL_CAPACITY);
 
+    // Start at the first row of the transition table.
+    size_t startState = 0;
+    listAppend(&states, &startState, STACK_CAPACITY_INCREMENT);
+
     // Every tree has at least a parent node.
     struct Node firstNode = {
         .type = PROGRAM,
-        .children = NULL,
         .tokens = tokens,
-        .tokensCount = 0,
     };
     listAppend(&nodes, &firstNode, NODES_CAPACITY_INCREMENT);
 
-    struct Node secondNode = {.type=TOKEN, .children=NULL, .tokens=tokens, tokensCount=1};
-    listAppend(&nodes, &secondNode, NODES_CAPACITY_INCREMENT);
-    listGet(struct Node, &nodes, 0)->children = listGet(struct Node, &nodes, 1);
-    ++listGet(struct Node, &nodes, 0)->childrenCount;
-
-    struct Node thirdNode = {.type=TOKEN, .children=NULL, .tokens=tokens+1, tokensCount=1};
-    listAppend(&nodes, &secondNode, NODES_CAPACITY_INCREMENT);
-    listGet(struct Node, &nodes, 0)->children[1] = *listGet(struct Node, &nodes, 2);
-    ++listGet(struct Node, &nodes, 0)->childrenCount;
-
+    bool keepParsing = true;
+    size_t state = 0;
+    size_t tokenIndex = 0;
+    struct Node *currentNode = listGet(struct Node, &nodes, 0);
+    while (keepParsing && tokenIndex < tokensCount) {
+        struct Token token = tokens[tokenIndex];
+        struct ParsingTransition transition = transitions[state][token.type];
+        struct Node newNode;
+        switch (transition.action) {
+            case REJECT:
+                keepParsing = false;
+                break;
+            case GOTO:
+                newNode = (struct Node) {
+                    .type = TOKEN,
+                    .parent = currentNode,
+                    .tokens = tokens + tokenIndex,
+                    .tokensCount = 1,
+                };
+                listAppend(&nodes, &newNode, NODES_CAPACITY_INCREMENT);
+                currentNode->next = listLast(struct Node, &nodes);
+                currentNode = currentNode->next;
+                state = transition.next;
+                break;
+        }
+    }
 
     listDestroy(&states);
     return (struct ParsingResult) {
-        .nodes = (struct Node*)nodes.elements,
+        .nodes = (struct Node*) nodes.elements,
         .nodesCount = nodes.count,
-        .errors = (struct ParsingError*)errors.elements,
+        .errors = (struct ParsingError*) errors.elements,
         .errorsCount = errors.count,
     };
 }

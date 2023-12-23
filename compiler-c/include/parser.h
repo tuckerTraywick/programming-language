@@ -23,8 +23,9 @@ enum NodeType {
 // Represents a node in a syntax tree.
 struct Node {
     enum NodeType type;
-    struct Node *children; // The children are allocated in one chunk. Unowned, don't free.
-    size_t childrenCount;
+    struct Node *parent;
+    struct Node *child;
+    struct Node *next;
     struct Token *tokens; // Points to the first token parsed to create the node. Unowned, don't free.
     size_t tokensCount;
 };
@@ -42,17 +43,19 @@ enum ParsingAction {
     BEGIN_NODE,
     END_NODE,
     GOTO,
-
-    PARSING_ACTION_COUNT,
+    RECOVER,
 };
 
 struct ParsingTransition {
     enum ParsingAction action;
-    enum NodeType type; // Only used for `BEGIN_NODE` and `END_NODE`.
-    size_t next; // The index of the next state.
+    union {
+        enum NodeType type; // Used when `action == BEGIN_NODE` or `action == END_NODE`.
+        char *message; // Used when `action == RECOVER`. Unowned, don't free.
+        size_t next; // Used when `action == GOTO`.
+    };
 };
 
-typedef struct ParsingTransition (*ParsingTable)[NODE_TYPE_COUNT];
+typedef struct ParsingTransition (*ParsingTable)[TOKEN_TYPE_COUNT];
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyParsingResult(struct ParsingResult *result);

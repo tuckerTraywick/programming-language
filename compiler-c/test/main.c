@@ -72,9 +72,9 @@ static void printNode(struct Node *node, int depth) {
         putsDebug("\n");
     }
 
-    for (size_t i = 0; i < node->childrenCount; ++i) {
-        printNode(node->children + i, depth + 1);
-    }
+    // for (size_t i = 0; i < node->childrenCount; ++i) {
+    //     printNode(node->children + i, depth + 1);
+    // }
 }
 
 static void printTree(struct Node *node) {
