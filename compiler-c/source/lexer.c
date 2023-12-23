@@ -11,8 +11,8 @@
 #define TOKENS_INITIAL_CAPACITY 3000
 #define TOKENS_CAPACITY_INCREMENT 1500
 
-#define ERRORS_INITIAL_CAPACITY 1000
-#define ERRORS_CAPACITY_INCREMENT 500
+#define ERRORS_INITIAL_CAPACITY 500
+#define ERRORS_CAPACITY_INCREMENT 100
 
 // Returns the max of `a` and `b`. Helper for `lexString()`.
 static size_t max(size_t a, size_t b) {
@@ -162,9 +162,12 @@ struct LexingResult lexString(char *text) {
         char ch = text[token.index];
         if (ch == '\n') {
             // Lex a newline.
+            token.length = 0;
             do {
-                ++token.index;
-            } while (text[token.index] == '\n');
+                ++token.length;
+            } while (text[token.index + token.length] == '\n');
+            token.index += token.length;
+            token.row += token.length;
             token.column = 0;
         } else if (isspace(ch)) {
             // Skip whitespace.
@@ -307,9 +310,9 @@ struct LexingResult lexString(char *text) {
     }
 
     return (struct LexingResult) {
-        .tokens = (struct Token*) tokens.elements,
+        .tokens = (struct Token*)tokens.elements,
         .tokensCount = tokens.count,
-        .errors = (struct LexingError*) errors.elements,
+        .errors = (struct LexingError*)errors.elements,
         .errorsCount = errors.count,
     };
 }

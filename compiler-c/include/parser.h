@@ -45,13 +45,16 @@ enum ParsingAction {
     PARSING_ACTION_COUNT,
 };
 
-struct ParsingState {
+struct ParsingTransition {
     enum ParsingAction action;
-    enum NodeType type; // Only used for END_NODE.
-    size_t next;
+    enum NodeType type; // Only used for `BEGIN_NODE` and `END_NODE`.
+    size_t next; // The index of the next state.
 };
 
-typedef struct ParsingState (*ParsingTable)[NODE_TYPE_COUNT];
+typedef struct ParsingTransition (*ParsingTable)[NODE_TYPE_COUNT];
+
+// Deallocates a `LexingResult`'s buffers and zeros its memory.
+void destroyParsingResult(struct ParsingResult *result);
 
 // Parses an array of tokens into a syntax tree.
 struct ParsingResult parse(struct Token *tokens, size_t tokensCount);
