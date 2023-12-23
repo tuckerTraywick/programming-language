@@ -1,0 +1,45 @@
+- table driven?
+- pushdown automata
+
+program = identifier ";"
+0:
+    identifier: 1
+    else: reject
+1:
+    ";": accept
+    else: reject
+
+program = number "+" number
+0:
+    number: 1
+    else: reject
+1:
+    "+": 2
+    else: reject
+2:
+    number: accept
+    else: reject
+
+program = ?"-" number
+0:
+    "-": 1
+    number: accept
+1:
+    number: accept
+    else: reject
+
+packageStatement = ?"public" "package" (identifier ! "Expected a package name.") ";"
+0:
+    "public": 1
+    "package": 2
+1:
+    "package": 2
+    else: reject
+2:
+    identifier: 3
+    else: error "Expected a package name."
+3:
+    ";": accept
+
+
+
