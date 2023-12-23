@@ -4,41 +4,40 @@
 #include <string.h> // memcpy()
 #include "list.h"
 
-void listInitialize(struct List *list, size_t itemSize, size_t capacity, size_t capacityIncrement) {
-    char *items = malloc(capacity*itemSize);
-    assert(items != NULL && "`malloc()` failed.");
-    *list = (struct List) {
-        .capacity = capacity,
-        .capacityIncrement = capacityIncrement,
-        .count = 0,
-        .items = items,
-        .itemSize = itemSize,
-    };
-}
-
 void listDestroy(struct List *list) {
     assert(list != NULL && "Must pass a list.");
-    free(list->items);
+    free(list->elements);
     *list = (struct List) {0};
 }
 
-void listAppend(struct List *list, char *item) {
+struct List listCreateImpl(size_t elementSize, size_t capacity) {
+    char *elements = malloc(capacity*elementSize);
+    assert(elements != NULL && "`malloc()` failed.");
+    return (struct List) {
+        .elements = elements,
+        .capacity = capacity,
+        .count = 0,
+    };
+}
+
+void listAppendImpl(struct List *list, char *element, size_t elementSize) {
     assert(list != NULL && "Must pass a list.");
-    assert(item != NULL && "Must pass an item.");
+    assert(element != NULL && "Must pass an element.");
 
     // Extend the list if needed.
     if (list->count >= list->capacity) {
-        list->capacity += list->capacityIncrement;
-        char *newItems = realloc(list->items, list->capacity*list->itemSize);
-        assert(newItems != NULL && "`realloc()` failed.");
-        list->items = newItems;
+        list->capacity += elementSize;
+        char *newElements = realloc(list->elements, list->capacity*elementSize);
+        assert(newElements != NULL && "`realloc()` failed.");
+        list->elements = newElements;
     }
 
-    memcpy(list->items + list->count*list->itemSize, item, list->itemSize);
+    memcpy(list->elements + list->count*elementSize, element, elementSize);
     ++list->count;
 }
 
-char *listGet(struct List *list, size_t index) {
+char *listGetImpl(size_t elementSize, struct List *list, size_t index) {
+    assert(list != NULL && "Must pass a list.");
     assert(index < list->count && "Index out of bounds.");
-    return list->items + index*list->itemSize;
+    return list->elements + index*elementSize;
 }

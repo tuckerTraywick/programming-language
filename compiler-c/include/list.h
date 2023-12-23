@@ -3,28 +3,32 @@
 
 #include <stddef.h> // size_t
 
-// Stores a dynamic array of items that can be grown as needed.
+// Creates a new list with the given type of elements and the given capacity.
+#define listCreate(type, capacity) (listCreateImpl(sizeof (type), (capacity)))
+
+// Appends the given element to the list.
+#define listAppend(list, element) (listAppendImpl((list), (char*)(element), sizeof *(element)))
+
+// Gets the element at the given index in the list.
+#define listGet(type, list, index) ((type*) listGetImpl(sizeof (type), (list), (index)))
+
+// Represents a dynamic array that can be grown as needed.
 struct List {
-    char *items;
-    size_t itemSize;
-    size_t count;
+    char *elements;
     size_t capacity;
-    size_t capacityIncrement;
+    size_t count;
 };
 
-// Indicates a `List` of `LexingError`s or `ParsingErrors`.
-typedef struct List ErrorList;
-
-// Sets up a new list. Must be destroyed after use with `listDestroy()`.
-void listInitialize(struct List *list, size_t itemSize, size_t capacity, size_t capacityIncrement);
-
-// Deallocates a list's items and zeros its memory.
+// Deallocates a list's elements and zeros its memory.
 void listDestroy(struct List *list);
 
-// Appends an item to a list
-void listAppend(struct List *list, char *item);
+// Implementation of `listCreate()`.
+struct List listCreateImpl(size_t elementSize, size_t capacity);
 
-// Gets the address of an element.
-char *listGet(struct List *list, size_t index);
+// Implementation of `listAppend()`.
+void listAppendImpl(struct List *list, char *element, size_t elementSize);
+
+// Implementation of `listGet()`.
+char *listGetImpl(size_t elementSize, struct List *list, size_t index);
 
 #endif // LIST_H

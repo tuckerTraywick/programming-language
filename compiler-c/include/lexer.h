@@ -3,9 +3,6 @@
 #include <stdio.h> // FILE
 #include "list.h"
 
-// Represents a `List` of tokens.
-typedef struct List TokenList;
-
 // Represents an error encountered during lexing.
 struct LexingError {
     char *message; // Unowned, don't free.
@@ -107,16 +104,26 @@ enum TokenType {
     RIGHT_BRACE,
 };
 
-// Represents a token lexed from an input stream. Stores information about the token's contents and
-// its position in the string being lexed.
+// Represents a token lexed from an input stream.
 struct Token {
     enum TokenType type;
     char *text; // NOT null-terminated. UNOWNED, DO NOT FREE.
-    size_t textLength;
+    size_t length;
     size_t index;
     size_t row; // Line number.
     size_t column; // Index relative to line start.
 };
+
+// Represents the result of lexing a string. Stores a list of tokens and a list of errors.
+struct LexingResult {
+    struct Token *tokens;
+    size_t tokensCount;
+    struct LexingError *errors;
+    size_t errorsCount;
+};
+
+// Deallocates a `LexingResult`'s buffers and zeros its memory.
+void destroyLexingResult(struct LexingResult *result);
 
 // Reads a file into a string. The string must be deallocated with `free()` after use.
 char *readFile(FILE *file);
@@ -124,6 +131,5 @@ char *readFile(FILE *file);
 // Reads the file at `path` into a string. The string must be deallocated with `free()` after use.
 char *openAndReadFile(char *path);
 
-// Lexes a string. `tokens` and `errors` do not need to be initialized. The caller is responsible
-// for freeing them. Returns true if no errors were encountered.
-bool lexString(char *text, TokenList *tokens, ErrorList *errors);
+// Lexes a string into an array of tokens.
+struct LexingResult lexString(char *text);

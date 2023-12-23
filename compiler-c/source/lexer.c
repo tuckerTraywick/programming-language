@@ -6,6 +6,7 @@
 #include <ctype.h> // isdigit(), isalpha(), isalnum(), ispunct()
 #include <string.h> // strncmp()
 #include "log.h"
+#include "list.h"
 #include "lexer.h"
 
 #define TOKENS_INITIAL_CAPACITY 3000
@@ -17,6 +18,13 @@
 // Returns the max of `a` and `b`. Helper for `lexString()`.
 static size_t max(size_t a, size_t b) {
     return (a >= b) ? a : b;
+}
+
+void destroyLexingResult(struct LexingResult *result) {
+    assert(result != NULL && "Must pass a result.");
+    free(result->tokens);
+    free(result->errors);
+    *result = (struct LexingResult) {0};
 }
 
 char *readFile(FILE *file) {
@@ -53,7 +61,7 @@ char *openAndReadFile(char *path) {
     return text;
 }
 
-bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
+struct LexingResult lexString(char *text) {
     // A mapping of keywords to their token types.
     static char* keywords[] = {
         "package",
@@ -148,8 +156,8 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
     static size_t operatorsCount = (sizeof operators)/(sizeof operators[0]);
 
     assert(text != NULL && "Must pass a string.");
-    listInitialize(tokens, sizeof(struct Token), TOKENS_INITIAL_CAPACITY, TOKENS_CAPACITY_INCREMENT);
-    listInitialize(errors, sizeof(struct LexingError), ERRORS_INITIAL_CAPACITY, ERRORS_CAPACITY_INCREMENT);
+    struct List tokens = listCreate(int, TOKENS_INITIAL_CAPACITY);
+    struct List errors = listCreate(struct LexingError, ERRORS_INITIAL_CAPACITY);
     struct Token token = {0};
 
     while (text[token.index]) {
@@ -173,46 +181,46 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             // Lex a number.
             token.type = NUMBER;
             token.text = text + token.index;
-            token.textLength = 0;
+            token.length = 0;
             do {
-                ++token.textLength;
+                ++token.length;
                 ++token.column;
-            } while (isdigit(text[token.index + token.textLength]));            
-            listAppend(tokens, (char*)(&token));
-            token.index += token.textLength;
+            } while (isdigit(text[token.index + token.length]));            
+            listAppend(&tokens, &token);
+            token.index += token.length;
         } else if (isalpha(ch) || ch == '_') {
             // Lex an identifier or a keyword.
             token.type = IDENTIFIER;
             token.text = text + token.index;
-            token.textLength = 0;
+            token.length = 0;
             do {
-                ++token.textLength;
-            } while (isalnum(text[token.index + token.textLength]));
+                ++token.length;
+            } while (isalnum(text[token.index + token.length]));
 
             for (size_t i = 0; i < keywordsCount; ++i) {
                 // TODO: Get rid of `strlen()` here and store the lengths of each keyword in the
                 // array.
-                if (strncmp(keywords[i], token.text, max(token.textLength, strlen(keywords[i]))) == 0) {
+                if (strncmp(keywords[i], token.text, max(token.length, strlen(keywords[i]))) == 0) {
                     token.type = i + PACKAGE;
                     break;
                 }
             }
-            listAppend(tokens, (char*)(&token));
-            token.index += token.textLength;
-            token.column += token.textLength;
+            listAppend(&tokens, &token);
+            token.index += token.length;
+            token.column += token.length;
         } else if (ch == '\'') {
             // Lex a character literal.
             token.type = CHARACTER;
             token.text = text + token.index;
-            token.textLength = 0;
+            token.length = 0;
             do {
-                ++token.textLength;
-            } while (text[token.index + token.textLength] && text[token.index + token.textLength] != '\''
-                     && text[token.index + token.textLength] != '\n');
+                ++token.length;
+            } while (text[token.index + token.length] && text[token.index + token.length] != '\''
+                     && text[token.index + token.length] != '\n');
 
             // Handle an unclosed quote.
-            if (text[token.index + token.textLength] == '\'') {
-                ++token.textLength;
+            if (text[token.index + token.length] == '\'') {
+                ++token.length;
             } else {
                 token.type = INVALID;
                 struct LexingError error = {
@@ -221,26 +229,26 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
                     .row=token.row,
                     .column=token.column,
                 };
-                listAppend(errors, (char*)(&error));
+                listAppend(&errors, (char*)(&error));
             }
 
             // TODO: Check for an escape sequence.
-            listAppend(tokens, (char*)(&token));
-            token.index += token.textLength;
-            token.column += token.textLength;
+            listAppend(&tokens, &token);
+            token.index += token.length;
+            token.column += token.length;
         } else if (ch == '"') {
             // Lex a string literal.
             token.type = STRING;
             token.text = text + token.index;
-            token.textLength = 0;
+            token.length = 0;
             do {
-                ++token.textLength;
-            } while (text[token.index + token.textLength] && text[token.index + token.textLength] != '"'
-                     && text[token.index + token.textLength] != '\n');
+                ++token.length;
+            } while (text[token.index + token.length] && text[token.index + token.length] != '"'
+                     && text[token.index + token.length] != '\n');
 
             // Handle an unclosed quote.
-            if (text[token.index + token.textLength] == '"') {
-                ++token.textLength;
+            if (text[token.index + token.length] == '"') {
+                ++token.length;
             } else {
                 token.type = INVALID;
                 struct LexingError error = {
@@ -249,28 +257,28 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
                     .row=token.row,
                     .column=token.column,
                 };
-                listAppend(errors, (char*)(&error));
+                listAppend(&errors, (char*)(&error));
             }
 
             // TODO: Check for escape sequences.
-            listAppend(tokens, (char*)(&token));
-            token.index += token.textLength;
-            token.column += token.textLength;
+            listAppend(&tokens, &token);
+            token.index += token.length;
+            token.column += token.length;
         } else {
             // Try to lex an operator.
             token.type = INVALID;
             token.text = text + token.index;
-            token.textLength = 0;
+            token.length = 0;
             bool foundOperator = false;
             for (size_t i = 0; i < operatorsCount; ++i) {
                 // TODO: Get rid of `strlen()`.
                 size_t length = strlen(operators[i]);
                 if (strncmp(operators[i], token.text, length) == 0) {
                     token.type = i + PLUS_EQUAL;
-                    token.textLength = length;
-                    listAppend(tokens, (char*)(&token));
-                    token.index += token.textLength;
-                    token.column += token.textLength;
+                    token.length = length;
+                    listAppend(&tokens, &token);
+                    token.index += token.length;
+                    token.column += token.length;
                     foundOperator = true;
                     break;
                 }
@@ -280,24 +288,29 @@ bool lexString(char *text, TokenList *tokens, ErrorList *errors) {
             if (!foundOperator) {
                 token.type = INVALID;
                 token.text = text + token.index;
-                token.textLength = 0;
+                token.length = 0;
                 struct LexingError error = {
                     .message="Invalid token.",
                     .index=token.index,
                     .row=token.row,
                     .column=token.column,
                 };
-                listAppend(errors, (char*)(&error));
+                listAppend(&errors, (char*)(&error));
                 
                 do {
-                    ++token.textLength;
-                } while (text[token.index + token.textLength] && !isspace(text[token.index + token.textLength]));
-                listAppend(tokens, (char*)(&token));
-                token.index += token.textLength;
-                token.column += token.textLength;
+                    ++token.length;
+                } while (text[token.index + token.length] && !isspace(text[token.index + token.length]));
+                listAppend(&tokens, &token);
+                token.index += token.length;
+                token.column += token.length;
             }
         }
     }
 
-    return !errors->count;
+    return (struct LexingResult) {
+        .tokens = (struct Token*) tokens.elements,
+        .tokensCount = tokens.count,
+        .errors = (struct LexingError*) errors.elements,
+        .errorsCount = errors.count,
+    };
 }

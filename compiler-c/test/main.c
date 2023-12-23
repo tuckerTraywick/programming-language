@@ -3,10 +3,11 @@
 #include "test.h"
 #define LOG_IMPL
 #include "log.h"
-#include "lexer.h"
 #include "list.h"
+#include "lexer.h"
+#include "parser.h"
 
-static void printTokens(TokenList *tokens) {
+static void printTokens(struct Token *tokens, size_t tokensCount) {
     static char *types[] = {
         [INVALID] = "invalid",
         [NUMBER] = "number",
@@ -15,47 +16,43 @@ static void printTokens(TokenList *tokens) {
         [IDENTIFIER] = "identifier",
     };
 
-    for (size_t i = 0; i < tokens->count; ++i) {
-        struct Token *token = (struct Token*)listGet(tokens, i);
-        char *text = token->text;
-        size_t textLength = token->textLength;
-        if (token->type == NEWLINE) {
+    for (size_t i = 0; i < tokensCount; ++i) {
+        struct Token token = tokens[i];
+        char *text = token.text;
+        size_t length = token.length;
+        if (token.type == NEWLINE) {
             text = "\\n";
-            textLength = 2;
+            length = 2;
         }
 
-        if (token->type < NEWLINE) {
-            logfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu", i, types[token->type], (int)textLength, text, textLength, token->index, token->row, token->column);
+        if (token.type < NEWLINE) {
+            logfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu", i, types[token.type], (int)length, text, length, token.index, token.row, token.column);
         } else {
-            logfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu", i, (int)textLength, text, textLength, token->index, token->row, token->column);
+            logfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu", i, (int)length, text, length, token.index, token.row, token.column);
         }
     }
 }
 
-static void printLexingErrors(ErrorList *errors) {
-    if (errors->count) {
-        for (size_t i = 0; i < errors->count; ++i) {
-            struct LexingError *error = (struct LexingError*)listGet(errors, i);
-            logfDebug("Lexing error (%zu:%zu): %s", error->row + 1, error->column + 1, error->message);
+static void printLexingErrors(struct LexingError *errors, size_t errorsCount) {
+    if (errors != NULL) {
+        for (size_t i = 0; i < errorsCount; ++i) {
+            struct LexingError error = errors[i];
+            logfDebug("Lexing error (%zu:%zu): %s", error.row + 1, error.column + 1, error.message);
         }
     }
 }
 
 void testList(void) {
-    struct List list;
-    struct Token token = {
-        .type = IDENTIFIER,
-        .text = "hi",
-        .textLength = 2,
-        .index = 0,
-        .row = 0,
-        .column = 0,
-    };
-    listInitialize(&list, sizeof(struct Token), 1, 10);
-    listAppend(&list, (char*)&token);
-    listAppend(&list, (char*)&token);
-    struct Token *item = (struct Token*)listGet(&list, 1);
-    test(item->textLength == 2 && item->type == IDENTIFIER);
+    struct List list = listCreate(int, 10);
+    int a = 1, b = 2, c = 3;
+    listAppend(&list, &a);
+    listAppend(&list, &b);
+    listAppend(&list, &c);
+    test(*(int*)listGet(int, &list, 0) == 1);
+    test(*(int*)listGet(int, &list, 1) == 2);
+    test(*(int*)listGet(int, &list, 2) == 3);
+
+    listDestroy(&list);
 }
 
 void testReadFile(void) {
@@ -63,6 +60,7 @@ void testReadFile(void) {
     assert(file != NULL && "Failed to open file.");
     char *text = readFile(file);
     assert(text != NULL && "Failed to read file.");
+
     fclose(file);
     free(text);
 }
@@ -72,6 +70,7 @@ void testOpenAndReadFile(void) {
     char *text = openAndReadFile("test/example.txt");
     assert(text != NULL && "Failed to read file.");
     logfDebug("\nfile text:\n%s", text);
+
     free(text);
     debugOut = stdout;
 }
@@ -79,16 +78,13 @@ void testOpenAndReadFile(void) {
 void testLexString(void) {
     char *text = openAndReadFile("test/example.txt");
     assert(text != NULL && "Failed to read file.");
-    TokenList tokens = {0};
-    ErrorList errors = {0};
-    lexString(text, &tokens, &errors);
-    logfDebug("tokensCount=%zu, errorMessagesCount=%zu", tokens.count, errors.count);
-    printLexingErrors(&errors);
-    printTokens(&tokens);
+    struct LexingResult result = lexString(text);
+    logfDebug("tokensCount=%zu, errorMessagesCount=%zu", result.tokensCount, result.errorsCount);
+    printLexingErrors(result.errors, result.errorsCount);
+    printTokens(result.tokens, result.tokensCount);
     
     free(text);
-    listDestroy(&tokens);
-    listDestroy(&errors);
+    destroyLexingResult(&result);
 }
 
 int main(void) {
