@@ -101,6 +101,7 @@ struct LexingResult lexString(char *text) {
         "true",
         "false",
         "this",
+        "auto",
     };
     static size_t keywordsCount = (sizeof keywords)/(sizeof keywords[0]);
 
@@ -160,9 +161,10 @@ struct LexingResult lexString(char *text) {
     while (text[token.index]) {
         char ch = text[token.index];
         if (ch == '\n') {
-            // Skip newlines.
-            ++token.index;
-            ++token.row;
+            // Lex a newline.
+            do {
+                ++token.index;
+            } while (text[token.index] == '\n');
             token.column = 0;
         } else if (isspace(ch)) {
             // Skip whitespace.

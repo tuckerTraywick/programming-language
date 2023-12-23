@@ -61,6 +61,7 @@ enum TokenType {
     T,
     F,
     THIS,
+    AUTO,
 
     PLUS_EQUAL,
     MINUS_EQUAL,
@@ -103,6 +104,8 @@ enum TokenType {
     RIGHT_BRACKET,
     LEFT_BRACE,
     RIGHT_BRACE,
+
+    TOKEN_TYPE_COUNT,
 };
 
 // Represents a token lexed from an input stream.

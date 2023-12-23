@@ -15,6 +15,8 @@ enum NodeType {
     PROGRAM,
     PACKAGE_STATEMENT,
     IMPORT_STATEMENT,
+
+    NODE_TYPE_COUNT,
 };
 
 // Represents a node in a syntax tree.
@@ -33,6 +35,23 @@ struct ParsingResult {
     struct ParsingError *errors;
     size_t errorsCount;
 };
+
+enum ParsingAction {
+    REJECT,
+    BEGIN_NODE,
+    END_NODE,
+    GOTO,
+
+    PARSING_ACTION_COUNT,
+};
+
+struct ParsingState {
+    enum ParsingAction action;
+    enum NodeType type; // Only used for END_NODE.
+    size_t next;
+};
+
+typedef struct ParsingState (*ParsingTable)[NODE_TYPE_COUNT];
 
 // Parses an array of tokens into a syntax tree.
 struct ParsingResult parse(struct Token *tokens, size_t tokensCount);

@@ -13,6 +13,41 @@ number
     = +[0-9]
 
 
+s = "(" s ")"
+  | "0"
+
+
+(((0)))
+
+
+
+
+program
+0:
+
+
+accessModifier
+0:
+    "public": accept
+    else: accept
+
+"package"
+0:
+    "package": accept
+    else: reject
+
+dottedIdentifier
+0:
+    identifier: 1
+    else: reject
+1:
+    ".": 2
+    else: accept
+2:
+    identifier: 1
+    else: reject
+
+
 program
     = ?packageStatement *programStatement
 
@@ -31,7 +66,7 @@ importStatement
 
 dottedIdentifierList
     = "*"
-    | dottedIdentifier *("," dottedIdentifier) ?","
+    | *(dottedIdentifier ",") ?dottedIdentifier
 
 structDefinition
     = "struct" identifier typeParameterList ?("{" *structMember "}" | "=" type)
@@ -78,7 +113,7 @@ forLoop
     = "for" forVariableList "in" expressionList block
 
 forVariableList
-    = forVariable *("," forVariable) ?","
+    = *(forVariable ",") ?forVariable
 
 forVariable
     = "(" forVariableList ")"
@@ -105,10 +140,6 @@ fallthroughStatement
 assignment
     = expressionList assignmentOperator expressionList
 
-range
-    = expression (".." | "...") ?expression ?(":" expression)
-    | (".." | "...") expression ?(":" expression)
-
 type
     = arrayType
     | pointerType
@@ -128,7 +159,7 @@ pointerType
     = "&" type
 
 tupleType
-    = "(" type *("," type) ")"
+    = "(" type *("," type) ")" *typeArgumentList
 
 functionType
     = "fun" typeArgumentList functionParameterList ?type
@@ -162,16 +193,23 @@ functionParameter
     | type ?("=" expression)
 
 identifierList
-    = identifier *("," identifier) ?","
+    = identifier *("," identifier)
 
 expressionList
-    = expression *("," expression) ?","
+    = expression *("," expression)
 
 expression
     = operation
 
 basicExpression
-    = (dottedIdentifier | "(" basicExpression ")") *(functionArgumentList | typeArgumentList)
+    = arrayLiteral
+    | (identifier | functionArgumentList) *(typeArgumentList | functionArgumentList | "." identifier)
+
+arrayLiteral
+    = "[" *(arrayElement ",") ?arrayElement "]"
+
+arrayElement
+    = expression ?("=" expression)
 
 dottedIdentifier
     = identifier *("." identifier)
@@ -183,7 +221,7 @@ functionArgument
     = ?(identifier "=") expression
 
 typeArgumentList
-    = ?("[" *(typeArgument "," ?typeArgument) "]")
+    = ?("[" *(typeArgument ",") ?typeArgument "]")
 
 typeArgument
     = ?(identifier "=") (type | expression)
