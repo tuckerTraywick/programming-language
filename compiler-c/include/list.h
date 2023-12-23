@@ -7,7 +7,7 @@
 #define listCreate(type, capacity) (listCreateImpl(sizeof (type), (capacity)))
 
 // Appends the given element to the list.
-#define listAppend(list, element) (listAppendImpl((list), (char*)(element), sizeof *(element)))
+#define listAppend(list, element, capacityIncrement) (listAppendImpl((list), (char*)(element), sizeof *(element), (capacityIncrement)))
 
 // Gets the element at the given index in the list.
 #define listGet(type, list, index) ((type*) listGetImpl(sizeof (type), (list), (index)))
@@ -26,7 +26,7 @@ void listDestroy(struct List *list);
 struct List listCreateImpl(size_t elementSize, size_t capacity);
 
 // Implementation of `listAppend()`.
-void listAppendImpl(struct List *list, char *element, size_t elementSize);
+void listAppendImpl(struct List *list, char *element, size_t elementSize, size_t capacityIncrement);
 
 // Implementation of `listGet()`.
 char *listGetImpl(size_t elementSize, struct List *list, size_t index);

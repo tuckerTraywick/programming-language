@@ -45,9 +45,9 @@ static void printLexingErrors(struct LexingError *errors, size_t errorsCount) {
 void testList(void) {
     struct List list = listCreate(int, 10);
     int a = 1, b = 2, c = 3;
-    listAppend(&list, &a);
-    listAppend(&list, &b);
-    listAppend(&list, &c);
+    listAppend(&list, &a, 1);
+    listAppend(&list, &b, 1);
+    listAppend(&list, &c, 1);
     test(*(int*)listGet(int, &list, 0) == 1);
     test(*(int*)listGet(int, &list, 1) == 2);
     test(*(int*)listGet(int, &list, 2) == 3);

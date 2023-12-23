@@ -5,9 +5,8 @@
 #include <stdlib.h> // malloc(), realloc(), free()
 #include <ctype.h> // isdigit(), isalpha(), isalnum(), ispunct()
 #include <string.h> // strncmp()
-#include "log.h"
-#include "list.h"
 #include "lexer.h"
+#include "list.h"
 
 #define TOKENS_INITIAL_CAPACITY 3000
 #define TOKENS_CAPACITY_INCREMENT 1500
@@ -186,7 +185,7 @@ struct LexingResult lexString(char *text) {
                 ++token.length;
                 ++token.column;
             } while (isdigit(text[token.index + token.length]));            
-            listAppend(&tokens, &token);
+            listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
             token.index += token.length;
         } else if (isalpha(ch) || ch == '_') {
             // Lex an identifier or a keyword.
@@ -205,7 +204,7 @@ struct LexingResult lexString(char *text) {
                     break;
                 }
             }
-            listAppend(&tokens, &token);
+            listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
             token.index += token.length;
             token.column += token.length;
         } else if (ch == '\'') {
@@ -229,11 +228,11 @@ struct LexingResult lexString(char *text) {
                     .row=token.row,
                     .column=token.column,
                 };
-                listAppend(&errors, (char*)(&error));
+                listAppend(&errors, &error, ERRORS_CAPACITY_INCREMENT);
             }
 
             // TODO: Check for an escape sequence.
-            listAppend(&tokens, &token);
+            listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
             token.index += token.length;
             token.column += token.length;
         } else if (ch == '"') {
@@ -257,11 +256,11 @@ struct LexingResult lexString(char *text) {
                     .row=token.row,
                     .column=token.column,
                 };
-                listAppend(&errors, (char*)(&error));
+                listAppend(&errors, &error, ERRORS_CAPACITY_INCREMENT);
             }
 
             // TODO: Check for escape sequences.
-            listAppend(&tokens, &token);
+            listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
             token.index += token.length;
             token.column += token.length;
         } else {
@@ -276,7 +275,7 @@ struct LexingResult lexString(char *text) {
                 if (strncmp(operators[i], token.text, length) == 0) {
                     token.type = i + PLUS_EQUAL;
                     token.length = length;
-                    listAppend(&tokens, &token);
+                    listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
                     token.index += token.length;
                     token.column += token.length;
                     foundOperator = true;
@@ -295,12 +294,12 @@ struct LexingResult lexString(char *text) {
                     .row=token.row,
                     .column=token.column,
                 };
-                listAppend(&errors, (char*)(&error));
+                listAppend(&errors, &error, ERRORS_CAPACITY_INCREMENT);
                 
                 do {
                     ++token.length;
                 } while (text[token.index + token.length] && !isspace(text[token.index + token.length]));
-                listAppend(&tokens, &token);
+                listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
                 token.index += token.length;
                 token.column += token.length;
             }
@@ -314,3 +313,9 @@ struct LexingResult lexString(char *text) {
         .errorsCount = errors.count,
     };
 }
+
+#undef TOKENS_INITIAL_CAPACITY
+#undef TOKENS_CAPACITY_INCREMENT
+
+#undef ERRORS_INITIAL_CAPACITY
+#undef ERRORS_CAPACITY_INCREMENT

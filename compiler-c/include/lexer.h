@@ -1,3 +1,6 @@
+#ifndef LEXER_H
+#define LEXER_H
+
 #include <stdbool.h>
 #include <stddef.h> // size_t
 #include <stdio.h> // FILE
@@ -133,3 +136,5 @@ char *openAndReadFile(char *path);
 
 // Lexes a string into an array of tokens.
 struct LexingResult lexString(char *text);
+
+#endif // LEXER_H
