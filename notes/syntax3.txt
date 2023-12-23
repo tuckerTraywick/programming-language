@@ -33,7 +33,7 @@ from animals import *
 pub struct Pet {
     pub walk(&this)
 } cases {
-    Dog, Cat // Specify existing cases.
+    Dog, Cat, ... // Specify existing cases.
 }
 
 pub struct Hamster {

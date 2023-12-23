@@ -153,7 +153,7 @@ struct LexingResult lexString(char *text) {
     static size_t operatorsCount = (sizeof operators)/(sizeof operators[0]);
 
     assert(text != NULL && "Must pass a string.");
-    struct List tokens = listCreate(int, TOKENS_INITIAL_CAPACITY);
+    struct List tokens = listCreate(struct Token, TOKENS_INITIAL_CAPACITY);
     struct List errors = listCreate(struct LexingError, ERRORS_INITIAL_CAPACITY);
     struct Token token = {0};
 

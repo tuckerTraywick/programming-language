@@ -1,30 +1,122 @@
-public struct Animal {
-    public string name;
-    public uint age;
-    public void makeNoise(*this);
+pub package animals
+from std.io import printLine
+
+pub struct Animal {
+    pub var name string
+    pub var age uint
+    pub fun makeNoise(&this)
 }
 
-public struct Dog {
-    embed Animal;
-    public string tag;
+pub struct Dog {
+    embed Animal
+    pub var tag string
 }
 
-public struct Cat {
-    embed Animal;
-    public string breed;
+pub struct Cat {
+    embed Animal
+    pub var breed string
 }
 
-public void makeNoise(*Dog dog) {
-    printLine("woof");
+pub fun makeNoise(dog &Dog) {
+    printLine("woof")
 }
 
-public void makeNoise(*Cat cat) {
-    printLine("meow");
+pub fun makeNoise(cat &Cat) {
+    printLine("meow")
 }
 
-void main() {
-    mut *Animal pet = &Dog();
-    pet.makeNoise();
-    pet = &Cat();
-    pet.makeNoise();
+
+pub package moreAnimals
+from std.io import printLine
+from animals import *
+
+pub struct Pet {
+    pub fun walk(&this)
+} cases {
+    Dog, Cat // Specify existing cases.
+}
+
+pub struct Hamster {
+    embed Animal, Pet
+    pub var wheelRadius uint
+}
+
+pub fun walk(dog &Dog) {}
+
+pub fun walk(cat &Cat) {}
+
+pub fun walk(hasmter &Hamster) {}
+
+pub fun makeNoise(hamster &Hamster) {}
+
+
+
+
+pub package physics
+import std.operations
+
+pub struct Entity {
+    pub var position, velocity acceleration Vector
+    pub fun update(&mut this, delta ufloat64)
+} cases {
+    struct Circle {
+        pub var radius ufloat64
+    }
+
+    struct Mesh {
+        pub var vertices owned []Vector
+    }
+}
+
+pub struct Vector {
+    from std.operations embed Arithmetic, Equality, To[string]
+    pub var x, y, z float64
+}
+
+pub fun update(entity &mut Entity.Circle, delta) {}
+
+pub fun update(entity &mut Entity.Mesh, delta) {}
+
+
+
+
+pub package enums
+
+pub struct Color {
+    pub var r, g, b uint8
+} cases {
+    default struct Rgb
+    var red = (255, 0, 0)
+    var green = (0, 255, 0)
+    var blue = (0, 0, 255)
+}
+
+pub struct Animal {
+    pub var name string
+    pub var age uint
+} cases {
+    struct Dog {
+        pub var tag string
+    }
+
+    struct Cat {
+        pub var breed string
+    }
+}
+
+
+
+
+pub package std.collections
+
+pub struct List[T] {
+    var first mut optional owned &Node[T]
+    var last mut optional &Node[T]
+    var length mut usize
+}
+
+struct Node[T] {
+    var next mut optional owned &Node[T]
+    var previous mut optional &Node[T]
+    var value mut T
 }
