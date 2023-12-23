@@ -40,10 +40,18 @@ struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
     };
     listAppend(&nodes, &firstNode, NODES_CAPACITY_INCREMENT);
 
-    while (0) {
+    struct Node secondNode = {.type=TOKEN, .children=NULL, .tokens=tokens, tokensCount=1};
+    listAppend(&nodes, &secondNode, NODES_CAPACITY_INCREMENT);
+    listGet(struct Node, &nodes, 0)->children = listGet(struct Node, &nodes, 1);
+    ++listGet(struct Node, &nodes, 0)->childrenCount;
 
-    }
+    struct Node thirdNode = {.type=TOKEN, .children=NULL, .tokens=tokens+1, tokensCount=1};
+    listAppend(&nodes, &secondNode, NODES_CAPACITY_INCREMENT);
+    listGet(struct Node, &nodes, 0)->children[1] = *listGet(struct Node, &nodes, 2);
+    ++listGet(struct Node, &nodes, 0)->childrenCount;
 
+
+    listDestroy(&states);
     return (struct ParsingResult) {
         .nodes = (struct Node*)nodes.elements,
         .nodesCount = nodes.count,

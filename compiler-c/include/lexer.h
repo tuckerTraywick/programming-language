@@ -113,7 +113,7 @@ enum TokenType {
 // Represents a token lexed from an input stream.
 struct Token {
     enum TokenType type;
-    char *text; // NOT null-terminated. UNOWNED, DO NOT FREE.
+    char *text; // NOT null-terminated. Unowned, don't free.
     size_t length;
     size_t index;
     size_t row; // Line number.

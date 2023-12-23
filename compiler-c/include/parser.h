@@ -12,6 +12,7 @@ struct ParsingError {
 
 // Represents the type of a node.
 enum NodeType {
+    TOKEN,
     PROGRAM,
     PACKAGE_STATEMENT,
     IMPORT_STATEMENT,

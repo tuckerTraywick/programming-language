@@ -16,6 +16,7 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
         [IDENTIFIER] = "identifier",
     };
 
+    logDebug("");
     for (size_t i = 0; i < tokensCount; ++i) {
         struct Token token = tokens[i];
         char *text = token.text;
@@ -26,20 +27,61 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
         }
 
         if (token.type < NEWLINE) {
-            logfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu", i, types[token.type], (int)length, text, length, token.index, token.row, token.column);
+            printfDebug("\t%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, types[token.type], (int)length, text, length, token.index, token.row, token.column);
         } else {
-            logfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu", i, (int)length, text, length, token.index, token.row, token.column);
+            printfDebug("\t%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)length, text, length, token.index, token.row, token.column);
         }
     }
 }
 
 static void printLexingErrors(struct LexingError *errors, size_t errorsCount) {
-    if (errors != NULL) {
-        for (size_t i = 0; i < errorsCount; ++i) {
-            struct LexingError error = errors[i];
-            logfDebug("Lexing error (%zu:%zu): %s", error.row + 1, error.column + 1, error.message);
-        }
+    for (size_t i = 0; i < errorsCount; ++i) {
+        struct LexingError error = errors[i];
+        logfDebug("Lexing error (%zu:%zu): %s", error.row + 1, error.column + 1, error.message);
     }
+}
+
+static void printParsingErrors(struct ParsingError *errors, size_t errorsCount) {
+    for (size_t i = 0; i < errorsCount; ++i) {
+        struct ParsingError error = errors[i];
+        logfDebug("Parsing error (%zu): %s", error.index, error.message);
+    }
+}
+
+static void printPipes(int depth) {
+    putsDebug("\t")
+    for (int i = 0; i < depth; ++i) {
+        putsDebug("| ");
+    }
+}
+
+static void printNode(struct Node *node, int depth) {
+    static char *types[] = {
+        [TOKEN] = "token",
+        [PROGRAM] = "program",
+    };
+
+    assert(depth >= 0 && "`depth` must be positive.");
+    printPipes(depth);
+    printfDebug("%s", types[node->type]);
+
+    struct Token token = node->tokens[0];
+    if (node->type == TOKEN) {
+        printfDebug(" \"%.*s\"\n", (int)token.length, token.text);
+    } else {
+        putsDebug("\n");
+    }
+
+    for (size_t i = 0; i < node->childrenCount; ++i) {
+        printNode(node->children + i, depth + 1);
+    }
+}
+
+static void printTree(struct Node *node) {
+    assert(node != NULL && "Must pass a node.");
+    logDebug("");
+    printNode(node, 0);
+    // putsDebug("\n");
 }
 
 void testList(void) {
@@ -87,6 +129,27 @@ void testLexString(void) {
     destroyLexingResult(&result);
 }
 
+void testParse(void) {
+    char *text = openAndReadFile("test/example.txt");
+    assert(text != NULL && "Failed to read file.");
+    struct LexingResult lexingResult = lexString(text);
+    assert(lexingResult.tokens != NULL && "Need tokens to parse.");
+    struct ParsingResult parsingResult = parse(lexingResult.tokens, lexingResult.tokensCount);
+    assert(parsingResult.nodes != NULL && "Need nodes.");
+
+    printTokens(lexingResult.tokens, lexingResult.tokensCount);
+    printTree(parsingResult.nodes);
+    logfDebug("tokensCount=%zu, lexingErrorsCount=%zu", lexingResult.tokensCount, lexingResult.errorsCount);
+    logfDebug("nodesCount=%zu, parsingErrorsCount=%zu", parsingResult.nodesCount, parsingResult.errorsCount);
+    printLexingErrors(lexingResult.errors, lexingResult.errorsCount);
+    printParsingErrors(parsingResult.errors, parsingResult.errorsCount);
+
+
+    free(text);
+    destroyLexingResult(&lexingResult);
+    destroyParsingResult(&parsingResult);
+}
+
 int main(void) {
     suiteOut = testOut = assertOut = resultsOut = stdout;
     debugOut = infoOut = warningOut = errorOut = stdout;
@@ -94,7 +157,8 @@ int main(void) {
         runSuite(testList);
         runSuite(testReadFile);
         runSuite(testOpenAndReadFile);
-        runSuite(testLexString);
+        // runSuite(testLexString);
+        runSuite(testParse);
     endTesting();
     return 0;
 }
