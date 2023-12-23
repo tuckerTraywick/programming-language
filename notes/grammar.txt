@@ -17,7 +17,7 @@ program
     = ?packageStatement *programStatement
 
 packageStatement
-    = accessModifier "package" packageName
+    = accessModifier "package" dottedIdentifier
 
 programStatement
     = importStatement
@@ -26,12 +26,12 @@ programStatement
     | accessModifier structDefinition
 
 importStatement
-    = "from" packageName "import" packageNameList
-    | "import" packageName
+    = "from" dottedIdentifier "import" dottedIdentifierList
+    | "import" dottedIdentifier
 
-packageNameList
+dottedIdentifierList
     = "*"
-    | packageName *("," packageName) ?","
+    | dottedIdentifier *("," dottedIdentifier) ?","
 
 structDefinition
     = "struct" identifier typeParameterList ?("{" *structMember "}" | "=" type)
@@ -105,19 +105,48 @@ fallthroughStatement
 assignment
     = expressionList assignmentOperator expressionList
 
-identifierList
-    = identifier *("," identifier) ?","
-
-expressionList
-    = expression *("," expression) ?","
-
-expression
-    = range
-    | number
-
 range
     = expression (".." | "...") ?expression ?(":" expression)
     | (".." | "...") expression ?(":" expression)
+
+type
+    = arrayType
+    | pointerType
+    | tupleType
+    | functionType
+    | constType
+    | mutType
+    | ownedType
+    | weakType
+    | basicType
+    | "auto"
+
+arrayType
+    = "[" ?expression "]" type
+
+pointerType
+    = "&" type
+
+tupleType
+    = "(" type *("," type) ")"
+
+functionType
+    = "fun" typeArgumentList functionParameterList ?type
+
+constType
+    = "const" type
+
+mutType
+    = "mut" type
+
+ownedType
+    = "owned" type
+
+weakType
+    = "weak" type
+
+basicType
+    = dottedIdentifier *typeArgumentList
 
 typeParameterList
     = ?("[" *(typeParameter ",") ?typeParameter "]")
@@ -129,14 +158,35 @@ functionParameterList
     = "(" *(functionParameter ",") ?functionParameter ")"
 
 functionParameter
-    = type
-    | identifier type ?("=" expression)
+    = identifier ?type ?("=" expression)
+    | type ?("=" expression)
 
-type
-    = packageName
+identifierList
+    = identifier *("," identifier) ?","
 
-packageName
+expressionList
+    = expression *("," expression) ?","
+
+expression
+    = operation
+
+basicExpression
+    = (dottedIdentifier | "(" basicExpression ")") *(functionArgumentList | typeArgumentList)
+
+dottedIdentifier
     = identifier *("." identifier)
 
+functionArgumentList
+    = "(" *(functionArgument ",") ?functionArgument ")"
+
+functionArgument
+    = ?(identifier "=") expression
+
+typeArgumentList
+    = ?("[" *(typeArgument "," ?typeArgument) "]")
+
+typeArgument
+    = ?(identifier "=") (type | expression)
+
 accessModifier
-    = ?("public" | "private")
+    = ?"pub"
