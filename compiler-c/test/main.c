@@ -27,9 +27,9 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
         }
 
         if (token.type < NEWLINE) {
-            printfDebug("\t%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, types[token.type], (int)length, text, length, token.index, token.row, token.column);
+            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, types[token.type], (int)length, text, length, token.index, token.row, token.column);
         } else {
-            printfDebug("\t%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)length, text, length, token.index, token.row, token.column);
+            printfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)length, text, length, token.index, token.row, token.column);
         }
     }
 }
@@ -49,7 +49,7 @@ static void printParsingErrors(struct ParsingError *errors, size_t errorsCount) 
 }
 
 static void printPipes(int depth) {
-    putsDebug("\t")
+    putsDebug("")
     for (int i = 0; i < depth; ++i) {
         putsDebug("| ");
     }
@@ -81,7 +81,6 @@ static void printTree(struct Node *node) {
     assert(node != NULL && "Must pass a node.");
     logDebug("");
     printNode(node, 0);
-    // putsDebug("\n");
 }
 
 void testList(void) {
@@ -135,15 +134,14 @@ void testParse(void) {
     struct LexingResult lexingResult = lexString(text);
     assert(lexingResult.tokens != NULL && "Need tokens to parse.");
     struct ParsingResult parsingResult = parse(lexingResult.tokens, lexingResult.tokensCount);
-    assert(parsingResult.nodes != NULL && "Need nodes.");
+    // assert(parsingResult.nodes != NULL && "Need nodes.");
 
     printTokens(lexingResult.tokens, lexingResult.tokensCount);
-    printTree(parsingResult.nodes);
+    // printTree(parsingResult.nodes);
     logfDebug("tokensCount=%zu, lexingErrorsCount=%zu", lexingResult.tokensCount, lexingResult.errorsCount);
     logfDebug("nodesCount=%zu, parsingErrorsCount=%zu", parsingResult.nodesCount, parsingResult.errorsCount);
     printLexingErrors(lexingResult.errors, lexingResult.errorsCount);
     printParsingErrors(parsingResult.errors, parsingResult.errorsCount);
-
 
     free(text);
     destroyLexingResult(&lexingResult);

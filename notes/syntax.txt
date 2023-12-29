@@ -44,7 +44,7 @@ public struct Pet {
 }
 
 public struct Hamster {
-    embed Pet;
+    embed Animal, Pet;
     public float wheelSize;
 }
 
@@ -145,9 +145,9 @@ public ufloat64 tau;
 public ufloat64 e;
 public ufloat64 inf;
 
-public T abs<T: Number>(T x);
-public T min<T: Number>([]T values);
-public T min<T: Number>(T.. values);
+public T abs[T embeds Number](T x);
+public T min[T embeds Number]([]T values);
+public T min[T embeds Number](T.. values);
 
 public float radToDeg(float x);
 public float64 radToDeg(float64 x);
@@ -239,17 +239,17 @@ struct Color {
 public package list;
 import std.operations;
 
-public struct List<T> {
+public struct List[T] {
     from std.operations embed GetElement, SetElement;
-    private mut optional owned *Node<T> start;
-    private mut optional *Node<T> end;
-    private mut usize length;
+    mut optional owned *Node[T] start;
+    mut optional *Node[T] end;
+    mut usize length;
 }
 
 public usize .length(*List list) => auto;
 
-public void append<T>(*mut List<T> list, T value) {
-    var next = new Node<T>(value, previous=list.end, next=None);
+public void append[T](*mut List[T] list, T value) {
+    var next = new Node[T](value, previous=list.end, next=None);
     if list.end {
         list.end.next = next;
     } else {
@@ -258,14 +258,14 @@ public void append<T>(*mut List<T> list, T value) {
     list.end = next;
 }
 
-public T or IndexOutOfBoundsError getElement<T>(*List<T> list, usize index);
+public T or IndexOutOfBoundsError getElement[T](*List[T] list, usize index);
 
-public optional IndexOutOfBoundsError setElement<T>(*mut List<T> list, usize index, T value);
+public optional IndexOutOfBoundsError setElement[T](*mut List[T] list, usize index, T value);
 
-private struct Node<T> {
-    private mut T value;
-    private mut optional owned *This next;
-    private mut optional *This previous;
+struct Node[T] {
+    mut T value;
+    mut optional owned *This next;
+    mut optional *This previous;
 }
 
 
@@ -334,7 +334,7 @@ for usize i; x in std.iterators.enumerate("abc") // use `x` from above
 
 
 [10]char array = {1 = 'a'};
-Map<string, int> map = (("a", 1), ("b", 2));
+Map[string, int] map = (("a", 1), ("b", 2));
 struct Point {int x, y;}
 Point a = (1, 2);
 var b = Point(x = 1, y = 2);
@@ -344,8 +344,8 @@ var b = Point(x = 1, y = 2);
 void new(*Map map); // constructor
 void drop(*Map map); // destructor
 
-void f<int n>(); // static expression.
-void f<T: Trait>(); // type constraint.
+void f[int n](); // static expression.
+void f[T embeds Trait](); // type constraint.
 
 
 
@@ -362,7 +362,7 @@ public struct Block {
     public [0]byte data; // Flexible array field.
 }
 
-public struct Allocator<T> {
+public struct Allocator[T] {
     public owned *T allocate(*mut this); // The returned pointer must include a BlockHeader above it.
     public void deallocate(*mut this, owned *T value);
 }
@@ -385,7 +385,7 @@ mut string foo; // Same as `mut []mut char foo;`.
 owned *int a = new 1;
 weak *int b = a;
 drop a;
->>> Memory error: ...
+// memory error
 
 // Or only crash if you dereference a weak pointer after the data is freed?
 owned *int a = new 1;
@@ -396,15 +396,13 @@ if a->isAlive() {
 } else {
     printLine("a is dead");
 }
->>> a is dead
+// a is dead
 
 
 
 
-struct Array<T, N usize> {
+struct Array[T, N usize] {
     [N]T elements;
 }
 
-auto a = Array<int, 3>();
-
-f(g<int(), 1)
+var a = Array[int, 3]();

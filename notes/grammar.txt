@@ -31,8 +31,8 @@ packageStatement
 
 programStatement
     = importStatement
-    | accessModifier variableDefinition
-    | accessModifier functionDefinition
+    | accessModifier "var" variableDefinition
+    | accessModifier "fun" functionDefinition
     | accessModifier structDefinition
 
 importStatement
@@ -61,8 +61,8 @@ block
     = "{" *blockStatement "}"
 
 blockStatement
-    = variableDefinition
-    | functionDefinition
+    = "var" variableDefinition
+    | "fun" functionDefinition
     | whileLoop
     | forLoop
     | ifStatement
@@ -76,10 +76,10 @@ blockStatement
     | block
 
 variableDefinition
-    = "var" identifierList ("=" expressionList | type ?("=" expressionList))
+    = identifierList ("=" expressionList | type ?("=" expressionList))
 
 functionDefinition
-    = "fun" identifier typeParameterList functionParameterList ?("=>" expression | block)
+    = identifier typeParameterList functionParameterList ?("=>" expression | block)
 
 whileLoop
     = ?"do" "while" expression block

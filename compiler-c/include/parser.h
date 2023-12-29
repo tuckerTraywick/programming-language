@@ -32,30 +32,30 @@ struct Node {
 
 // Represents the result of parsing an array of tokens.
 struct ParsingResult {
-    struct Node *nodes; // An array of all of the nodes in breadth-first order, also a pointer to the topmost node in the tree.
+    struct Node *nodes; // An array of nodes (preorder traversal).
     size_t nodesCount;
     struct ParsingError *errors;
     size_t errorsCount;
 };
 
-enum ParsingAction {
-    REJECT,
-    BEGIN_NODE,
-    END_NODE,
-    GOTO,
-    RECOVER,
-};
+// enum ParsingAction {
+//     REJECT,
+//     BEGIN_NODE,
+//     END_NODE,
+//     GOTO,
+//     RECOVER,
+// };
 
-struct ParsingTransition {
-    enum ParsingAction action;
-    union {
-        enum NodeType type; // Used when `action == BEGIN_NODE` or `action == END_NODE`.
-        char *message; // Used when `action == RECOVER`. Unowned, don't free.
-        size_t next; // Used when `action == GOTO`.
-    };
-};
+// struct ParsingTransition {
+//     enum ParsingAction action;
+//     union {
+//         enum NodeType type; // Used when `action == BEGIN_NODE` or `action == END_NODE`.
+//         char *message; // Used when `action == RECOVER`. Unowned, don't free.
+//         size_t next; // Used when `action == GOTO`.
+//     };
+// };
 
-typedef struct ParsingTransition (*ParsingTable)[TOKEN_TYPE_COUNT];
+// typedef struct ParsingTransition (*ParsingTable)[TOKEN_TYPE_COUNT];
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyParsingResult(struct ParsingResult *result);
