@@ -64,7 +64,7 @@ pub struct Entity {
     }
 
     struct Mesh {
-        pub vertices owned []Vector
+        vertices owned []Vector
     }
 }
 
@@ -107,6 +107,84 @@ pub struct Animal {
 
 
 
+pub package std.compiler
+from std.io import File, FileError
+
+pub struct TokenType {
+    pub value uint = auto
+    pub name string = auto
+} cases {
+    default invalid
+    number
+    character
+    string
+    identifier
+    newline
+    ...
+}
+
+pub struct Token {
+    pub type TokenType
+    pub text string
+    pub index, row, column usize
+}
+
+pub struct LexingError {
+    embed Error
+    pub message string
+    pub token &Token
+}
+
+pub struct LexingResult {
+    pub tokens optional owned []mut Token
+    pub errors optional owned []LexingError
+}
+
+pub struct NodeType {
+    pub value uint = auto
+    pub name string = auto
+} cases {
+    token
+    program
+    packageStatement
+    ...
+}
+
+pub struct Node {
+    pub type NodeType
+    pub tokens []Token
+    pub next, parent, child &Node
+}
+
+pub struct ParsingError {
+    embed Error
+    pub message string
+    pub tokens []Token
+    pub index usize
+}
+
+pub struct ParsingResult {
+    pub nodes optional owned []mut Node
+    pub errors optional owned []&ParsingError
+}
+
+pub fun lexFile(path string) LexingResult or FileError
+
+pub fun lexFile(file File) LexingResult or FileError
+
+pub fun lex(text string) LexingResult
+
+pub fun parseFile(path string) ParsingResult or FileError
+
+pub fun parseFile(file File) ParsingResult or FileError
+
+pub fun parse(text string) ParsingResult
+
+pub fun parse(tokens []Token) ParsingResult
+
+
+
+
 pub package std.collections
 
 pub struct List[T] {
@@ -121,12 +199,13 @@ struct Node[T] {
     value mut T
 }
 
+pub fun .length(list &List) = auto
 
+@discard=Error
+pub fun [][T](list &List[T]) T or IndexOutOfBoundsError {}
 
+@discard=Error
+pub fun []=[T](list &List[T], T) optional IndexOutOfBoundsError {}
 
-struct Point {
-    x, y, z int
-}
-
-var p Point
-p.x, .y = 1, 2
+@discard=Error
+pub fun append[T](list &List[T], value &T) optional AllocationError {}

@@ -12,6 +12,17 @@
 #define ERRORS_INITIAL_CAPACITY 500
 #define ERRORS_CAPACITY_INCREMENT 100
 
+static void parsePackageStatement() {
+    beginNode();
+        expect(PACKAGE);
+        expect(IDENTIFIER);
+        zeroOrMore({
+            expect(DOT);
+            expect(IDENTIFIER);
+        })
+    endNode(PACKAGE_STATEMENT);
+}
+
 void destroyParsingResult(struct ParsingResult *result) {
     assert(result != NULL && "Must pass a result.");
     free(result->nodes);

@@ -40,7 +40,7 @@ from animals import *;
 public struct Pet {
     public void walk(*this);
 } cases {
-    embed Dog, Cat, ...;
+    embed in Dog, Cat, ...;
 }
 
 public struct Hamster {

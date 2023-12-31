@@ -49,7 +49,7 @@ static void printParsingErrors(struct ParsingError *errors, size_t errorsCount) 
 }
 
 static void printPipes(int depth) {
-    putsDebug("")
+    putsDebug("");
     for (int i = 0; i < depth; ++i) {
         putsDebug("| ");
     }
