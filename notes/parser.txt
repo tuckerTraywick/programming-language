@@ -2,6 +2,9 @@
 - pushdown automata
 
 
+  a, b -> c
+0 --------> 1
+
 
 
 
@@ -47,3 +50,7 @@ packageStatement = ?"public" "package" (identifier: "Expected a package name.") 
 
 
 
+0:
+    _, "public": 1
+    _, "package": 2
+    

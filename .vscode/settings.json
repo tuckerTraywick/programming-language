@@ -1,3 +1,6 @@
 {
-    "makefile.makefilePath": "compiler-c/Makefile"
+    "makefile.makefilePath": "compiler-c/Makefile",
+    "files.associations": {
+        "stdint.h": "c"
+    }
 }

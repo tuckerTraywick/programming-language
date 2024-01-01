@@ -178,7 +178,7 @@ pub fun parseFile(path string) ParsingResult or FileError
 
 pub fun parseFile(file File) ParsingResult or FileError
 
-pub fun parse(text string) ParsingResult
+pub fun parse(text string) (LexingResult, ParsingResult)
 
 pub fun parse(tokens []Token) ParsingResult
 

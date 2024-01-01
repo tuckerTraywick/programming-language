@@ -7,13 +7,13 @@
 void listDestroy(struct List *list) {
     assert(list != NULL && "Must pass a list.");
     free(list->elements);
-    *list = (struct List) {0};
+    *list = (struct List){0};
 }
 
 struct List listCreateImpl(size_t elementSize, size_t capacity) {
     char *elements = malloc(capacity*elementSize);
     assert(elements != NULL && "`malloc()` failed.");
-    return (struct List) {
+    return (struct List){
         .elements = elements,
         .capacity = capacity,
         .count = 0,
@@ -27,8 +27,8 @@ void listAppendImpl(struct List *list, char *element, size_t elementSize, size_t
 
     // Extend the list if needed.
     if (list->count >= list->capacity) {
-        list->capacity += elementSize;
-        char *newElements = realloc(list->elements, (list->capacity + capacityIncrement)*elementSize);
+        list->capacity += capacityIncrement;
+        char *newElements = realloc(list->elements, list->capacity*elementSize);
         assert(newElements != NULL && "`realloc()` failed.");
         list->elements = newElements;
     }

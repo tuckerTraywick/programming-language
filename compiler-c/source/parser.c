@@ -7,27 +7,16 @@
 #include "list.h"
 
 #define NODES_INITIAL_CAPACITY 3000
-#define NODES_CAPACITY_INCREMENT 1500
+#define NODES_CAPACITY_INCREMENT 3000
 
 #define ERRORS_INITIAL_CAPACITY 500
-#define ERRORS_CAPACITY_INCREMENT 100
-
-static void parsePackageStatement() {
-    beginNode();
-        expect(PACKAGE);
-        expect(IDENTIFIER);
-        zeroOrMore({
-            expect(DOT);
-            expect(IDENTIFIER);
-        })
-    endNode(PACKAGE_STATEMENT);
-}
+#define ERRORS_CAPACITY_INCREMENT 500
 
 void destroyParsingResult(struct ParsingResult *result) {
     assert(result != NULL && "Must pass a result.");
     free(result->nodes);
     free(result->errors);
-    *result = (struct ParsingResult) {0};
+    *result = (struct ParsingResult){0};
 }
 
 struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
@@ -35,10 +24,12 @@ struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
     struct List nodes = listCreate(struct Node, NODES_INITIAL_CAPACITY);
     struct List errors = listCreate(struct ParsingError, ERRORS_INITIAL_CAPACITY);
 
-    return (struct ParsingResult) {
-        .nodes = (struct Node*) nodes.elements,
+    
+
+    return (struct ParsingResult){
+        .nodes = (struct Node*)nodes.elements,
         .nodesCount = nodes.count,
-        .errors = (struct ParsingError*) errors.elements,
+        .errors = (struct ParsingError*)errors.elements,
         .errorsCount = errors.count,
     };
 }

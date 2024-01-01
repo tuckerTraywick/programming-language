@@ -61,7 +61,7 @@ static void printNode(struct Node *node, int depth) {
         [PROGRAM] = "program",
     };
 
-    assert(depth >= 0 && "`depth` must be positive.");
+    assert(depth >= 0 && "`depth` must be >= 0.");
     printPipes(depth);
     printfDebug("%s", types[node->type]);
 
@@ -134,7 +134,7 @@ void testParse(void) {
     struct LexingResult lexingResult = lexString(text);
     assert(lexingResult.tokens != NULL && "Need tokens to parse.");
     struct ParsingResult parsingResult = parse(lexingResult.tokens, lexingResult.tokensCount);
-    // assert(parsingResult.nodes != NULL && "Need nodes.");
+    // assert(parsingResult.nodes != NULL && "Need nodes to print.");
 
     printTokens(lexingResult.tokens, lexingResult.tokensCount);
     // printTree(parsingResult.nodes);

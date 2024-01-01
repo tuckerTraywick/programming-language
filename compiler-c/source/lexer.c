@@ -1,18 +1,17 @@
 #include <assert.h> // assert()
 #include <stdbool.h> // bool
-#include <stdint.h> // SIZE_MAX
 #include <stdio.h> // FILE, fopen(), fclose(), fseek(), frewind(), ftell()
-#include <stdlib.h> // malloc(), realloc(), free()
+#include <stdlib.h> // malloc(), free()
 #include <ctype.h> // isdigit(), isalpha(), isalnum(), ispunct()
 #include <string.h> // strncmp()
 #include "lexer.h"
 #include "list.h"
 
 #define TOKENS_INITIAL_CAPACITY 3000
-#define TOKENS_CAPACITY_INCREMENT 1500
+#define TOKENS_CAPACITY_INCREMENT 3000
 
 #define ERRORS_INITIAL_CAPACITY 500
-#define ERRORS_CAPACITY_INCREMENT 100
+#define ERRORS_CAPACITY_INCREMENT 500
 
 // Returns the max of `a` and `b`. Helper for `lexString()`.
 static size_t max(size_t a, size_t b) {
@@ -23,7 +22,7 @@ void destroyLexingResult(struct LexingResult *result) {
     assert(result != NULL && "Must pass a result.");
     free(result->tokens);
     free(result->errors);
-    *result = (struct LexingResult) {0};
+    *result = (struct LexingResult){0};
 }
 
 char *readFile(FILE *file) {
@@ -309,10 +308,10 @@ struct LexingResult lexString(char *text) {
         }
     }
 
-    return (struct LexingResult) {
-        .tokens = (struct Token*) tokens.elements,
+    return (struct LexingResult){
+        .tokens = (struct Token*)tokens.elements,
         .tokensCount = tokens.count,
-        .errors = (struct LexingError*) errors.elements,
+        .errors = (struct LexingError*)errors.elements,
         .errorsCount = errors.count,
     };
 }
