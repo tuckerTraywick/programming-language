@@ -16,6 +16,8 @@ enum NodeType {
     PROGRAM,
     PACKAGE_STATEMENT,
     IMPORT_STATEMENT,
+
+    NODE_TYPE_COUNT,
 };
 
 // Represents a node in a syntax tree.
@@ -36,22 +38,19 @@ struct ParsingResult {
     size_t errorsCount;
 };
 
-// enum ParsingAction {
-//     REJECT,
-//     BEGIN_NODE,
-//     END_NODE,
-//     GOTO,
-//     RECOVER,
-// };
+enum ParsingAction {
+    ERROR, // message, ?next
+    GOTO, // next
+    BEGIN, // type, next
+    END,
+};
 
-// struct ParsingTransition {
-//     enum ParsingAction action;
-//     union {
-//         enum NodeType type; // Type of node to begin/end. Used when `action == BEGIN_NODE` or `action == END_NODE`.
-//         char *message; // Error message on recovery. Used when `action == RECOVER`. Unowned, don't free.
-//         size_t next; // Next state to go to. Used when `action == GOTO`.
-//     };
-// };
+struct ParsingTransition {
+    size_t next;
+    enum ParsingAction action;
+    char *message;
+    enum NodeType type;
+};
 
 // typedef struct ParsingTransition (*ParsingTable)[TOKEN_TYPE_COUNT];
 

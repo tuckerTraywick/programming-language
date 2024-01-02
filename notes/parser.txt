@@ -1,12 +1,8 @@
 - table driven?
 - pushdown automata
 
-
   a, b -> c
 0 --------> 1
-
-
-
 
 program = identifier ";"
 0:
@@ -35,7 +31,7 @@ program = ?"-" number
     number: accept
     else: reject
 
-packageStatement = ?"public" "package" (identifier: "Expected a package name.") ";"
+packageStatement = ?"public" "package" (identifier : "Expected a package name.") ";"
 0:
     "public": 1
     "package": 2
@@ -49,8 +45,68 @@ packageStatement = ?"public" "package" (identifier: "Expected a package name.") 
     ";": accept
 
 
+expression = term *([+-] term)
+term       = factor *([*/] factor)
+factor     = *[+-] basic
+basic      = "(" expression ")"
+           | number
 
+expression
 0:
-    _, "public": 1
-    _, "package": 2
-    
+    +, -, (, number: call 3, goto 1
+1:
+    +, -: goto 2
+    $: end(expression)
+2:
+    +, -, (, number: call 3, goto 1
+term
+3:
+    +, -, (, number: call 6, goto 4
+4:
+    *, /: goto 5
+    _: end(term)
+5:
+    +, -, (, number: call 6, goto 4
+factor
+6:
+    +, -: goto 6
+    (, number: call 7, end(factor)
+basic
+7:
+    (: goto 8
+    number: end(basic)
+8:
+    +, -, (: call 0, goto 9
+9:
+    ): end(basic)
+
+1*2 + 3 $
+        ^
+result expression(term(factor(basic(1)) * factor(basic(2))) + term(factor(basic(3))))
+state 1
+stack 
+
+
+
+
+
+0: expression = . term *([+-] term)
+   term       = . factor *([*/] factor)
+   factor     = . *[+-] basic
+   basic      = . "(" expression ")"
+              | . number
+   (: 
+   +: 
+   -: 
+   number: reduce factor, goto 1
+
+1: expression = . term *([+-] term) 
+   term       = factor . *([*/] factor)
+   *: shift, goto 2
+   /: shift, goto 2
+   $: reduce term, goto 3
+
+2: expression = . term *([+-] term) 
+   term       = factor *([*/] . factor)
+
+3: 
