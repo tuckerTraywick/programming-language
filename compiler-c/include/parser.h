@@ -32,27 +32,22 @@ struct Node {
 
 // Represents the result of parsing an array of tokens.
 struct ParsingResult {
-    struct Node *nodes; // An array of nodes (preorder traversal).
+    struct Node *nodes; // An array of nodes (preorder traversal). The first node is the root node of the tree.
     size_t nodesCount;
     struct ParsingError *errors;
     size_t errorsCount;
 };
 
-enum ParsingAction {
-    ERROR, // message, ?next
-    GOTO, // next
-    BEGIN, // type, next
-    END,
-};
-
+// Represents an entry in the parsing state transition table.
 struct ParsingTransition {
-    size_t next;
-    enum ParsingAction action;
-    char *message;
-    enum NodeType type;
+    size_t call; // State to call like a function.
+    size_t jump; // State to jump directly to, when both `call` and `jump` are > 0, pushed to stack before calling.
+    enum NodeType type; // The type of node to begin.
+    char *errorMessage; // Error message to produce.
 };
 
-// typedef struct ParsingTransition (*ParsingTable)[TOKEN_TYPE_COUNT];
+// Represents a state transition table for the parser.
+typedef struct ParsingTransition (*ParsingTable)[TOKEN_TYPE_COUNT];
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyParsingResult(struct ParsingResult *result);

@@ -201,11 +201,11 @@ struct Node[T] {
 
 pub fun .length(list &List) = auto
 
-@discard=Error
+@discard(Error)
 pub fun [][T](list &List[T]) T or IndexOutOfBoundsError {}
 
-@discard=Error
+@discard(Error)
 pub fun []=[T](list &List[T], T) optional IndexOutOfBoundsError {}
 
-@discard=Error
+@discard(Error)
 pub fun append[T](list &List[T], value &T) optional AllocationError {}

@@ -6,37 +6,34 @@ variables
 functions
 
 
-public package myPackage
-import std.io.printLine
+pub package myPackage
+from std.io import printLine
 
-public struct Point {
-    public var x, y int
-    var z int
+pub struct Point {
+    pub x, y int
+    z int
 }
 
-public var a int = 1
+pub var a int = 1
 
-public func f() {
+pub fun f() {
     printLine("Hello")
 }
 
 var b int = 1
 
-priv var c int = 1
-
-
 symbols:
     myPackage
-        .Point: public struct {
+        .Point: pub struct {
             size = 12
             alignment = 4
-            x: public field {
+            x: pub field {
                 size = 4
                 alignment = 4
                 offset = 0
                 type = int32
             }
-            y: public field {
+            y: pub field {
                 size = 4
                 alignment = 4
                 offset = 4
@@ -49,24 +46,18 @@ symbols:
                 type = int32
             }
         }
-        .a: public var {
+        .a: pub var {
             size = 4
             alignment = 4
             type = int32
-            address = 0x.. # Local to start of file.
+            address = 0x.. // Local to start of file.
         }
-        .f: public func {
+        .f: pub fun {
             parameterTypes = ()
             returnType = ()
             address = 0x..
         }
-        .b: var int32 {
-            size = 4
-            alignment = 4
-            type = int32
-            address = 0x..
-        }
-        .c: priv var int32 {
+        .b: var {
             size = 4
             alignment = 4
             type = int32
@@ -99,11 +90,11 @@ Instructions:
 
 
 
-func add(a, b int) int {
+fun add(a, b int) int {
     return a + b
 }
 
-func main() {
+fun main() {
     add(1, 2)
 }
 
@@ -166,8 +157,8 @@ storep32
 
 
 struct Thing {
-    var a int32
-    var b int32
+    a int32
+    b int32
 }
 var thing Thing = (1, 2)
 var b int32 = thing.b
@@ -294,10 +285,10 @@ returnN
 
 
 
-public package myPackage
+pub package myPackage
 from std.io import printLine
 
-public func sayGreeting() int {
+pub fun sayGreeting() {
     printLine(1)
 }
 
@@ -368,15 +359,15 @@ struct Cat {
     breed string
 }
 
-func makeNoise(dog &Dog) {
+fun makeNoise(dog &Dog) {
     printLine("woof")
 }
 
-func makeNoise(cat &Cat) {
+fun makeNoise(cat &Cat) {
     printLine("meow")
 }
 
-func main() {
+fun main() {
     var pet mut &Animal = &Dog("fido", 2, "123 doggy lane")
     pet.makeNoise()
     pet = &Cat("felix", 2, "tabby")
@@ -408,7 +399,7 @@ from std.math import pi, pow
 
 struct Shape {
     color [3]uint8
-    area(this)
+    area(&this)
 } cases {
     struct Circle {
         radius ufloat64
@@ -423,19 +414,19 @@ struct Shape {
     }
 }
 
-func area(circle Shape.Circle) {
+fun area(circle Shape.Circle) {
     return pi*pow(circle.radius, 2)
 }
 
-func area(rectangle Shape.Rectanlge) {
+fun area(rectangle Shape.Rectanlge) {
     return rectangle.width*rectangle.height
 }
 
-func area(triangle Shape.Triangle) {
+fun area(triangle Shape.Triangle) {
     return 0.5*triangle.base*triangle.height
 }
 
-func main() {
+fun main() {
     var shape mut Shape = .Rectangle(2, 5)
     printLine(shape.area()) # Prints "10".
     shape = .Triangle(2, 5)
@@ -445,81 +436,81 @@ func main() {
 
 
 
-public package physics
+pub package physics
 
-public struct Entity {
-    public position, velocity acceleration Vector
-    public update(mut this, delta ufloat64)
+pub struct Entity {
+    pub position, velocity acceleration Vector
+    pub update(&mut this, delta ufloat64)
 } cases {
     struct Circle {
-        public radius ufloat64
+        pub radius ufloat64
     }
 
     struct Mesh {
-        public vertices owned []Vector
+        pub vertices owned []Vector
     }
 }
 
-public func update(entity &mut Entity.Circle, delta) {}
+pub fun update(entity &mut Entity.Circle, delta) {}
 
-public func update(entity &mut Entity.Mesh, delta) {}
-
-
+pub fun update(entity &mut Entity.Mesh, delta) {}
 
 
-public package language
 
-public struct TokenType cases {
+
+pub package language
+
+pub struct TokenType cases {
     default invalid
     newline, number, character, string, identifier
 }
 
-public struct Token {
-    public text string
-    public index usize
-    public row, column usize
+pub struct Token {
+    pub text string
+    pub index usize
+    pub row, column usize
 }
 
-public struct LexingError {
+pub struct LexingError {
     embed Error
-    public message string
-    public index usize
-    public row, column usize
+    pub message string
+    pub index usize
+    pub row, column usize
 }
 
-public struct LexingResult = owned []Token or LexingError
+pub struct LexingResult = owned []Token or LexingError
 
-public func lexFile(path string) LexingResult or FileError
+pub fun lexFile(path string) LexingResult or FileError
 
-public func lexFile(file File) LexingResult or FileError
+pub fun lexFile(file File) LexingResult or FileError
 
-public func lex(text string) LexingResult
+pub fun lex(text string) LexingResult
 
 
-public package language
+pub package language
 
-public struct NodeType cases {
+pub struct NodeType cases {
     program, importStatement, ...
 }
 
-public struct Node {
-    public type NodeType
-    public children owned [](owned &Node or Token)
+pub struct Node {
+    pub type NodeType
+    pub children owned [](owned &Node or Token)
 }
 
-public struct ParsingError {
+pub struct ParsingError {
     embed Error
-    public message string
-    public index usize
+    pub message string
+    pub index usize
 }
 
-public struct ParsingResult = owned &Node or ParsingError
+pub struct ParsingResult = owned &Node or ParsingError
 
-public func parseFile(path string) ParsingResult or FileError
+pub fun parseFile(path string) ParsingResult or FileError
 
-public func parseFile(file File) ParsingResult or FileError
+pub fun parseFile(file File) ParsingResult or FileError
 
-public func parse(text string) ParsingResult
+pub fun parse(text string) ParsingResult
 
 
 
@@ -527,40 +518,40 @@ public func parse(text string) ParsingResult
 package std.math
 from std.types import Number
 
-public var pi float64
-public var tau float64
-public var e float64
-public var inf float64
-public var deg float64
-public var rad float64
+pub var pi float64
+pub var tau float64
+pub var e float64
+pub var inf float64
+pub var deg float64
+pub var rad float64
 
-public func abs[T Number](x T) T
-public func min[T Number](values []T) T
-public func max[T Number](values []T) T
+pub fun abs[T Number](x T) T
+pub fun min[T Number](values []T) T
+pub fun max[T Number](values []T) T
 ...
 
-public func sinD(x float64) float64
-public func sinR(x float64) float64
-public func cosD(x float64) float64
+pub fun sinD(x float64) float64
+pub fun sinR(x float64) float64
+pub fun cosD(x float64) float64
 ...
 
 
 
 
-public package std.flags
+pub package std.flags
 from std.types import Primitive
 
-public func setDescription(message string)
+pub fun setDescription(message string)
 
-public func setUsage(message string)
+pub fun setUsage(message string)
 
-public func parseFlags()
+pub fun parseFlags()
 
-public func addFlag[T Primitive](value &mut T, name string, description string)
+pub fun addFlag[T Primitive](value &mut T, name string, description string)
 
-public func addFlag[T Primitive](value &mut, names []string, description string)
+pub fun addFlag[T Primitive](value &mut, names []string, description string)
 
-public func printHelp()
+pub fun printHelp()
 
 var flags Map[string, Primitive]
 
@@ -570,7 +561,7 @@ from std.io import printLine
 from std.operations import to
 from std.flags import *
 
-func main() {
+fun main() {
     setDescription("Adds one to a number.")
     setUsage("add1 [options] --number=[integer]")
     var help = addFlag[bool](["h", "help"], "Print this help message.")
@@ -594,20 +585,20 @@ func main() {
 
 
 
-public package std.builtin
+pub package std.builtin
 from std.operations import To
 
-public struct None
+pub struct None
 
-public struct Error {
+pub struct Error {
     embed To[string]
 }
 
-public struct And[T..] {
+pub struct And[T..] {
     embed T
 }
 
-public struct Or[T..] cases {
+pub struct Or[T..] cases {
     embed T
 }
 
@@ -615,10 +606,10 @@ public struct Or[T..] cases {
 
 
 // myApi.txt
-public package myApi;
+pub package myApi;
 @description "Returns 1."
-@return "Always 1."
-int f() => 1;
+@return "Always returns 1."
+pub fun f() int => 1
 
 // shell
 $ compile("myApi.txt")
@@ -628,8 +619,8 @@ $ load("myApi.obj")
 $ help(myApi.f)
 myApi.f
 SIGNATURE
-    package myApi;
-    int f();
+    pub package myApi
+    pub fun f() int
 
 DESCRIPTION
     Returns 1.

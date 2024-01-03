@@ -1,50 +1,3 @@
-- table driven?
-- pushdown automata
-
-  a, b -> c
-0 --------> 1
-
-program = identifier ";"
-0:
-    identifier: 1
-    else: reject
-1:
-    ";": accept
-    else: reject
-
-program = number "+" number
-0:
-    number: 1
-    else: reject
-1:
-    "+": 2
-    else: reject
-2:
-    number: accept
-    else: reject
-
-program = ?"-" number
-0:
-    "-": 1
-    number: accept
-1:
-    number: accept
-    else: reject
-
-packageStatement = ?"public" "package" (identifier : "Expected a package name.") ";"
-0:
-    "public": 1
-    "package": 2
-1:
-    "package": 2
-    else: reject
-2:
-    identifier: 3
-    else: error "Expected a package name."
-3:
-    ";": accept
-
-
 expression = term *([+-] term)
 term       = factor *([*/] factor)
 factor     = *[+-] basic
@@ -89,24 +42,12 @@ stack
 
 
 
+program = packageStatemet
+packageStatement = "package" identifier *("." identifier)
 
-0: expression = . term *([+-] term)
-   term       = . factor *([*/] factor)
-   factor     = . *[+-] basic
-   basic      = . "(" expression ")"
-              | . number
-   (: 
-   +: 
-   -: 
-   number: reduce factor, goto 1
+packageStatement = "package" identifier packageStatement0
+packageStatement0 = "." identifier | _
 
-1: expression = . term *([+-] term) 
-   term       = factor . *([*/] factor)
-   *: shift, goto 2
-   /: shift, goto 2
-   $: reduce term, goto 3
 
-2: expression = . term *([+-] term) 
-   term       = factor *([*/] . factor)
-
-3: 
+0:
+    "package", _: 
