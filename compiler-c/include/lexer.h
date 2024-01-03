@@ -113,7 +113,7 @@ enum TokenType {
 // Represents a token lexed from an input stream.
 struct Token {
     enum TokenType type;
-    char *text; // NOT null-terminated. Unowned, don't free.
+    char *text; // Not null-terminated. Unowned, don't free.
     size_t length;
     size_t index;
     size_t row; // Line number.
@@ -128,23 +128,17 @@ struct LexingResult {
     size_t errorsCount;
 };
 
-// enum LexingAction {
-//     REJECT,
-//     ACCEPT,
-//     GOTO,
-//     RECOVER,
-// };
+struct LexingTransition {
+    enum TokenType type;
+    size_t next;
+};
 
-// struct LexingTransition {
-//     enum LexingAction action;
-//     union {
-//         enum TokenType type; // Used when `action == ACCEPT`.
-//         char *message; // Used when `action == RECOVER`. Unowned, don't free.
-//         size_t next; // Used when `action == GOTO`.
-//     };
-// };
+typedef struct LexingTransition (*LexingTable)[256];
 
-// typedef struct LexingTransition (*LexingTable)[256];
+// struct LexingTrieNode {
+//     enum TokenType type;
+//     struct LexingTrieNode *next[TOKEN_TYPE_COUNT];
+// };
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyLexingResult(struct LexingResult *result);

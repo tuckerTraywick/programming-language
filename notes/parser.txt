@@ -42,12 +42,52 @@ stack
 
 
 
-program = packageStatemet
+
+program          = *packageStatement
 packageStatement = "package" identifier *("." identifier)
 
-packageStatement = "package" identifier packageStatement0
-packageStatement0 = "." identifier | _
-
-
 0:
-    "package", _: 
+    "package": shift 1
+1:
+    identifier: shift 2
+    else: reduce packageStatement
+2:
+    ".": shift 3
+    else: reduce packageStatement
+3:
+    identifier: shift 2
+
+packageStatement  = "package" identifier packageStatement0
+packageStatement0 = "." identifier packageStatement0 | _
+[] package hello
+shift
+[package] hello
+shift
+[package hello]
+reduce packageStatement0
+[package hello packageStatement0]
+reduce packageStatement
+[packageStatement(package hello packageStatement0)]
+
+"package hello"
+packageStatement $, []
+"package" identifier packageStatement0, []
+identifier packageStatement0, ["package"]
+packageStatement0 ["package", identifier]
+_ ["package", identifier]
+
+
+functionArgument = ?(identifier "=") expression
+expression       = identifier "+" identifier
+
+functionArgument = identifier "=" expression
+                 | expression
+expression       = identifier "+" identifier
+
+functionArgument = identifier ?expression
+
+functionParameter
+    = identifier ?type ?("=" expression)
+    | type ?("=" expression)
+type
+    = identifier "." identifier

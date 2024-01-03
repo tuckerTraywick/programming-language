@@ -12,7 +12,10 @@ struct ParsingError {
 
 // Represents the type of a node.
 enum NodeType {
+    FATAL_ERROR = TOKEN_TYPE_COUNT,
+    ERROR,
     TOKEN,
+
     PROGRAM,
     PACKAGE_STATEMENT,
     IMPORT_STATEMENT,
@@ -38,16 +41,18 @@ struct ParsingResult {
     size_t errorsCount;
 };
 
-// Represents an entry in the parsing state transition table.
 struct ParsingTransition {
-    size_t call; // State to call like a function.
-    size_t jump; // State to jump directly to, when both `call` and `jump` are > 0, pushed to stack before calling.
-    enum NodeType type; // The type of node to begin.
-    char *errorMessage; // Error message to produce.
+    enum NodeType type;
+    size_t next;
 };
 
-// Represents a state transition table for the parser.
-typedef struct ParsingTransition (*ParsingTable)[TOKEN_TYPE_COUNT];
+struct ParsingTransition (*ParsingTable)[TOKEN_TYPE_COUNT];
+
+// struct ParsingTrieNode {
+//     enum NodeType type;
+//     struct ParsingTrieNode *next;
+//     struct ParsingTrieNode *sibling;
+// };
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyParsingResult(struct ParsingResult *result);

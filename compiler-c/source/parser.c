@@ -12,20 +12,18 @@
 #define ERRORS_INITIAL_CAPACITY 500
 #define ERRORS_CAPACITY_INCREMENT 500
 
-static void parsePackageStatement(void) {
+static bool parsePackageStatement(void) {
     beginNode(PACKAGE_STATEMENT);
         expect(PACKAGE);
         expect(IDENTIFIER);
         recover("Expected a package name.");
-        skipLine();
         while (expect(DOT)) {
             if (accept(TIMES))
                 break;
             expect(IDENTIFIER);
             recover("Expected an identifier.");
-            skipLine();
         }
-    endNode();
+    return endNode();
 }
 
 void destroyParsingResult(struct ParsingResult *result) {
