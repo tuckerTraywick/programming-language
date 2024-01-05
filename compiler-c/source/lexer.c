@@ -165,7 +165,7 @@ struct LexingResult lexString(char *text) {
                 ++newlineCount;
             } while (text[token.index + newlineCount] == '\n');
 
-            if (listLast(struct Token, &tokens)->type != NEWLINE) {
+            if (listGet(struct Token, &tokens, tokens.count - 1)->type != NEWLINE) {
                 listAppend(&tokens, &token);
             }
             token.index += newlineCount;

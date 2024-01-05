@@ -65,20 +65,20 @@ static bool endNode(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
 }
 
-static bool parsePackageStatement(struct Parser *parser) {
-    assert(parser != NULL && "Must pass a parser.");
-    beginNode(parser, PACKAGE_STATEMENT);
-    if (!consume(parser, PACKAGE)) return fail(parser);
-    if (!consume(parser, IDENTIFIER)) recover(parser, "Expected a packge name.");
-    while (consume(parser, DOT)) {
-        if (consume(parser, TIMES)) {
-            if (hasTokens(parser) || consume(parser, NEWLINE)) break;
-            recover(parser, "Expected end of statement.");
-        }
-        if (!consume(parser, IDENTIFIER)) recover(parser, "Expected an identifier.");
-    }
-    return endNode(parser);
-}
+// static bool parsePackageStatement(struct Parser *parser) {
+//     assert(parser != NULL && "Must pass a parser.");
+//     beginNode(parser, PACKAGE_STATEMENT);
+//     if (!consume(parser, PACKAGE)) return fail(parser);
+//     if (!consume(parser, IDENTIFIER)) recover(parser, "Expected a packge name.");
+//     while (consume(parser, DOT)) {
+//         if (consume(parser, TIMES)) {
+//             if (hasTokens(parser) || consume(parser, NEWLINE)) break;
+//             recover(parser, "Expected end of statement.");
+//         }
+//         if (!consume(parser, IDENTIFIER)) recover(parser, "Expected an identifier.");
+//     }
+//     return endNode(parser);
+// }
 
 void destroyParsingResult(struct ParsingResult *result) {
     assert(result != NULL && "Must pass a result.");
@@ -93,7 +93,7 @@ struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
     struct List errors = listCreate(struct ParsingError, ERRORS_INITIAL_CAPACITY);
     struct Parser parser = {
         .nodes = nodes,
-        .currentNode = nodes.elements,
+        .currentNode = (struct Node*)nodes.elements,
         .errors = errors,
     };
     
