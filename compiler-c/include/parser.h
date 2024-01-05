@@ -13,9 +13,9 @@ struct ParsingError {
 // Represents the type of a node.
 enum NodeType {
     FATAL_ERROR = TOKEN_TYPE_COUNT,
-    ERROR,
+    EXPECTED_PACKAGE_NAME,
+    
     TOKEN,
-
     PROGRAM,
     PACKAGE_STATEMENT,
     IMPORT_STATEMENT,
@@ -35,24 +35,11 @@ struct Node {
 
 // Represents the result of parsing an array of tokens.
 struct ParsingResult {
-    struct Node *nodes; // An array of nodes (preorder traversal). The first node is the root node of the tree.
+    struct Node *nodes; // The preorder traversal of the parser tree. The first node is the root node of the tree.
     size_t nodesCount;
     struct ParsingError *errors;
     size_t errorsCount;
 };
-
-struct ParsingTransition {
-    enum NodeType type;
-    size_t next;
-};
-
-struct ParsingTransition (*ParsingTable)[TOKEN_TYPE_COUNT];
-
-// struct ParsingTrieNode {
-//     enum NodeType type;
-//     struct ParsingTrieNode *next;
-//     struct ParsingTrieNode *sibling;
-// };
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyParsingResult(struct ParsingResult *result);

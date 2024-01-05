@@ -128,18 +128,6 @@ struct LexingResult {
     size_t errorsCount;
 };
 
-struct LexingTransition {
-    enum TokenType type;
-    size_t next;
-};
-
-typedef struct LexingTransition (*LexingTable)[256];
-
-// struct LexingTrieNode {
-//     enum TokenType type;
-//     struct LexingTrieNode *next[TOKEN_TYPE_COUNT];
-// };
-
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyLexingResult(struct LexingResult *result);
 

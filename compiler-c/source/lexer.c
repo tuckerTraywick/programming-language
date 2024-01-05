@@ -8,10 +8,7 @@
 #include "list.h"
 
 #define TOKENS_INITIAL_CAPACITY 3000
-#define TOKENS_CAPACITY_INCREMENT 3000
-
 #define ERRORS_INITIAL_CAPACITY 500
-#define ERRORS_CAPACITY_INCREMENT 500
 
 // Returns the max of `a` and `b`. Helper for `lexString()`.
 static size_t max(size_t a, size_t b) {
@@ -187,7 +184,7 @@ struct LexingResult lexString(char *text) {
                 ++token.length;
                 ++token.column;
             } while (isdigit(text[token.index + token.length]));            
-            listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
+            listAppend(&tokens, &token);
             token.index += token.length;
         } else if (isalpha(ch) || ch == '_') {
             // Lex an identifier or a keyword.
@@ -206,7 +203,7 @@ struct LexingResult lexString(char *text) {
                     break;
                 }
             }
-            listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
+            listAppend(&tokens, &token);
             token.index += token.length;
             token.column += token.length;
         } else if (ch == '\'') {
@@ -230,11 +227,11 @@ struct LexingResult lexString(char *text) {
                     .row=token.row,
                     .column=token.column,
                 };
-                listAppend(&errors, &error, ERRORS_CAPACITY_INCREMENT);
+                listAppend(&errors, &error);
             }
 
             // TODO: Check for an escape sequence.
-            listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
+            listAppend(&tokens, &token);
             token.index += token.length;
             token.column += token.length;
         } else if (ch == '"') {
@@ -258,11 +255,11 @@ struct LexingResult lexString(char *text) {
                     .row=token.row,
                     .column=token.column,
                 };
-                listAppend(&errors, &error, ERRORS_CAPACITY_INCREMENT);
+                listAppend(&errors, &error);
             }
 
             // TODO: Check for escape sequences.
-            listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
+            listAppend(&tokens, &token);
             token.index += token.length;
             token.column += token.length;
         } else {
@@ -277,7 +274,7 @@ struct LexingResult lexString(char *text) {
                 if (strncmp(operators[i], token.text, length) == 0) {
                     token.type = i + PLUS_EQUAL;
                     token.length = length;
-                    listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
+                    listAppend(&tokens, &token);
                     token.index += token.length;
                     token.column += token.length;
                     foundOperator = true;
@@ -296,12 +293,12 @@ struct LexingResult lexString(char *text) {
                     .row=token.row,
                     .column=token.column,
                 };
-                listAppend(&errors, &error, ERRORS_CAPACITY_INCREMENT);
+                listAppend(&errors, &error);
                 
                 do {
                     ++token.length;
                 } while (text[token.index + token.length] && !isspace(text[token.index + token.length]));
-                listAppend(&tokens, &token, TOKENS_CAPACITY_INCREMENT);
+                listAppend(&tokens, &token);
                 token.index += token.length;
                 token.column += token.length;
             }
@@ -317,7 +314,4 @@ struct LexingResult lexString(char *text) {
 }
 
 #undef TOKENS_INITIAL_CAPACITY
-#undef TOKENS_CAPACITY_INCREMENT
-
 #undef ERRORS_INITIAL_CAPACITY
-#undef ERRORS_CAPACITY_INCREMENT

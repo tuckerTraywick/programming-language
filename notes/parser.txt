@@ -91,3 +91,6 @@ functionParameter
     | type ?("=" expression)
 type
     = identifier "." identifier
+
+
+identifier -> type -> = -> expresssion -> 

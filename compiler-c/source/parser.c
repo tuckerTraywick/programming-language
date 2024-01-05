@@ -7,24 +7,71 @@
 #include "list.h"
 
 #define NODES_INITIAL_CAPACITY 3000
-#define NODES_CAPACITY_INCREMENT 3000
-
 #define ERRORS_INITIAL_CAPACITY 500
-#define ERRORS_CAPACITY_INCREMENT 500
 
-static bool parsePackageStatement(void) {
-    beginNode(PACKAGE_STATEMENT);
-        expect(PACKAGE);
-        expect(IDENTIFIER);
-        recover("Expected a package name.");
-        while (expect(DOT)) {
-            if (accept(TIMES))
-                break;
-            expect(IDENTIFIER);
-            recover("Expected an identifier.");
-        }
-    return endNode();
+// Represents the state of the parser.
+struct Parser {
+    struct Token *tokens;
+    size_t tokensCount;
+    size_t currentToken;
+    struct List nodes;
+    struct Node *currentNode;
+    struct List errors;
+};
+
+// Deallocates a `Parser`'s nodes and errors, and zeros its memory.
+static void destroyParser(struct Parser *parser) {
+    assert(parser != NULL && "Must pass a parser.");
+
 }
+
+// Returns true if the parser has consumed all of its tokens.
+static bool hasTokens(struct Parser *parser) {
+    assert(parser != NULL && "Must pass a parser.");
+    return parser->currentToken < parser->tokensCount;
+}
+
+// Returns true if the current token of the parser is of the given type.
+static bool peek(struct Parser *parser, enum TokenType type) {
+    assert(parser != NULL && "Must pass a parser.");
+    return hasTokens(parser) && parser->tokens[parser->currentToken].type == type;
+}
+
+// Returns true and advances to the next token if the current token of the parser is of the given type.
+static bool consume(struct Parser *parser, enum TokenType type) {
+    assert(parser != NULL && "Must pass a parser.");
+    if (peek(parser, type)) {
+        ++parser->currentToken;
+        return false;
+    }
+    return true;
+}
+
+// Begins a new node in the parse tree with the given type. The node is appended to `parser->nodes`.
+static void beginNode(struct Parser *parser, enum NodeType type) {
+    assert(parser != NULL && "Must pass a parser.");
+    struct Node node = {
+        .type = type,
+        .tokens = parser->tokens + parser->currentToken,
+        .parent = parser->currentNode,
+    };
+    listAppend(&parser->nodes, &node);
+}
+
+// static bool parsePackageStatement(struct Parser *parser) {
+//     assert(parser != NULL && "Must pass a parser.");
+//     beginNode(parser, PACKAGE_STATEMENT);
+//     if (!consume(parser, PACKAGE)) return fail(parser);
+//     if (!consume(parser, IDENTIFIER)) recover(parser, "Expected a packge name.");
+//     while (consume(parser, DOT)) {
+//         if (consume(parser, TIMES)) {
+//             if (hasTokens(parser) || consume(parser, NEWLINE)) break;
+//             recover(parser, "Expected end of statement.");
+//         }
+//         if (!consume(parser, IDENTIFIER)) recover(parser, "Expected an identifier.");
+//     }
+//     return endNode(parser);
+// }
 
 void destroyParsingResult(struct ParsingResult *result) {
     assert(result != NULL && "Must pass a result.");
@@ -37,7 +84,11 @@ struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
     assert(tokens != NULL && "Must pass an array of tokens.");
     struct List nodes = listCreate(struct Node, NODES_INITIAL_CAPACITY);
     struct List errors = listCreate(struct ParsingError, ERRORS_INITIAL_CAPACITY);
-
+    struct Parser parser = {
+        .nodes = nodes,
+        .currentNode = nodes.elements,
+        .errors = errors,
+    };
     
 
     return (struct ParsingResult){
@@ -49,7 +100,4 @@ struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
 }
 
 #undef NODES_INITIAL_CAPACITY
-#undef NODES_CAPACITY_INCREMENT
-
 #undef ERRORS_INITIAL_CAPACITY
-#undef ERRORS_CAPACITY_INCREMENT

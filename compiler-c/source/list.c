@@ -20,14 +20,13 @@ struct List listCreateImpl(size_t elementSize, size_t capacity) {
     };
 }
 
-void listAppendImpl(struct List *list, char *element, size_t elementSize, size_t capacityIncrement) {
+void listAppendImpl(struct List *list, char *element, size_t elementSize) {
     assert(list != NULL && "Must pass a list.");
     assert(element != NULL && "Must pass an element.");
-    assert(capacityIncrement && "Must pass a capacity increment > 0.");
 
     // Extend the list if needed.
     if (list->count >= list->capacity) {
-        list->capacity += capacityIncrement;
+        list->capacity += list->capacity;
         char *newElements = realloc(list->elements, list->capacity*elementSize);
         assert(newElements != NULL && "`realloc()` failed.");
         list->elements = newElements;
