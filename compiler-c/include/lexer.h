@@ -6,17 +6,12 @@
 #include <stdio.h> // FILE
 #include "list.h"
 
-// Represents an error encountered during lexing.
-struct LexingError {
-    char *message; // Unowned, don't free.
-    size_t index;
-    size_t row; // Line number.
-    size_t column; // Index relative to line start.
-};
-
 // Represents the type of a token.
 enum TokenType {
     INVALID_TOKEN,
+    CHARACTER_UNCLOSED_QUOTE,
+    STRING_UNCLOSED_QUOTE,
+
     NUMBER,
     CHARACTER,
     STRING,
@@ -120,13 +115,16 @@ struct Token {
     size_t column; // Index relative to line start.
 };
 
-// Represents the result of lexing a string. Stores a list of tokens and a list of errors.
+// Represents the result of lexing a string. Stores a list of tokens and a list of invalid tokens.
 struct LexingResult {
     struct Token *tokens;
     size_t tokensCount;
-    struct LexingError *errors;
+    struct Token *errors;
     size_t errorsCount;
 };
+
+// The name or error message for each type of token upto `PACKAGE`.
+extern char *tokenTypeNames[];
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyLexingResult(struct LexingResult *result);

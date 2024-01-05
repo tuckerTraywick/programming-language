@@ -8,45 +8,31 @@
 #include "parser.h"
 
 static void printTokens(struct Token *tokens, size_t tokensCount) {
-    static char *types[] = {
-        [INVALID_TOKEN] = "invalid",
-        [NUMBER] = "number",
-        [CHARACTER] = "character",
-        [STRING] = "string",
-        [IDENTIFIER] = "identifier",
-    };
-
     logDebug("");
     for (size_t i = 0; i < tokensCount; ++i) {
         struct Token token = tokens[i];
-        char *text = token.text;
-        size_t length = token.length;
-        if (token.type == NEWLINE) {
-            text = "\\n";
-            length = 2;
-        }
-
-        if (token.type < NEWLINE) {
-            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, types[token.type], (int)length, text, token.length, token.index, token.row + 1, token.column + 1);
+        char *type = tokenTypeNames[token.type];
+        if (token.type < PACKAGE) {
+            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, type, (int)strlen(type), token.text, token.length, token.index, token.row + 1, token.column + 1);
         } else {
-            printfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)length, text, token.length, token.index, token.row + 1, token.column + 1);
+            printfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)token.length, token.text, token.length, token.index, token.row + 1, token.column + 1);
         }
     }
 }
 
-static void printLexingErrors(struct LexingError *errors, size_t errorsCount) {
+static void printLexingErrors(struct Token *errors, size_t errorsCount) {
     for (size_t i = 0; i < errorsCount; ++i) {
-        struct LexingError error = errors[i];
-        logfDebug("Lexing error (%zu:%zu): %s", error.row + 1, error.column + 1, error.message);
+        struct Token error = errors[i];
+        logfDebug("Lexing error (%zu:%zu): %s", error.row + 1, error.column + 1, tokenTypeNames[error.type]);
     }
 }
 
-static void printParsingErrors(struct ParsingError *errors, size_t errorsCount) {
-    for (size_t i = 0; i < errorsCount; ++i) {
-        struct ParsingError error = errors[i];
-        logfDebug("Parsing error (%zu): %s", error.index, error.message);
-    }
-}
+// static void printParsingErrors(struct ParsingError *errors, size_t errorsCount) {
+//     for (size_t i = 0; i < errorsCount; ++i) {
+//         struct ParsingError error = errors[i];
+//         logfDebug("Parsing error (%zu): %s", error.index, error.message);
+//     }
+// }
 
 static void printPipes(int depth) {
     putsDebug("");
@@ -121,7 +107,7 @@ void testLexString(void) {
     assert(text != NULL && "Failed to read file.");
     struct LexingResult result = lexString(text);
     logfDebug("tokensCount=%zu, errorMessagesCount=%zu", result.tokensCount, result.errorsCount);
-    printLexingErrors(result.errors, result.errorsCount);
+    // printLexingErrors(result.errors, result.errorsCount);
     printTokens(result.tokens, result.tokensCount);
     
     free(text);
@@ -140,8 +126,8 @@ void testParse(void) {
     // printTree(parsingResult.nodes);
     logfDebug("tokensCount=%zu, lexingErrorsCount=%zu", lexingResult.tokensCount, lexingResult.errorsCount);
     logfDebug("nodesCount=%zu, parsingErrorsCount=%zu", parsingResult.nodesCount, parsingResult.errorsCount);
-    printLexingErrors(lexingResult.errors, lexingResult.errorsCount);
-    printParsingErrors(parsingResult.errors, parsingResult.errorsCount);
+    // printLexingErrors(lexingResult.errors, lexingResult.errorsCount);
+    // printParsingErrors(parsingResult.errors, parsingResult.errorsCount);
 
     free(text);
     destroyLexingResult(&lexingResult);

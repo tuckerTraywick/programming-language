@@ -15,6 +15,18 @@ static size_t max(size_t a, size_t b) {
     return (a >= b) ? a : b;
 }
 
+char *tokenTypeNames[] = {
+    [INVALID_TOKEN] = "Invalid token.",
+    [CHARACTER_UNCLOSED_QUOTE] = "Unclosed '.",
+    [STRING_UNCLOSED_QUOTE] = "Unclosed \".",
+
+    [NUMBER] = "number",
+    [CHARACTER] = "character",
+    [STRING] = "string",
+    [IDENTIFIER] = "identifier",
+    [NEWLINE] = "newline",
+};
+
 void destroyLexingResult(struct LexingResult *result) {
     assert(result != NULL && "Must pass a result.");
     free(result->tokens);
@@ -151,13 +163,13 @@ struct LexingResult lexString(char *text) {
 
     assert(text != NULL && "Must pass a string.");
     struct List tokens = listCreate(struct Token, TOKENS_INITIAL_CAPACITY);
-    struct List errors = listCreate(struct LexingError, ERRORS_INITIAL_CAPACITY);
+    struct List errors = listCreate(struct Token, ERRORS_INITIAL_CAPACITY);
     struct Token token = {0};
 
     while (text[token.index]) {
         char ch = text[token.index];
         if (ch == '\n') {
-            // Lex a newline.
+            // Lex a newline, just skip it if the previous token was a newline.
             token.type = NEWLINE;
             token.length = 1;
             size_t newlineCount = 0;
@@ -226,14 +238,8 @@ struct LexingResult lexString(char *text) {
             if (text[token.index + token.length] == '\'') {
                 ++token.length;
             } else {
-                token.type = INVALID_TOKEN;
-                struct LexingError error = {
-                    .message = "Unclosed '.",
-                    .index=token.index,
-                    .row=token.row,
-                    .column=token.column,
-                };
-                listAppend(&errors, &error);
+                token.type = CHARACTER_UNCLOSED_QUOTE;
+                listAppend(&errors, &token);
             }
 
             // TODO: Check for an escape sequence.
@@ -254,14 +260,8 @@ struct LexingResult lexString(char *text) {
             if (text[token.index + token.length] == '"') {
                 ++token.length;
             } else {
-                token.type = INVALID_TOKEN;
-                struct LexingError error = {
-                    .message = "Unclosed \".",
-                    .index=token.index,
-                    .row=token.row,
-                    .column=token.column,
-                };
-                listAppend(&errors, &error);
+                token.type = STRING_UNCLOSED_QUOTE;
+                listAppend(&errors, &token);
             }
 
             // TODO: Check for escape sequences.
@@ -288,18 +288,12 @@ struct LexingResult lexString(char *text) {
                 }
             }
             
-            // If that fails, append and INVALID_TOKEN token and skip whitespace.
+            // If that fails, append and `INVALID_TOKEN` and skip whitespace.
             if (!foundOperator) {
                 token.type = INVALID_TOKEN;
                 token.text = text + token.index;
                 token.length = 0;
-                struct LexingError error = {
-                    .message="INVALID_TOKEN token.",
-                    .index=token.index,
-                    .row=token.row,
-                    .column=token.column,
-                };
-                listAppend(&errors, &error);
+                listAppend(&errors, &token);
                 
                 do {
                     ++token.length;
@@ -314,7 +308,7 @@ struct LexingResult lexString(char *text) {
     return (struct LexingResult){
         .tokens = (struct Token*)tokens.elements,
         .tokensCount = tokens.count,
-        .errors = (struct LexingError*)errors.elements,
+        .errors = (struct Token*)errors.elements,
         .errorsCount = errors.count,
     };
 }
