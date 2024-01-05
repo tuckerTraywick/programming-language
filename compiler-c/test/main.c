@@ -9,7 +9,7 @@
 
 static void printTokens(struct Token *tokens, size_t tokensCount) {
     static char *types[] = {
-        [INVALID] = "invalid",
+        [INVALID_TOKEN] = "invalid",
         [NUMBER] = "number",
         [CHARACTER] = "character",
         [STRING] = "string",
@@ -27,9 +27,9 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
         }
 
         if (token.type < NEWLINE) {
-            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, types[token.type], (int)length, text, length, token.index, token.row, token.column);
+            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, types[token.type], (int)length, text, token.length, token.index, token.row + 1, token.column + 1);
         } else {
-            printfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)length, text, length, token.index, token.row, token.column);
+            printfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)length, text, token.length, token.index, token.row + 1, token.column + 1);
         }
     }
 }

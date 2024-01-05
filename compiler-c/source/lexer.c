@@ -158,12 +158,18 @@ struct LexingResult lexString(char *text) {
         char ch = text[token.index];
         if (ch == '\n') {
             // Lex a newline.
-            token.length = 0;
+            token.type = NEWLINE;
+            token.length = 1;
+            size_t newlineCount = 0;
             do {
-                ++token.length;
-            } while (text[token.index + token.length] == '\n');
-            token.index += token.length;
-            token.row += token.length;
+                ++newlineCount;
+            } while (text[token.index + newlineCount] == '\n');
+
+            if (listLast(struct Token, &tokens)->type != NEWLINE) {
+                listAppend(&tokens, &token);
+            }
+            token.index += newlineCount;
+            token.row += newlineCount;
             token.column = 0;
         } else if (isspace(ch)) {
             // Skip whitespace.
@@ -220,7 +226,7 @@ struct LexingResult lexString(char *text) {
             if (text[token.index + token.length] == '\'') {
                 ++token.length;
             } else {
-                token.type = INVALID;
+                token.type = INVALID_TOKEN;
                 struct LexingError error = {
                     .message = "Unclosed '.",
                     .index=token.index,
@@ -248,7 +254,7 @@ struct LexingResult lexString(char *text) {
             if (text[token.index + token.length] == '"') {
                 ++token.length;
             } else {
-                token.type = INVALID;
+                token.type = INVALID_TOKEN;
                 struct LexingError error = {
                     .message = "Unclosed \".",
                     .index=token.index,
@@ -264,7 +270,7 @@ struct LexingResult lexString(char *text) {
             token.column += token.length;
         } else {
             // Try to lex an operator.
-            token.type = INVALID;
+            token.type = INVALID_TOKEN;
             token.text = text + token.index;
             token.length = 0;
             bool foundOperator = false;
@@ -282,13 +288,13 @@ struct LexingResult lexString(char *text) {
                 }
             }
             
-            // If that fails, append and invalid token and skip whitespace.
+            // If that fails, append and INVALID_TOKEN token and skip whitespace.
             if (!foundOperator) {
-                token.type = INVALID;
+                token.type = INVALID_TOKEN;
                 token.text = text + token.index;
                 token.length = 0;
                 struct LexingError error = {
-                    .message="Invalid token.",
+                    .message="INVALID_TOKEN token.",
                     .index=token.index,
                     .row=token.row,
                     .column=token.column,

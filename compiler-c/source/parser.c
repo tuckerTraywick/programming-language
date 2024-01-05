@@ -56,22 +56,29 @@ static void beginNode(struct Parser *parser, enum NodeType type) {
         .parent = parser->currentNode,
     };
     listAppend(&parser->nodes, &node);
+    parser->currentNode->next = listLast(struct Node, &parser->nodes);
 }
 
-// static bool parsePackageStatement(struct Parser *parser) {
-//     assert(parser != NULL && "Must pass a parser.");
-//     beginNode(parser, PACKAGE_STATEMENT);
-//     if (!consume(parser, PACKAGE)) return fail(parser);
-//     if (!consume(parser, IDENTIFIER)) recover(parser, "Expected a packge name.");
-//     while (consume(parser, DOT)) {
-//         if (consume(parser, TIMES)) {
-//             if (hasTokens(parser) || consume(parser, NEWLINE)) break;
-//             recover(parser, "Expected end of statement.");
-//         }
-//         if (!consume(parser, IDENTIFIER)) recover(parser, "Expected an identifier.");
-//     }
-//     return endNode(parser);
-// }
+// Ends the current node and moves the current node pointer to its parent if it has one. Always
+// returns `true` so the return value can be used in parsing functions.
+static bool endNode(struct Parser *parser) {
+    assert(parser != NULL && "Must pass a parser.");
+}
+
+static bool parsePackageStatement(struct Parser *parser) {
+    assert(parser != NULL && "Must pass a parser.");
+    beginNode(parser, PACKAGE_STATEMENT);
+    if (!consume(parser, PACKAGE)) return fail(parser);
+    if (!consume(parser, IDENTIFIER)) recover(parser, "Expected a packge name.");
+    while (consume(parser, DOT)) {
+        if (consume(parser, TIMES)) {
+            if (hasTokens(parser) || consume(parser, NEWLINE)) break;
+            recover(parser, "Expected end of statement.");
+        }
+        if (!consume(parser, IDENTIFIER)) recover(parser, "Expected an identifier.");
+    }
+    return endNode(parser);
+}
 
 void destroyParsingResult(struct ParsingResult *result) {
     assert(result != NULL && "Must pass a result.");
@@ -92,10 +99,10 @@ struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
     
 
     return (struct ParsingResult){
-        .nodes = (struct Node*)nodes.elements,
-        .nodesCount = nodes.count,
-        .errors = (struct ParsingError*)errors.elements,
-        .errorsCount = errors.count,
+        .nodes = (struct Node*)parser.nodes.elements,
+        .nodesCount = parser.nodes.count,
+        .errors = (struct ParsingError*)parser.errors.elements,
+        .errorsCount = parser.errors.count,
     };
 }
 

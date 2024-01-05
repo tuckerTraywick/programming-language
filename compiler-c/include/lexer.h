@@ -16,7 +16,7 @@ struct LexingError {
 
 // Represents the type of a token.
 enum TokenType {
-    INVALID,
+    INVALID_TOKEN,
     NUMBER,
     CHARACTER,
     STRING,

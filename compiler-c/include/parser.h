@@ -12,7 +12,7 @@ struct ParsingError {
 
 // Represents the type of a node.
 enum NodeType {
-    FATAL_ERROR = TOKEN_TYPE_COUNT,
+    INVALID_NODE = TOKEN_TYPE_COUNT,
     EXPECTED_PACKAGE_NAME,
     
     TOKEN,
