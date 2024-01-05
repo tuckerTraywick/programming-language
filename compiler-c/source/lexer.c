@@ -171,6 +171,7 @@ struct LexingResult lexString(char *text) {
         if (ch == '\n') {
             // Lex a newline, just skip it if the previous token was a newline.
             token.type = NEWLINE;
+            token.text = text + token.index;
             token.length = 1;
             size_t newlineCount = 0;
             do {

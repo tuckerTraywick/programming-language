@@ -12,8 +12,10 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
     for (size_t i = 0; i < tokensCount; ++i) {
         struct Token token = tokens[i];
         char *type = tokenTypeNames[token.type];
-        if (token.type < PACKAGE) {
-            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, type, (int)strlen(type), token.text, token.length, token.index, token.row + 1, token.column + 1);
+        if (token.type == NEWLINE) {
+            printfDebug("%zu \"\\n\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, token.length, token.index, token.row + 1, token.column + 1);
+        } else if (token.type < PACKAGE) {
+            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, type, (int)token.length, token.text, token.length, token.index, token.row + 1, token.column + 1);
         } else {
             printfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)token.length, token.text, token.length, token.index, token.row + 1, token.column + 1);
         }
