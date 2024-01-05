@@ -201,10 +201,10 @@ struct LexingResult lexString(char *text) {
             token.length = 0;
             do {
                 ++token.length;
-                ++token.column;
             } while (isdigit(text[token.index + token.length]));            
             listAppend(&tokens, &token);
             token.index += token.length;
+            token.column += token.length;
         } else if (isalpha(ch) || ch == '_') {
             // Lex an identifier or a keyword.
             token.type = IDENTIFIER;
