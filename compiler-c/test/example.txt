@@ -1,4 +1,2 @@
+'abcdef
 123
-'a b 12'
-12334
-abcdef
