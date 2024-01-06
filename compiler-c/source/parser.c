@@ -22,7 +22,9 @@ struct Parser {
 // Deallocates a `Parser`'s nodes and errors, and zeros its memory.
 static void destroyParser(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
-
+    listDestroy(&parser->nodes);
+    listDestroy(&parser->errors);
+    *parser = (struct Parser){0};
 }
 
 // Returns true if the parser has consumed all of its tokens.
@@ -37,13 +39,34 @@ static bool peek(struct Parser *parser, enum TokenType type) {
     return hasTokens(parser) && parser->tokens[parser->currentToken].type == type;
 }
 
-// Returns true and advances to the next token if the current token of the parser is of the given type.
+// Advances to the next token and returns true if the current token of the parser is of the given type.
 static bool consume(struct Parser *parser, enum TokenType type) {
     assert(parser != NULL && "Must pass a parser.");
     if (peek(parser, type)) {
         ++parser->currentToken;
-        return false;
+        ++parser->currentNode->tokensCount;
+        return true;
     }
+    return false;
+}
+
+// Begins the root node in the parse tree with the given type. The node is appended to
+// `parser->nodes`.
+static void beginRootNode(struct Parser *parser, enum NodeType type) {
+    assert(parser != NULL && "Must pass a parser.");
+    struct Node node = {
+        .type = PROGRAM,
+        .tokens = parser->tokens,
+    };
+    listAppend(&parser->nodes, &node);
+}
+
+// Ends the root node. Returns `true` so its return value can be used in parsing functions.
+static bool endRootNode(struct Parser *parser) {
+    assert(parser != NULL && "Must pass a parser.");
+    struct Node *root = (struct Node*)parser->nodes.elements;
+    root->tokensCount += parser->currentNode->tokensCount;
+    parser->currentNode = root;
     return true;
 }
 
@@ -52,17 +75,22 @@ static void beginNode(struct Parser *parser, enum NodeType type) {
     assert(parser != NULL && "Must pass a parser.");
     struct Node node = {
         .type = type,
+        .parent = parser->currentNode->parent,
         .tokens = parser->tokens + parser->currentToken,
-        .parent = parser->currentNode,
     };
     listAppend(&parser->nodes, &node);
     parser->currentNode->next = listLast(struct Node, &parser->nodes);
+    parser->currentNode = parser->currentNode->next;
 }
 
 // Ends the current node and moves the current node pointer to its parent if it has one. Always
 // returns `true` so the return value can be used in parsing functions.
 static bool endNode(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
+    struct Node *current = parser->currentNode;
+    struct Node *parent = current->parent;
+    parent->tokensCount += current->tokensCount;
+
 }
 
 // static bool parsePackageStatement(struct Parser *parser) {
@@ -79,6 +107,13 @@ static bool endNode(struct Parser *parser) {
 //     }
 //     return endNode(parser);
 // }
+
+static bool parseProgram(struct Parser *parser) {
+    assert(parser != NULL && "Must pass a parser.");
+    beginRootNode(parser, PROGRAM);
+
+    endRootNode(parser);
+}
 
 void destroyParsingResult(struct ParsingResult *result) {
     assert(result != NULL && "Must pass a result.");
