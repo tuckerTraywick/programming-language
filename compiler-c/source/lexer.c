@@ -1,7 +1,7 @@
 #include <assert.h> // assert()
 #include <stdbool.h> // bool
 #include <stdio.h> // FILE, fopen(), fclose(), fseek(), frewind(), ftell()
-#include <stdlib.h> // malloc(), free()
+#include <stdlib.h> // free()
 #include <ctype.h> // isdigit(), isalpha(), isalnum(), ispunct()
 #include <string.h> // strncmp()
 #include "lexer.h"

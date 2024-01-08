@@ -134,7 +134,7 @@ void testParse(void) {
     putsDebug("\n");
     printLexingErrors(lexingResult.errors, lexingResult.errorsCount);
     putsDebug("\n");
-    printTree(parsingResult.nodes);
+    // printTree(parsingResult.nodes);
     putsDebug("\n");
 
     free(text);
