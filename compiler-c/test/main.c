@@ -7,7 +7,7 @@
 #include "lexer.h"
 #include "parser.h"
 
-static void printTokens(struct Token *tokens, size_t tokensCount) {
+static void printTokens(char *text, struct Token *tokens, size_t tokensCount) {
     printfDebug("%zu tokens:\n", tokensCount);
     for (size_t i = 0; i < tokensCount; ++i) {
         struct Token token = tokens[i];
@@ -15,9 +15,9 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
         if (token.type == NEWLINE) {
             printfDebug("%zu \"\\n\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, token.length, token.index, token.row + 1, token.column + 1);
         } else if (token.type < PACKAGE) {
-            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, type, (int)token.length, token.text, token.length, token.index, token.row + 1, token.column + 1);
+            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, type, (int)token.length, text + token.index, token.length, token.index, token.row + 1, token.column + 1);
         } else {
-            printfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)token.length, token.text, token.length, token.index, token.row + 1, token.column + 1);
+            printfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)token.length, text + token.index, token.length, token.index, token.row + 1, token.column + 1);
         }
     }
 }
@@ -43,34 +43,34 @@ static void printPipes(int depth) {
     }
 }
 
-static void printNode(struct Node *node, int depth) {
-    static char *types[] = {
-        [TOKEN] = "token",
-        [PROGRAM] = "program",
-    };
+// static void printNode(char *text, struct Node *node, int depth) {
+//     static char *types[] = {
+//         [TOKEN] = "token",
+//         [PROGRAM] = "program",
+//     };
 
-    assert(node != NULL && "Must pass a node.");
-    assert(depth >= 0 && "`depth` must be >= 0.");
-    printPipes(depth);
-    printfDebug("%s", types[node->type]);
-    // printfDebug("%d", node->type);
+//     assert(node != NULL && "Must pass a node.");
+//     assert(depth >= 0 && "`depth` must be >= 0.");
+//     printPipes(depth);
+//     printfDebug("%s", types[node->type]);
+//     // printfDebug("%d", node->type);
 
-    struct Token token = node->tokens[0];
-    if (node->type == TOKEN) {
-        printfDebug(" \"%.*s\"\n", (int)token.length, token.text);
-    } else {
-        putsDebug("\n");
-    }
+//     struct Token token = node->tokens[0];
+//     if (node->type == TOKEN) {
+//         printfDebug(" \"%.*s\"\n", (int)token.length, text + token.index);
+//     } else {
+//         putsDebug("\n");
+//     }
 
-    // for (size_t i = 0; i < node->childrenCount; ++i) {
-    //     printNode(node->children + i, depth + 1);
-    // }
-}
+//     // for (size_t i = 0; i < node->childrenCount; ++i) {
+//     //     printNode(node->children + i, depth + 1);
+//     // }
+// }
 
-static void printTree(struct Node *node) {
-    putsDebug("syntax tree:\n");
-    printNode(node, 0);
-}
+// static void printTree(char *text, struct Node *node) {
+//     putsDebug("syntax tree:\n");
+//     printNode(text, node, 0);
+// }
 
 void testList(void) {
     size_t listCapacity = 10;
@@ -115,7 +115,7 @@ void testLexString(void) {
     struct LexingResult result = lexString(text);
     logfDebug("tokensCount=%zu, errorMessagesCount=%zu", result.tokensCount, result.errorsCount);
     // printLexingErrors(result.errors, result.errorsCount);
-    printTokens(result.tokens, result.tokensCount);
+    printTokens(text, result.tokens, result.tokensCount);
     
     free(text);
     destroyLexingResult(&result);
@@ -130,7 +130,7 @@ void testParse(void) {
     // assert(parsingResult.nodes != NULL && "Need nodes to print.");
 
     logDebug("");
-    printTokens(lexingResult.tokens, lexingResult.tokensCount);
+    printTokens(text, lexingResult.tokens, lexingResult.tokensCount);
     putsDebug("\n");
     printLexingErrors(lexingResult.errors, lexingResult.errorsCount);
     putsDebug("\n");

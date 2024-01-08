@@ -20,11 +20,10 @@ struct Parser {
     size_t errorsCapacity;
     size_t errorsCount;
     size_t currentTokenIndex;
-    struct Node *currentParent;
-    struct Node *currentChild;
+    size_t nextNodeIndex;
 };
 
-// Deallocates a `Parser`'s nodes and errors, and zeros its memory.
+// Deallocates a parser's nodes and errors, and zeros its memory.
 static void destroyParser(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
     listDestroy((void**)&parser->nodes, &parser->nodesCapacity, &parser->nodesCount);
@@ -38,22 +37,33 @@ static bool hasTokens(struct Parser *parser) {
     return parser->tokens != NULL && parser->currentTokenIndex < parser->tokensCount;
 }
 
-// Returns the token the parser is currently looking at.
+// Returns the current token the parser is looking at.
 static struct Token *currentToken(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
+    assert(hasTokens(parser));
     return parser->tokens + parser->currentTokenIndex;
 }
 
-// Looks at the current token and returns true if it is of the given type.
+// Returns the next new node in the parse tree.
+static struct Node *nextNode(struct Parser *parser) {
+    assert(parser != NULL && "Must pass a parser.");
+    return parser->nodes + parser->nextNodeIndex;
+}
+
+// Looks at the current token and returns true if it has the given type.
 static bool peek(struct Parser *parser, enum TokenType type) {
     assert(parser != NULL && "Must pass a parser.");
     return hasTokens(parser) && currentToken(parser)->type == type;
 }
 
-// Conesumes the current token if it matches the given type. Adds the token to the syntax tree.
+// Consumes the current token if it has the given type. Adds the token to the syntax tree.
 static bool consume(struct Parser *parser, enum TokenType type) {
     if (peek(parser, type)) {
-        // TODO: Add the token to the parse tree.
+        struct Node *newNode = nextNode(parser);
+        nextNode(parser)->type = TOKEN;
+        nextNode(parser)->firstToken = parser->currentTokenIndex;
+        nextNode(parser)->tokensCount = 1;
+        nextNode(parser);
         ++parser->currentTokenIndex;
         return true;
     }

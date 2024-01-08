@@ -177,7 +177,6 @@ struct LexingResult lexString(char *text) {
         if (ch == '\n') {
             // Lex a newline, just skip it if the previous token was a newline.
             token.type = NEWLINE;
-            token.text = text + token.index;
             token.length = 1;
             size_t newlineCount = 0;
             do {
@@ -203,7 +202,6 @@ struct LexingResult lexString(char *text) {
         } else if (isdigit(ch)) {
             // Lex a number.
             token.type = NUMBER;
-            token.text = text + token.index;
             token.length = 0;
             do {
                 ++token.length;
@@ -214,7 +212,6 @@ struct LexingResult lexString(char *text) {
         } else if (isalpha(ch) || ch == '_') {
             // Lex an identifier or a keyword.
             token.type = IDENTIFIER;
-            token.text = text + token.index;
             token.length = 0;
             do {
                 ++token.length;
@@ -223,7 +220,7 @@ struct LexingResult lexString(char *text) {
             for (size_t i = 0; i < keywordsCount; ++i) {
                 // TODO: Get rid of `strlen()` here and store the lengths of each keyword in the
                 // array.
-                if (strncmp(keywords[i], token.text, max(token.length, strlen(keywords[i]))) == 0) {
+                if (strncmp(keywords[i], text + token.index, max(token.length, strlen(keywords[i]))) == 0) {
                     token.type = i + PACKAGE;
                     break;
                 }
@@ -234,7 +231,6 @@ struct LexingResult lexString(char *text) {
         } else if (ch == '\'') {
             // Lex a character literal.
             token.type = CHARACTER;
-            token.text = text + token.index;
             token.length = 0;
             do {
                 ++token.length;
@@ -256,7 +252,6 @@ struct LexingResult lexString(char *text) {
         } else if (ch == '"') {
             // Lex a string literal.
             token.type = STRING;
-            token.text = text + token.index;
             token.length = 0;
             do {
                 ++token.length;
@@ -278,13 +273,12 @@ struct LexingResult lexString(char *text) {
         } else {
             // Try to lex an operator.
             token.type = INVALID_TOKEN;
-            token.text = text + token.index;
             token.length = 0;
             bool foundOperator = false;
             for (size_t i = 0; i < operatorsCount; ++i) {
                 // TODO: Get rid of `strlen()`.
                 size_t length = strlen(operators[i]);
-                if (strncmp(operators[i], token.text, length) == 0) {
+                if (strncmp(operators[i], text + token.index, length) == 0) {
                     token.type = i + PLUS_EQUAL;
                     token.length = length;
                     listAppend((void**)&tokens, sizeof *tokens, &tokensCapacity, &tokensCount, &token);
@@ -298,7 +292,6 @@ struct LexingResult lexString(char *text) {
             // If that fails, append and `INVALID_TOKEN` and skip whitespace.
             if (!foundOperator) {
                 token.type = INVALID_TOKEN;
-                token.text = text + token.index;
                 token.length = 0;
                 listAppend((void**)&errors, sizeof *errors, &errorsCapacity, &errorsCount, &token);
                 

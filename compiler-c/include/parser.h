@@ -18,9 +18,10 @@ enum NodeType {
 // Represents a node in a syntax tree.
 struct Node {
     enum NodeType type;
-    struct Node *child;
-    struct Node *sibling;
-    struct Token *tokens; // Points to the first token parsed to create the node. Unowned, don't free.
+    size_t parent;
+    size_t child;
+    size_t next;
+    size_t firstToken;
     size_t tokensCount;
 };
 
