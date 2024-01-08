@@ -31,6 +31,11 @@ static void destroyParser(struct Parser *parser) {
     *parser = (struct Parser){0};
 }
 
+static void appendNode(struct Parser *parser) {
+    assert(parser != NULL && "Must pass a parser.");
+    // listAppend((void**)&parser->nodes, )
+}
+
 // Returns true if the parser still has tokens to consume.
 static bool hasTokens(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
@@ -59,11 +64,11 @@ static bool peek(struct Parser *parser, enum TokenType type) {
 // Consumes the current token if it has the given type. Adds the token to the syntax tree.
 static bool consume(struct Parser *parser, enum TokenType type) {
     if (peek(parser, type)) {
-        struct Node *newNode = nextNode(parser);
         nextNode(parser)->type = TOKEN;
         nextNode(parser)->firstToken = parser->currentTokenIndex;
         nextNode(parser)->tokensCount = 1;
-        nextNode(parser);
+        nextNode(parser)->next = parser->nextNodeIndex + 1;
+        (parser);
         ++parser->currentTokenIndex;
         return true;
     }
