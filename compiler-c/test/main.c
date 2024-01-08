@@ -8,7 +8,7 @@
 #include "parser.h"
 
 static void printTokens(struct Token *tokens, size_t tokensCount) {
-    logDebug("");
+    printfDebug("%zu tokens:\n", tokensCount);
     for (size_t i = 0; i < tokensCount; ++i) {
         struct Token token = tokens[i];
         char *type = tokenTypeNames[token.type];
@@ -23,16 +23,16 @@ static void printTokens(struct Token *tokens, size_t tokensCount) {
 }
 
 static void printLexingErrors(struct Token *errors, size_t errorsCount) {
+    printfDebug("%zu lexing errors:\n", errorsCount);
     for (size_t i = 0; i < errorsCount; ++i) {
         struct Token error = errors[i];
-        logfDebug("Lexing error (%zu:%zu): %s", error.row + 1, error.column + 1, tokenTypeNames[error.type]);
+        printfDebug("(%zu:%zu): %s\n", error.row + 1, error.column + 1, tokenTypeNames[error.type]);
     }
 }
 
-// static void printParsingErrors(struct ParsingError *errors, size_t errorsCount) {
+// static void printParsingErrors(struct Node *errors, size_t errorsCount) {
 //     for (size_t i = 0; i < errorsCount; ++i) {
-//         struct ParsingError error = errors[i];
-//         logfDebug("Parsing error (%zu): %s", error.index, error.message);
+//         struct Node error = errors[i];
 //     }
 // }
 
@@ -49,9 +49,11 @@ static void printNode(struct Node *node, int depth) {
         [PROGRAM] = "program",
     };
 
+    assert(node != NULL && "Must pass a node.");
     assert(depth >= 0 && "`depth` must be >= 0.");
     printPipes(depth);
     printfDebug("%s", types[node->type]);
+    // printfDebug("%d", node->type);
 
     struct Token token = node->tokens[0];
     if (node->type == TOKEN) {
@@ -66,22 +68,25 @@ static void printNode(struct Node *node, int depth) {
 }
 
 static void printTree(struct Node *node) {
-    assert(node != NULL && "Must pass a node.");
-    logDebug("");
+    putsDebug("syntax tree:\n");
     printNode(node, 0);
 }
 
 void testList(void) {
-    struct List list = listCreate(int, 10);
+    size_t listCapacity = 10;
+    size_t listCount = 0;
+    int *list = listCreate(sizeof *list, listCapacity);
     int a = 1, b = 2, c = 3;
-    listAppend(&list, &a);
-    listAppend(&list, &b);
-    listAppend(&list, &c);
-    test(*(int*)listGet(int, &list, 0) == 1);
-    test(*(int*)listGet(int, &list, 1) == 2);
-    test(*(int*)listGet(int, &list, 2) == 3);
+    listAppend((void**)&list, sizeof *list, &listCapacity, &listCount, &a);
+    listAppend((void**)&list, sizeof *list, &listCapacity, &listCount, &b);
+    listAppend((void**)&list, sizeof *list, &listCapacity, &listCount, &c);
+    test(list[0] == 1);
+    test(list[1] == 2);
+    test(list[2] == 3);
+    test(listCount == 3);
 
-    listDestroy(&list);
+    listDestroy((void**)&list, &listCapacity, &listCount);
+    test(list == NULL && listCapacity == 0 && listCount == 0);
 }
 
 void testReadFile(void) {
@@ -124,12 +129,13 @@ void testParse(void) {
     struct ParsingResult parsingResult = parse(lexingResult.tokens, lexingResult.tokensCount);
     // assert(parsingResult.nodes != NULL && "Need nodes to print.");
 
+    logDebug("");
     printTokens(lexingResult.tokens, lexingResult.tokensCount);
-    // printTree(parsingResult.nodes);
-    logfDebug("tokensCount=%zu, lexingErrorsCount=%zu", lexingResult.tokensCount, lexingResult.errorsCount);
-    logfDebug("nodesCount=%zu, parsingErrorsCount=%zu", parsingResult.nodesCount, parsingResult.errorsCount);
-    // printLexingErrors(lexingResult.errors, lexingResult.errorsCount);
-    // printParsingErrors(parsingResult.errors, parsingResult.errorsCount);
+    putsDebug("\n");
+    printLexingErrors(lexingResult.errors, lexingResult.errorsCount);
+    putsDebug("\n");
+    printTree(parsingResult.nodes);
+    putsDebug("\n");
 
     free(text);
     destroyLexingResult(&lexingResult);

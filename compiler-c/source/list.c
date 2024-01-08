@@ -4,45 +4,31 @@
 #include <string.h> // memcpy()
 #include "list.h"
 
-void listDestroy(struct List *list) {
-    assert(list != NULL && "Must pass a list.");
-    free(list->elements);
-    *list = (struct List){0};
-}
-
-struct List listCreateImpl(size_t elementSize, size_t capacity) {
-    char *elements = malloc(capacity*elementSize);
+void *listCreate(size_t elementSize, size_t capacity) {
+    void *elements = malloc(capacity*elementSize);
     assert(elements != NULL && "`malloc()` failed.");
-    return (struct List){
-        .elements = elements,
-        .capacity = capacity,
-        .count = 0,
-    };
+    return elements;
 }
 
-void listAppendImpl(struct List *list, char *element, size_t elementSize) {
+void listDestroy(void **list, size_t *capacity, size_t *count) {
     assert(list != NULL && "Must pass a list.");
+    free(*list);
+    *list = NULL;
+    *capacity = 0;
+    *count = 0;
+}
+
+void listAppend(void **list, size_t elementSize, size_t *capacity, size_t *count, void *element) {
+    assert(list != NULL && "Must pass a list.");
+    assert(capacity != NULL && "Must pass a capacity.");
+    assert(count != NULL && "Must pass a count.");
     assert(element != NULL && "Must pass an element.");
-
-    // Extend the list if needed.
-    if (list->count >= list->capacity) {
-        list->capacity += list->capacity;
-        char *newElements = realloc(list->elements, list->capacity*elementSize);
-        assert(newElements != NULL && "`realloc()` failed.");
-        list->elements = newElements;
+    if (*count >= *capacity) {
+        *capacity *= 2;
+        void *newList = realloc(*list, *capacity*elementSize);
+        assert(newList != NULL && "`realloc()` failed.");
+        *list = list;
     }
-
-    memcpy(list->elements + list->count*elementSize, element, elementSize);
-    ++list->count;
-}
-
-char *listGetImpl(size_t elementSize, struct List *list, size_t index) {
-    assert(list != NULL && "Must pass a list.");
-    assert(index < list->count && "Index out of bounds.");
-    return list->elements + index*elementSize;
-}
-
-char *listLastImpl(size_t elementSize, struct List *list) {
-    assert(list != NULL && "Must pass a list.");
-    return list->elements + list->count*elementSize;
+    memcpy((char*)*list + *count*elementSize, element, elementSize);
+    ++*count;
 }

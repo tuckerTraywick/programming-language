@@ -162,8 +162,14 @@ struct LexingResult lexString(char *text) {
     static size_t operatorsCount = (sizeof operators)/(sizeof operators[0]);
 
     assert(text != NULL && "Must pass a string.");
-    struct List tokens = listCreate(struct Token, TOKENS_INITIAL_CAPACITY);
-    struct List errors = listCreate(struct Token, ERRORS_INITIAL_CAPACITY);
+    size_t tokensCapacity = TOKENS_INITIAL_CAPACITY;
+    size_t tokensCount = 0;
+    struct Token *tokens = listCreate(sizeof *tokens, tokensCapacity);
+    
+    size_t errorsCapacity = ERRORS_INITIAL_CAPACITY;
+    size_t errorsCount = 0;
+    struct Token *errors = listCreate(sizeof *errors, errorsCapacity);
+    
     struct Token token = {0};
 
     while (text[token.index]) {
@@ -178,8 +184,8 @@ struct LexingResult lexString(char *text) {
                 ++newlineCount;
             } while (text[token.index + newlineCount] == '\n');
 
-            if (listGet(struct Token, &tokens, tokens.count - 1)->type != NEWLINE) {
-                listAppend(&tokens, &token);
+            if (tokens[tokensCount - 1].type != NEWLINE) {
+                listAppend((void**)&tokens, sizeof *tokens, &tokensCapacity, &tokensCount, &token);
             }
             token.index += newlineCount;
             token.row += newlineCount;
@@ -202,7 +208,7 @@ struct LexingResult lexString(char *text) {
             do {
                 ++token.length;
             } while (isdigit(text[token.index + token.length]));            
-            listAppend(&tokens, &token);
+            listAppend((void**)&tokens, sizeof *tokens, &tokensCapacity, &tokensCount, &token);
             token.index += token.length;
             token.column += token.length;
         } else if (isalpha(ch) || ch == '_') {
@@ -222,7 +228,7 @@ struct LexingResult lexString(char *text) {
                     break;
                 }
             }
-            listAppend(&tokens, &token);
+            listAppend((void**)&tokens, sizeof *tokens, &tokensCapacity, &tokensCount, &token);
             token.index += token.length;
             token.column += token.length;
         } else if (ch == '\'') {
@@ -240,11 +246,11 @@ struct LexingResult lexString(char *text) {
                 ++token.length;
             } else {
                 token.type = CHARACTER_UNCLOSED_QUOTE;
-                listAppend(&errors, &token);
+                listAppend((void**)&errors, sizeof *errors, &errorsCapacity, &errorsCount, &token);
             }
 
             // TODO: Check for an escape sequence.
-            listAppend(&tokens, &token);
+            listAppend((void**)&tokens, sizeof *tokens, &tokensCapacity, &tokensCount, &token);
             token.index += token.length;
             token.column += token.length;
         } else if (ch == '"') {
@@ -262,11 +268,11 @@ struct LexingResult lexString(char *text) {
                 ++token.length;
             } else {
                 token.type = STRING_UNCLOSED_QUOTE;
-                listAppend(&errors, &token);
+                listAppend((void**)&errors, sizeof *errors, &errorsCapacity, &errorsCount, &token);
             }
 
             // TODO: Check for escape sequences.
-            listAppend(&tokens, &token);
+            listAppend((void**)&tokens, sizeof *tokens, &tokensCapacity, &tokensCount, &token);
             token.index += token.length;
             token.column += token.length;
         } else {
@@ -281,7 +287,7 @@ struct LexingResult lexString(char *text) {
                 if (strncmp(operators[i], token.text, length) == 0) {
                     token.type = i + PLUS_EQUAL;
                     token.length = length;
-                    listAppend(&tokens, &token);
+                    listAppend((void**)&tokens, sizeof *tokens, &tokensCapacity, &tokensCount, &token);
                     token.index += token.length;
                     token.column += token.length;
                     foundOperator = true;
@@ -294,12 +300,12 @@ struct LexingResult lexString(char *text) {
                 token.type = INVALID_TOKEN;
                 token.text = text + token.index;
                 token.length = 0;
-                listAppend(&errors, &token);
+                listAppend((void**)&errors, sizeof *errors, &errorsCapacity, &errorsCount, &token);
                 
                 do {
                     ++token.length;
                 } while (text[token.index + token.length] && !isspace(text[token.index + token.length]));
-                listAppend(&tokens, &token);
+                listAppend((void**)&tokens, sizeof *tokens, &tokensCapacity, &tokensCount, &token);
                 token.index += token.length;
                 token.column += token.length;
             }
@@ -307,10 +313,10 @@ struct LexingResult lexString(char *text) {
     }
 
     return (struct LexingResult){
-        .tokens = (struct Token*)tokens.elements,
-        .tokensCount = tokens.count,
-        .errors = (struct Token*)errors.elements,
-        .errorsCount = errors.count,
+        .tokens = tokens,
+        .tokensCount = tokensCount,
+        .errors = errors,
+        .errorsCount = errorsCount,
     };
 }
 

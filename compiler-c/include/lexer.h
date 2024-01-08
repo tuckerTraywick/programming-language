@@ -101,8 +101,6 @@ enum TokenType {
     RIGHT_BRACKET,
     LEFT_BRACE,
     RIGHT_BRACE,
-
-    TOKEN_TYPE_COUNT,
 };
 
 // Represents a token lexed from an input stream.
@@ -115,7 +113,8 @@ struct Token {
     size_t column; // Index relative to line start.
 };
 
-// Represents the result of lexing a string. Stores a list of tokens and a list of invalid tokens.
+// Represents the result of lexing a string. Stores a list of tokens and a list of just the invalid
+// tokens.
 struct LexingResult {
     struct Token *tokens;
     size_t tokensCount;
@@ -123,7 +122,7 @@ struct LexingResult {
     size_t errorsCount;
 };
 
-// The name or error message for each type of token upto `PACKAGE`.
+// The name or error message for each lexing error and the name of each type of literal token.
 extern char *tokenTypeNames[];
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
