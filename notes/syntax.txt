@@ -38,9 +38,8 @@ from std.io import printLine;
 from animals import *;
 
 public struct Pet {
+    embed in Dog, Cat;
     public void walk(*this);
-} cases {
-    embed in Dog, Cat, ...;
 }
 
 public struct Hamster {
@@ -241,8 +240,8 @@ import std.operations;
 
 public struct List[T] {
     from std.operations embed GetElement, SetElement;
-    mut optional owned *Node[T] start;
-    mut optional *Node[T] end;
+    mut opt owned *Node[T] start;
+    mut opt *Node[T] end;
     mut usize length;
 }
 
@@ -260,12 +259,12 @@ public void append[T](*mut List[T] list, T value) {
 
 public T or IndexOutOfBoundsError getElement[T](*List[T] list, usize index);
 
-public optional IndexOutOfBoundsError setElement[T](*mut List[T] list, usize index, T value);
+public opt IndexOutOfBoundsError setElement[T](*mut List[T] list, usize index, T value);
 
 struct Node[T] {
     mut T value;
-    mut optional owned *This next;
-    mut optional *This previous;
+    mut opt owned *This next;
+    mut opt *This previous;
 }
 
 

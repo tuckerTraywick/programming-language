@@ -18,7 +18,6 @@ enum NodeType {
 // Represents a node in a syntax tree.
 struct Node {
     enum NodeType type;
-    size_t parent;
     size_t child;
     size_t next;
     size_t firstToken;
@@ -32,6 +31,9 @@ struct ParsingResult {
     struct Node *errors;
     size_t errorsCount;
 };
+
+// The error message for each lexing error and the name of each type of literal token.
+extern char *nodeTypeNames[];
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.
 void destroyParsingResult(struct ParsingResult *result);

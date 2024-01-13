@@ -121,7 +121,7 @@ struct LexingResult {
     size_t errorsCount;
 };
 
-// The name or error message for each lexing error and the name of each type of literal token.
+// The error message for each lexing error and the name of each type of literal token.
 extern char *tokenTypeNames[];
 
 // Deallocates a `LexingResult`'s buffers and zeros its memory.

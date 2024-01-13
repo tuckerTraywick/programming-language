@@ -23,17 +23,11 @@ struct Parser {
     size_t nextNodeIndex;
 };
 
-// Deallocates a parser's nodes and errors, and zeros its memory.
-static void destroyParser(struct Parser *parser) {
-    assert(parser != NULL && "Must pass a parser.");
-    listDestroy((void**)&parser->nodes, &parser->nodesCapacity, &parser->nodesCount);
-    listDestroy((void**)&parser->errors, &parser->errorsCapacity, &parser->errorsCount);
-    *parser = (struct Parser){0};
-}
-
+// Appends a new empty node the list of nodes.
 static void appendNode(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
-    // listAppend((void**)&parser->nodes, )
+    struct Node node = parser->nodes[parser->nextNodeIndex];
+    listAppend((void**)&parser->nodes, sizeof *parser->nodes, &parser->nodesCapacity, &parser->nodesCount, &node);
 }
 
 // Returns true if the parser still has tokens to consume.
@@ -49,7 +43,7 @@ static struct Token *currentToken(struct Parser *parser) {
     return parser->tokens + parser->currentTokenIndex;
 }
 
-// Returns the next new node in the parse tree.
+// Returns the next empty node in the parse tree.
 static struct Node *nextNode(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
     return parser->nodes + parser->nextNodeIndex;
@@ -64,16 +58,26 @@ static bool peek(struct Parser *parser, enum TokenType type) {
 // Consumes the current token if it has the given type. Adds the token to the syntax tree.
 static bool consume(struct Parser *parser, enum TokenType type) {
     if (peek(parser, type)) {
-        nextNode(parser)->type = TOKEN;
-        nextNode(parser)->firstToken = parser->currentTokenIndex;
-        nextNode(parser)->tokensCount = 1;
-        nextNode(parser)->next = parser->nextNodeIndex + 1;
-        (parser);
+        struct Node *next = nextNode(parser);
+        next->type = TOKEN;
+        next->firstToken = parser->currentTokenIndex;
+        next->tokensCount = 1;
+        next->next = parser->nextNodeIndex + 1;
+        appendNode(parser);
         ++parser->currentTokenIndex;
         return true;
     }
     return false;
 }
+
+char *nodeTypeNames[] = {
+    [INVALID_NODE] = "Invalid syntax.",
+    [PACKAGE_STATEMENT_EXPECTED_PACKAGE_NAME] = "Expected a package name.",
+    [TOKEN] = "token",
+    [PROGRAM] = "program",
+    [PACKAGE_STATEMENT] = "package statement",
+    [IMPORT_STATEMENT] = "import statement",
+};
 
 void destroyParsingResult(struct ParsingResult *result) {
     assert(result != NULL && "Must pass a result.");
@@ -93,7 +97,8 @@ struct ParsingResult parse(struct Token *tokens, size_t tokensCount) {
         .errorsCapacity = ERRORS_INITIAL_CAPACITY,
     };
 
-
+    consume(&parser, PACKAGE);
+    consume(&parser, IMPORT);
 
     return (struct ParsingResult){
         .nodes = parser.nodes,
