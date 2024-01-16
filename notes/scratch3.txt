@@ -1,0 +1,80 @@
+pub package animals
+from std.io import printLine
+
+pub struct Animal {
+    pub name string
+    pub age uint
+    pub makeNoise(&this)
+}
+
+pub struct Dog {
+    extend Animal
+    pub tag string
+}
+
+pub struct Cat {
+    extend Animal
+    pub breed string
+}
+
+pub fun makeNoise(dog &Dog) => printLine("woof")
+
+pub fun makeNoise(cat &Cat) => printLine("meow")
+
+fun main() {
+    var animal mut &Animal = &Dog()
+    animal.makeNoise()
+    animal = &Cat()
+    animal.makeNoise()
+}
+
+
+pub package moreAnimals
+import animals
+
+pub struct Pet {
+    from animals abstract Dog, Cat
+    pub walk(&this)
+}
+
+pub fun walk(dog &Dog) {}
+
+pub fun walk(cat &Cat) {}
+
+fun main() {
+    var pet mut &Pet = &Dog()
+    pet.walk()
+    pet = &Cat()
+    pet.walk()
+}
+
+
+
+
+pub package physics
+import std.operations
+
+pub struct Entity {
+    pub position, velocity acceleration Vector
+    pub update(&mut this, delta ufloat64)
+}
+
+pub struct Circle {
+    extend Entity
+    pub radius ufloat64
+}
+
+pub struct Mesh {
+    extend Entity
+    pub vertices owned []Vector
+}
+
+pub struct Vector {
+    from std.operations extend Arithmetic, Equality, To[string]
+    pub x, y, z float64
+}
+
+pub fun update(entity &mut Circle, delta) {}
+
+pub fun update(entity &mut Mesh, delta) {}
+
