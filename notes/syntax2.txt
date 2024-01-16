@@ -1,122 +1,157 @@
-pub package animals
-from std.io import printLine
+package animals
 
-pub struct Animal {
-    pub var name string
-    pub var age uint
-    pub fun makeNoise(&this)
+struct Animal {
+    name string
+    age uint
 }
 
-pub struct Dog {
-    embed Animal
-    pub var tag string
+struct Dog {
+    extend Animal
+    tag string
 }
 
-pub struct Cat {
-    embed Animal
-    pub var breed string
+struct Cat {
+    extend Animal
+    breed string
 }
 
-pub fun makeNoise(dog &Dog) {
-    printLine("woof")
+fun makeNoise(animal &Animal)
+
+fun makeNoise(dog &Dog) => printLine("woof")
+
+fun makeNoise(cat &Cat) => printLine("meow")
+
+fun main() {
+    var animal &Animal = &Dog()
+    makeNoise(animal)
+    animal = &Cat()
+    animal->makeNoise()
 }
 
-pub fun makeNoise(cat &Cat) {
-    printLine("meow")
+
+package moreAnimals
+import animals
+
+struct Hamster {
+    extend animals.Animal
+}
+
+fun animals.makeNoise(hamster &Hamster) => printLine("squeak")
+
+fun main() {
+    var animal &animals.Animal = &Hamster()
+    animals.makeNoise(animal)
 }
 
 
-pub package moreAnimals
-from std.io import printLine
-from animals import *
+package evenMoreAnimals
+import animals
 
-pub struct Pet {
-    pub fun walk(&this)
+struct Pet {
+    extend animals.Animal
+}
+
+fun walk(pet &Pet)
+
+struct Bunny {
+    extend Pet
+}
+
+fun walk(bunny &Bunny) {}
+
+fun makeNoise(bunny &Bunny) {}
+
+
+
+
+struct Trait
+fun method(t Trait)
+
+fun generic[T extends Trait](x T)  {
+    method(x)
+}
+
+
+
+
+package physics
+
+struct Entity {
+    position, velocity acceleration Vector
+}
+
+struct Circle {
+    extend Entity
+    radius ufloat64
+}
+
+struct Mesh {
+    extend Entity
+    vertices owned []Vector
+}
+
+fun update(&mut Entity)
+
+fun update(circle &mut Circle) {}
+
+fun update(mesh &mut Mesh) {}
+
+
+
+
+package enums
+
+enum Direction cases {
+    north, south, east, west
+}
+
+enum Color {
+    r, g, b uint8
 } cases {
-    Dog, Cat // Specify existing cases.
-}
-
-pub struct Hamster {
-    embed Animal, Pet
-    pub var wheelRadius uint
-}
-
-pub fun walk(dog &Dog) {}
-
-pub fun walk(cat &Cat) {}
-
-pub fun walk(hasmter &Hamster) {}
-
-pub fun makeNoise(hamster &Hamster) {}
-
-
-
-
-pub package physics
-import std.operations
-
-pub struct Entity {
-    pub var position, velocity acceleration Vector
-    pub fun update(&mut this, delta ufloat64)
-} cases {
-    struct Circle {
-        pub var radius ufloat64
-    }
-
-    struct Mesh {
-        pub var vertices owned []Vector
-    }
-}
-
-pub struct Vector {
-    from std.operations embed Arithmetic, Equality, To[string]
-    pub var x, y, z float64
-}
-
-pub fun update(entity &mut Entity.Circle, delta) {}
-
-pub fun update(entity &mut Entity.Mesh, delta) {}
-
-
-
-
-pub package enums
-
-pub struct Color {
-    pub var r, g, b uint8
-} cases {
-    default struct Rgb
-    var red = (255, 0, 0)
-    var green = (0, 255, 0)
-    var blue = (0, 0, 255)
-}
-
-pub struct Animal {
-    pub var name string
-    pub var age uint
-} cases {
-    struct Dog {
-        pub var tag string
-    }
-
-    struct Cat {
-        pub var breed string
-    }
+    red = (0, 255, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
 }
 
 
 
 
-pub package std.collections
+package shapes
+from math import pi, pow
 
-pub struct List[T] {
-    var first mut optional owned &Node[T]
-    var last mut optional &Node[T]
-    var length mut usize
+enum Shape {
+    color [3]uint8
 }
 
-struct Node[T] {
-    var next mut optional owned &Node[T]
-    var previous mut optional &Node[T]
-    var value mut T
+struct Circle {
+    extend Shape
+    radius ufloat64
+}
+
+struct Rectanlge {
+    extend Shape
+    length, width ufloat64
+}
+
+fun area(Shape)
+
+fun area(circle Circle) => pi*pow(circle.radius, 2)
+
+fun area(rectangle Rectangle) => rectangle.width*rectangle.height
+
+
+
+
+package 
+
+
+
+package std.types
+
+struct And[T..] {
+    extend T
+}
+
+struct Or[T..] {
+    abstract T
 }
