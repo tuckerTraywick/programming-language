@@ -174,3 +174,26 @@ type Node[T]
     var next mut Maybe[Box[This]]
     var previous mut Maybe[&This]
 end
+
+
+
+
+package lexer
+from std.io import File, FileError
+
+type Token
+    var type_ TokenType
+    var index, row, column, length usize
+end
+
+type TokenType cases
+    default var invalid
+    var identifier, number, character, string
+    var package_, import_, ...
+end
+
+fun lexFile(path string) Any[List[Token], FileError]
+
+fun lexFile(file File) Any[List[Token], FileError]
+
+fun lex(text string) List[Token]

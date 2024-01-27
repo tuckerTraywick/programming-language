@@ -13,11 +13,11 @@ static void printTokens(char *text, struct Token *tokens, size_t tokensCount) {
         struct Token token = tokens[i];
         char *type = tokenTypeNames[token.type];
         if (token.type == NEWLINE) {
-            printfDebug(" %zu \"\\n\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, token.length, token.index, token.row + 1, token.column + 1);
+            printfDebug("%zu \"\\n\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, token.length, token.index, token.row + 1, token.column + 1);
         } else if (token.type < PACKAGE) {
-            printfDebug(" %zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, type, (int)token.length, text + token.index, token.length, token.index, token.row + 1, token.column + 1);
+            printfDebug("%zu %s \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, type, (int)token.length, text + token.index, token.length, token.index, token.row + 1, token.column + 1);
         } else {
-            printfDebug(" %zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)token.length, text + token.index, token.length, token.index, token.row + 1, token.column + 1);
+            printfDebug("%zu \"%.*s\" length=%zu, index=%zu, row=%zu, column=%zu\n", i, (int)token.length, text + token.index, token.length, token.index, token.row + 1, token.column + 1);
         }
     }
 }
@@ -26,7 +26,7 @@ static void printLexingErrors(struct Token *errors, size_t errorsCount) {
     printfDebug("%zu lexing errors:\n", errorsCount);
     for (size_t i = 0; i < errorsCount; ++i) {
         struct Token error = errors[i];
-        printfDebug(" (%zu:%zu): %s\n", error.row + 1, error.column + 1, tokenTypeNames[error.type]);
+        printfDebug("(%zu:%zu): %s\n", error.row + 1, error.column + 1, tokenTypeNames[error.type]);
     }
 }
 
