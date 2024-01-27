@@ -1,0 +1,176 @@
+type alias fun var mut imm inline lazy static
+None Error Maybe List Box Weak
+
+pub inline var a = 1
+pub inline fun max(a, b) => if a >= b then a else b
+pub inline fun doTwice(x lazy int) => (x, x)
+
+
+
+
+import std
+std.io.printLine, std.math.sqrt # valid
+
+import std.io
+std.io.printLine # valid
+std.math.sqrt # invalid
+
+from std import *
+io.printLine, math.sqrt # valid
+std.io.printLine, std.math.sqrt # invalid
+
+from std import io
+io.printLine # valid
+std.io.printLine, std.math.sqrt # invalid
+
+from std.io import printLine
+printLine # valid
+std.io.printLine, io.printLine, std.math.sqrt # invalid
+
+
+
+
+package examples
+
+var a = 1
+var b int = 1
+fun f(x) => x + 1
+fun g(x, y int) int
+    return x + y
+end
+
+fun sqrt(x float) type(var p, n float)
+fun parse(f File) cases(embed List[Token], FileError)
+fun serialize(data []int, file type(embed File, Writeable))
+
+type UserId uint64
+
+alias MyUsize uint64
+
+type Point(var x, y float)
+
+type Person
+    var name string
+    var age uint
+end
+
+type Direction cases(var n, s, e, w)
+
+type Color
+    var r, g, b uint8
+cases
+    default alias Rgb # Alias for Color.
+    var red = (255, 0, 0)
+    var green = (0, 255, 0)
+    var blue = (0, 0, 255)
+end
+
+
+
+
+pub package animals
+from std.io import printLine
+
+pub type Animal
+    pub var name string
+    pub var age uint
+    pub fun makeNoise(&this)
+end
+
+pub type Dog
+    embed Animal
+    pub var tag string
+end
+
+pub type Cat
+    embed Animal
+    pub var breed string
+end
+
+pub fun makeNoise(dog &Dog)
+    printLine("woof")
+end
+
+pub fun makeNoise(cat &Cat)
+    printLine("meow")
+end
+
+
+pub package moreAnimals
+from animals import *
+
+pub type Pet
+    pub fun walk(&this)
+cases
+    Dog, Cat # Specify existing cases without closing the type.
+end
+
+pub fun walk(dog &Dog)
+    ...
+end
+
+pub fun walk(cat &Cat)
+    ...
+end
+
+
+
+
+pub package physics
+import std.math
+import std.operations
+
+pub type Entity
+    pub var position, velocity, acceleration Vector
+cases
+    type Circle
+        pub var radius float64
+    end
+
+    type Mesh
+        pub var vertices List[Vector]
+    end
+end
+
+pub type Vector
+    from std.operations embed default Arithmetic, Equality
+    from std.operations embed To[string]
+    pub var x, y, z float64
+end
+
+pub fun collide(a, b &mut Entity)
+    match a, b
+        case .Circle, .Circle
+            ...
+        case .Mesh, .Mesh
+            ...
+        case .Circle, .Mesh
+            ...
+        case .Mesh, .Circle
+            ...
+    end
+end
+
+pub fun to[string](v &Vector3)
+    return f"({", ".join(v.x, v.y, v.z)})"
+end
+
+
+
+
+pub package std.collections
+import std.operations
+
+pub type LinkedList[T]
+    from std.operations embed TryArithmetic, TryBitwise, TryBoolean
+    from std.operations embed TryGetElement, TrySetElement
+    from std.operations embed To[string]
+    var first mut Maybe[Box[&Node[T]]]
+    var last mut Maybe[&Node[T]]
+end
+
+type Node[T]
+    var data T
+    var next mut Maybe[Box[This]]
+    var previous mut Maybe[&This]
+end
