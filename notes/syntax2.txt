@@ -1,157 +1,102 @@
-package animals
+var slice owned []int
+var generic owned[int]
+var invalidSyntax owned[int] string
 
-struct Animal {
-    name string
-    age uint
-}
+& [] const mut struct union
+none any error maybe
+owned shared weak
 
-struct Dog {
-    extend Animal
-    tag string
-}
+alias MyUsize usize
 
-struct Cat {
-    extend Animal
-    breed string
-}
+struct UserId uint64
 
-fun makeNoise(animal &Animal)
+struct Point {x, y float}
 
-fun makeNoise(dog &Dog) => printLine("woof")
+union Direction {n, s, e, w}
 
-fun makeNoise(cat &Cat) => printLine("meow")
+union Key {int, string}
 
-fun main() {
-    var animal &Animal = &Dog()
-    makeNoise(animal)
-    animal = &Cat()
-    animal->makeNoise()
-}
-
-
-package moreAnimals
-import animals
-
-struct Hamster {
-    extend animals.Animal
-}
-
-fun animals.makeNoise(hamster &Hamster) => printLine("squeak")
-
-fun main() {
-    var animal &animals.Animal = &Hamster()
-    animals.makeNoise(animal)
-}
-
-
-package evenMoreAnimals
-import animals
-
-struct Pet {
-    extend animals.Animal
-}
-
-fun walk(pet &Pet)
-
-struct Bunny {
-    extend Pet
-}
-
-fun walk(bunny &Bunny) {}
-
-fun makeNoise(bunny &Bunny) {}
-
-
-
-
-struct Trait
-fun method(t Trait)
-
-fun generic[T extends Trait](x T)  {
-    method(x)
-}
-
-
-
-
-package physics
-
-struct Entity {
-    position, velocity acceleration Vector
-}
-
-struct Circle {
-    extend Entity
-    radius ufloat64
-}
-
-struct Mesh {
-    extend Entity
-    vertices owned []Vector
-}
-
-fun update(&mut Entity)
-
-fun update(circle &mut Circle) {}
-
-fun update(mesh &mut Mesh) {}
-
-
-
-
-package enums
-
-enum Direction cases {
-    north, south, east, west
-}
-
-enum Color {
+struct Color {
     r, g, b uint8
-} cases {
-    red = (0, 255, 0)
+} union {
+    red = (255, 0, 0)
     green = (0, 255, 0)
     blue = (0, 0, 255)
 }
 
-
-
-
-package shapes
-from math import pi, pow
-
-enum Shape {
-    color [3]uint8
+struct Animal {
+    name string
+    age uint
+} union {
+    struct Dog {tag string}
+    struct Cat {breed string}
 }
 
-struct Circle {
-    extend Shape
-    radius ufloat64
+func sqrt(x float) struct{p, n float}
+func lex(f File) union{owned []Token, FileError}
+func serialize(d []int, f struct{File, Writeable})
+
+
+
+
+pub package animals
+
+pub struct Animal {
+    pub name string
+    pub age uint
+    pub makeNoise(&this)
 }
 
-struct Rectanlge {
-    extend Shape
-    length, width ufloat64
+pub struct Dog {
+    Animal
+    pub tag string
 }
 
-fun area(Shape)
-
-fun area(circle Circle) => pi*pow(circle.radius, 2)
-
-fun area(rectangle Rectangle) => rectangle.width*rectangle.height
-
-
-
-
-package 
-
-
-
-package std.types
-
-struct And[T..] {
-    extend T
+pub struct Cat {
+    Animal
+    pub breed string
 }
 
-struct Or[T..] {
-    abstract T
+
+
+
+pub package std.collections
+
+pub struct List[T] {
+    std.operations.TryArithmetic, .TryBitwise, .TryBoolean
+    std.operations.TryGetElement, .TrySetElement
+    std.operations.To string
+
+    first maybe owned &Node T
+    last maybe &Node T
+    length usize
 }
+
+struct Node[T] {
+    data T
+    next maybe owned &This
+    previous maybe &This
+}
+
+
+
+
+package lexer
+import std.File, .FileError
+
+struct Token {
+    type TokenType
+    index, row, column, length usize
+}
+
+union TokenType {
+    default invalid
+    identifier, number, character, string_
+    package_, import_, ...
+}
+
+func lexFile(path string) union{owned []Token, FileError}
+
+func lexFile(file File) union{owned []Token, FileError}
+
+func lex(text string) owned []Token

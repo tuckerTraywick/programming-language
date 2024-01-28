@@ -1,5 +1,5 @@
 type alias fun var mut imm inline lazy static
-None Error Maybe List Box Weak
+None Any Error Maybe List Box Weak
 
 pub inline var a = 1
 pub inline fun max(a, b) => if a >= b then a else b
@@ -39,22 +39,22 @@ fun g(x, y int) int
     return x + y
 end
 
-fun sqrt(x float) type(var p, n float)
-fun parse(f File) cases(embed List[Token], FileError)
-fun serialize(data []int, file type(embed File, Writeable))
+fun sqrt(x float) type(p, n float)
+fun parse(f File) cases(T List(Token), E FileError)
+fun serialize(data []int, file type(File, Writeable))
 
 type UserId uint64
 
 alias MyUsize uint64
 
-type Point(var x, y float)
+type Point(x, y float)
 
 type Person
     var name string
     var age uint
 end
 
-type Direction cases(var n, s, e, w)
+type Direction cases(n, s, e, w)
 
 type Color
     var r, g, b uint8
@@ -197,3 +197,27 @@ fun lexFile(path string) Any[List[Token], FileError]
 fun lexFile(file File) Any[List[Token], FileError]
 
 fun lex(text string) List[Token]
+
+
+pub package parser
+from std.io import File, FileError
+from lexer import *
+
+type Node
+    var type_ NodeType
+    var next, previous, child usize
+    var tokensIndex, tokensCount usize
+end
+
+type NodeType cases
+    default var invalid
+    var program, packageStatement, ...
+end
+
+fun parseFile(path string) Any[List[Node], FileError]
+
+fun parseFile(file File) Any[List[Node], FileError]
+
+fun parse(text string) List[Node]
+
+fun parse(tokens List[Token]) List[Node]
