@@ -1,24 +1,25 @@
 var slice owned []int
 var generic owned[int]
-var invalidSyntax owned[int] string
+var slice2 owned[int] string
 
-& [] const mut struct union
-none any error maybe
+& [] () func() const mut
+this none error maybe any all
 owned shared weak
 
-alias MyUsize usize
+alaias MyUsize usize
 
 struct UserId uint64
 
 struct Point {x, y float}
 
-union Direction {n, s, e, w}
+struct Direction uint8 cases {n, s, e, w}
 
-union Key {int, string}
+struct Key cases {embed int, string}
 
 struct Color {
     r, g, b uint8
-} union {
+} cases {
+    default struct Rgb
     red = (255, 0, 0)
     green = (0, 255, 0)
     blue = (0, 0, 255)
@@ -27,14 +28,14 @@ struct Color {
 struct Animal {
     name string
     age uint
-} union {
+} cases {
     struct Dog {tag string}
     struct Cat {breed string}
 }
 
-func sqrt(x float) struct{p, n float}
-func lex(f File) union{owned []Token, FileError}
-func serialize(d []int, f struct{File, Writeable})
+func sqrt(x float) (p, n float)
+func lex(f File) any[owned []Token, FileError]
+func serialize(d []int, f all[File, Writeable])
 
 
 
@@ -48,14 +49,39 @@ pub struct Animal {
 }
 
 pub struct Dog {
-    Animal
+    embed Animal
     pub tag string
 }
 
 pub struct Cat {
-    Animal
+    embed Animal
     pub breed string
 }
+
+pub func makeNoise(dog &Dog)
+
+pub func makeNoise(cat &Cat)
+
+
+pub package moreAnimals
+from animals import *
+
+pub struct Pet {
+    pub walk(&this)
+}
+
+pub struct Hamster {
+    embed Animal, Pet
+    pub wheelRadius float
+}
+
+pub func makeNoise(hamster &Hamster)
+
+pub func walk(hamster &Hamster)
+
+pub func walk(dog &Dog)
+
+pub func walk(cat &Cat)
 
 
 
@@ -63,9 +89,9 @@ pub struct Cat {
 pub package std.collections
 
 pub struct List[T] {
-    std.operations.TryArithmetic, .TryBitwise, .TryBoolean
-    std.operations.TryGetElement, .TrySetElement
-    std.operations.To string
+    from std.operations embed TryArithmetic, TryBitwise, TryBoolean
+    from std.operations embed TryGetElement, TrySetElement
+    from std.operations embed To string
 
     first maybe owned &Node T
     last maybe &Node T
@@ -82,21 +108,181 @@ struct Node[T] {
 
 
 package lexer
-import std.File, .FileError
+from std.io import File, FileError
 
 struct Token {
     type TokenType
     index, row, column, length usize
 }
 
-union TokenType {
+struct TokenType cases {
     default invalid
-    identifier, number, character, string_
+    identifier, number, character, string
     package_, import_, ...
 }
 
-func lexFile(path string) union{owned []Token, FileError}
+func lexFile(path string) any[owned []Token, FileError]
 
-func lexFile(file File) union{owned []Token, FileError}
+func lexFile(file File) any[owned []Token, FileError]
 
 func lex(text string) owned []Token
+
+
+package parser
+from lexer import *
+
+struct Node {
+    type NodeType
+    child, next usize
+    tokensIndex, tokensCount usize
+}
+
+struct NodeType cases {
+    default invalid
+    token
+    program, pacakgeStatement, ...
+}
+
+func parseFile(path string) any[owned []mut Node, FileError]
+
+func parseFile(file File) any[owned []mut Node, FileError]
+
+func parse(text string) owned []mut Node
+
+func parse(tokens []Token) owned []mut Node
+
+
+
+
+pub package physics
+import std.operations
+import std.math
+
+pub struct Entity {
+    pub position, velocity acceleration Vector
+} cases {
+    struct Circle {
+        pub radius float64
+    }
+
+    struct Mesh {
+        pub vertices owned []Vector
+    }
+}
+
+pub struct Vector {
+    from std.operations embed To string
+    from std.operations embed default Arithmetic, Bitwise, Equality
+    pub x, y, z float64
+}
+
+pub func collide(a, b &mut Entity) {
+    match a, b {
+        case .Circle, .Circle:
+        case .Mesh, .Mesh:
+        case .Circle, .Mesh:
+        case .Mesh, .Circle:
+    }
+}
+
+pub func to[string](v &Vector) {
+    return f"({", ".split(v.(x, y, z))})"
+}
+
+pub func length(v &Vector) {
+    return math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z)
+}
+
+
+
+
+package textEditor
+from std import tui, io
+
+struct Editor {
+    tabs owned []Tab
+    currentTabIndex usize
+    mode EditorMode
+}
+
+struct EditorMode cases {
+    struct FileExplorer {
+        currentDirectory string
+        currentSelection usize
+    }
+
+    struct Editor {
+
+    }
+
+    struct 
+}
+
+struct Tab {
+    name string
+    path string
+    file File
+    buffer Buffer
+    cursors owned []Cursor
+}
+
+struct Buffer {
+    lines owned []Line
+}
+
+struct Line {
+    text owned string
+    gap string
+}
+
+struct Cursor {
+    row, column usize
+}
+
+func new(editor &mut Editor) {
+    editor.tabs = new []Tab
+}
+
+func run(editor &Editor) {
+    tui.begin()
+    tui.configure(raw=true)
+    tui.clear()
+    drawFileExplorer(editor)
+    tui.end()
+}
+
+func drawFileExplorer(editor &Editor) {
+    if fullscreen {
+        tui.printLine("File Explorer")
+        drawDirectory(editor)
+    }
+}
+
+func drawDirectory(editor &Editor, depth usize=0) {
+    assert editor.mode is .FileExplorer
+    var directory = editor.mode.currentDirectory
+    assert io.isPath(directory)
+    if editor.mode.currentSelection == index {
+        tui.enableStyle(.invert)
+    }
+    tui.printLine("\t"*depth + subdirectory->io.tail())
+    tui.disableStyle(.invert)
+    for var subdirectory in io.subdirectories(directory) {
+        drawDirectory(editor, depth + 1)
+    }
+}
+
+func main() {
+    Editor().run()
+}
+
+
+
+
+$ load("steam"); steam()
+$ run("steam", ...)
+$ load("git"); git.clone(...)
+$ unload("git"); git.push()
+Error: ...
+$ loadedLibraries()
+["std", "env", "shell", "steam"]

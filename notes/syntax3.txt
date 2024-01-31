@@ -13,22 +13,22 @@ struct UserId uint64
 
 struct Point(x, y float)
 
-union Direction(n, s, e, w)
+struct Direction uint8 cases(n, s, e, w)
 
-union Key(int, String)
+struct Key cases(int, String)
 
 struct Color
     r, g, b uint8
-union
-    default type Rgb
+cases
+    default struct Rgb()
     red = (255, 0, 0)
     green = (0, 255, 0)
     blue = (0, 0, 255)
 end
 
 func sqrt(x float) struct(p, n float)
-func lex(f File) union(T owned []Token, E FileError)
-func serialize(d []int, f struct(File, Writeable))
+func lex(f File) any[owned []Token, FileError]
+func serialize(d []int, f all[File, Writeable])
 
 
 
