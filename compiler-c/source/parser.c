@@ -23,6 +23,12 @@ struct Parser {
     size_t nextNodeIndex;
 };
 
+// Returns the next empty node in the parse tree.
+static struct Node *nextNode(struct Parser *parser) {
+    assert(parser != NULL && "Must pass a parser.");
+    return parser->nodes + parser->nextNodeIndex;
+}
+
 // Appends a new empty node the list of nodes.
 static void appendNode(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
@@ -41,12 +47,6 @@ static struct Token *currentToken(struct Parser *parser) {
     assert(parser != NULL && "Must pass a parser.");
     assert(hasTokens(parser));
     return parser->tokens + parser->currentTokenIndex;
-}
-
-// Returns the next empty node in the parse tree.
-static struct Node *nextNode(struct Parser *parser) {
-    assert(parser != NULL && "Must pass a parser.");
-    return parser->nodes + parser->nextNodeIndex;
 }
 
 // Looks at the current token and returns true if it has the given type.
@@ -68,6 +68,11 @@ static bool consume(struct Parser *parser, enum TokenType type) {
         return true;
     }
     return false;
+}
+
+// Begins a new node in the parse tree.
+static bool beginNode(struct Parser *parser, enum NodeType type) {
+    
 }
 
 char *nodeTypeNames[] = {
