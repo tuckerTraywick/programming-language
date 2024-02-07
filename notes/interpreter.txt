@@ -1,0 +1,100 @@
+64-bit stack based
+
+registers:
+    - ip: instruction pointer
+    - fp: frame pointer
+    - sp: stack pointer
+
+addressing modes:
+    - immediate
+    - a[offset]: sp[-offset]
+    - l[offset]: fp[offset]
+    - s[offset]: sp[-offset]
+    - &x: ref
+    - *x: deref
+
+macros:
+    - size(x): number of bytes in x
+
+
+copy size, source, dest
+copy (size), source, dest
+copyN source, dest
+
+dup size
+dup (size)
+dupN
+
+clear size
+clear (size)
+clearN
+
+bump size
+clear (size)
+bumpN
+
+call address
+call
+
+return size
+returnN
+
+
+
+
+func foo(x int) int {
+    return x + 1
+}
+
+func main() {
+    foo(1)
+}
+
+foo:
+    copy32 a[0], s[0]
+    copy32 1, s[0]
+    addi32
+    return32
+
+main:
+    copy32 1, s[0]
+    clear32
+    call foo
+    return0
+
+
+var a int = 1
+var b int = a
+
+copy32 1, s[0]
+copy32 l[0], s[0]
+
+
+var a mut int = 1
+var b &mut int = &a
+var c int = *b
+
+copy32 1, s[0]
+copy64 &l[0], s[0]
+copy32 *l[4], s[0]
+
+
+var a = [1, 2, 3]
+var b = a
+
+// #data = sizeof(data)
+copy #data, data, s[0]
+copy #data, l[0], s[0]
+data:
+    i32 1 2 3
+
+
+var a = 1
+var b = 2
+var c = a + b
+
+copy32 1, s[0]
+copy32 2, s[0]
+copy32 l[0], s[0]
+copy32 l[4], s[0]
+addi32

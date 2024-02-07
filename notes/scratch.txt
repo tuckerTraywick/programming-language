@@ -1,14 +1,1 @@
-struct Person {
-    char *name;
-    unsigned int age;
-    void makeNoise();
-};
 
-struct Dog {
-    struct Person;
-    char *tag;
-}
-
-void makeNoise(struct Dog *dog) {
-    printf("woof\");
-}

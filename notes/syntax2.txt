@@ -1,12 +1,12 @@
 var slice owned []int
 var generic owned[int]
-var slice2 owned[int] string
+var invalid owned[int] string
 
 & [] () func() const mut
 this none error maybe any all
 owned shared weak
 
-alaias MyUsize usize
+alias MyUsize usize
 
 struct UserId uint64
 
@@ -206,16 +206,7 @@ struct Editor {
 }
 
 struct EditorMode cases {
-    struct FileExplorer {
-        currentDirectory string
-        currentSelection usize
-    }
-
-    struct Editor {
-
-    }
-
-    struct 
+    fileExplorer, editor
 }
 
 struct Tab {
@@ -262,7 +253,7 @@ func drawDirectory(editor &Editor, depth usize=0) {
     assert editor.mode is .FileExplorer
     var directory = editor.mode.currentDirectory
     assert io.isPath(directory)
-    if editor.mode.currentSelection == index {
+    if editor.currentSelection == index {
         tui.enableStyle(.invert)
     }
     tui.printLine("\t"*depth + subdirectory->io.tail())
@@ -273,7 +264,7 @@ func drawDirectory(editor &Editor, depth usize=0) {
 }
 
 func main() {
-    Editor().run()
+    Editor()->run()
 }
 
 

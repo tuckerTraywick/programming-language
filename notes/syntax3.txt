@@ -15,18 +15,18 @@ struct Point(x, y float)
 
 struct Direction uint8 cases(n, s, e, w)
 
-struct Key cases(int, String)
+struct Key cases(int, string)
 
 struct Color
     r, g, b uint8
 cases
-    default struct Rgb()
+    default alias Rgb
     red = (255, 0, 0)
     green = (0, 255, 0)
     blue = (0, 0, 255)
 end
 
-func sqrt(x float) struct(p, n float)
+func sqrt(x float) (p, n float)
 func lex(f File) any[owned []Token, FileError]
 func serialize(d []int, f all[File, Writeable])
 
@@ -42,12 +42,12 @@ pub struct Animal
 end
 
 pub struct Dog
-    Animal
+    embed Animal
     pub tag string
 end
 
 pub struct Cat
-    Animal
+    embed Animal
     pub breed string
 end
 
@@ -59,7 +59,7 @@ import std.operations
 
 pub struct Entity
     pub position, velocity, acceleration Vector
-union
+cases
     struct Circle
         pub radius float64
     end
@@ -70,8 +70,8 @@ union
 end
 
 pub struct Vector
-    default std.operations.Arithmetic, .Equality
-    std.operations.To string
+    from std.operations embed default Arithmetic, Equality
+    from std.operations embed To string
     pub x, y, z float64
 end
 
@@ -82,16 +82,13 @@ pub package std.collections
 import std.operations
 
 pub struct LinkedList[T]
-    std.operations.TryArithmetic, .TryBitwise, .TryBoolean
-    std.operations.TryGetElement, .TrySetElement
-    std.operations.To string
+    from std.operations embed TryArithmetic, TryBitwise, TryBoolean
+    from std.operations embed TryGetElement, TrySetElement
+    from std.operations embed To string
 
     first mut maybe owned &Node T
     last mut maybe &Node T
 end
-
-for LinkedList[T] impl std.operations.TryArithmetic, .TryBitwise, .TryBoolean
-
 
 struct Node[T]
     data T
@@ -103,21 +100,21 @@ end
 
 
 package lexer
-import std.File, .FileError
+from std.io import File, FileError
 
 struct Token
     type TokenType
     index, row, column, length usize
 end
 
-union TokenType
+struct TokenType cases
     default invalid
-    identifier, number, character, string_
+    identifier, number, character, string
     package_, import_, ...
 end
 
-func lexFile(path string) union(owned []Token, FileError)
+func lexFile(path string) any[owned []Token, FileError]
 
-func lexFile(file File) union(owned []Token, FileError)
+func lexFile(file File) any[owned []Token, FileError]
 
 func lex(text string) owned []Token
