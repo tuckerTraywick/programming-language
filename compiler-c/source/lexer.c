@@ -287,7 +287,7 @@ struct LexingResult lexString(char *text) {
                 }
             }
             
-            // If that fails, append and `INVALID_TOKEN` and skip whitespace.
+            // If that fails, append an `INVALID_TOKEN` and skip whitespace.
             if (!foundOperator) {
                 token.type = INVALID_TOKEN;
                 token.length = 0;
