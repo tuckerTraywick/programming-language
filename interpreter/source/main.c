@@ -2,9 +2,7 @@
 #include "interpreter.h"
 
 static char code[] = {
-    PUSH16I, 0, 0,
-    PRINT16,
-    HALT,
+    NOOP, NOOP, HALT,
 };
 
 int main(void) {
