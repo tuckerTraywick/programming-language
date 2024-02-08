@@ -7,7 +7,7 @@ registers:
 
 addressing modes:
     - immediate
-    - a[offset]: sp[-offset]
+    - a[offset]: fp[-offset]
     - l[offset]: fp[offset]
     - s[offset]: sp[-offset]
     - &x: ref
