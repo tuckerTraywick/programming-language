@@ -91,7 +91,7 @@ void endTesting(void) {
 
         fprintf(resultsOut, "%zu tests run, ", *testsRun);
         if (*testsRun == *testsPassed) {
-            fprintf(resultsOut, "all tests passed.\n");
+            fprintf(resultsOut, "all tests passed\n");
         } else {
             fprintf(resultsOut, "%zu tests passed, ", *testsPassed);
             fprintf(resultsOut, "%zu tests failed\n", *testsRun - *testsPassed);

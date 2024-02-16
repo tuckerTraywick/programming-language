@@ -1,3 +1,6 @@
+- Table-driven vs recursive descent?
+- Use a parser generator?
+- LLVM?
 
 
 

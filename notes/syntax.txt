@@ -1,407 +1,145 @@
-public package animals;
-from std.io import printLine;
+// Example of the basic syntax:
+package example
+import std.io.printLine
 
-public struct Animal {
-    public string name;
-    public uint age;
-    public void makeNoise(*this);
+var a = 1
+var b int = 2
+var c string
+
+func foo(x) => x + 1
+func bar(x, y int) int {
+    return x + y
 }
 
-public struct Dog {
-    embed Animal;
-    public string tag;
+struct Thing {
+    a int
+    b string
 }
 
-public struct Cat {
-    embed Animal;
-    public string breed;
-}
-
-public void makeNoise(*Dog dog) {
-    printLine("woof");
-}
-
-public void makeNoise(*Cat cat) {
-    printLine("meow");
-}
-
-void main() {
-    mut *Animal pet = &Dog();
-    pet.makeNoise();
-    pet = &Cat();
-    pet.makeNoise();
-}
-
-
-public package moreAnimals;
-from std.io import printLine;
-from animals import *;
-
-public struct Pet {
-    embed in Dog, Cat;
-    public void walk(*this);
-}
-
-public struct Hamster {
-    embed Animal, Pet;
-    public float wheelSize;
-}
-
-public void makeNoise(*Hamster hamster) {
-    printLine("squeak");
-}
-
-public void walk(*Hamster hamster) {
-    printLine("running on wheel");
-}
-
-public void walk(*Dog dog) {
-    printLine("going on walk");
-}
-
-public void walk(*Cat cat) {
-    printLine("running around the house");
+func main() {
+    printLine("Hello, world!")
 }
 
 
 
 
-package Shapes;
-from std.math import pi, pow;
+// Example of struct embedding and methods:
+pub package animals
+import std.io.printLine
+
+pub struct Animal {
+    pub name string
+    pub age uint
+    pub makeNoise(&this)
+}
+
+pub struct Dog {
+    embed Animal
+    pub tag string
+}
+
+pub struct Cat {
+    embed Animal
+    pub breed string
+}
+
+pub func makeNoise(dog &Dog) {
+    printLine("woof")
+}
+
+pub func makeNoise(cat &Cat) {
+    printLine("meow")
+}
+
+pub func main() {
+    var pet mut &Animal = &Dog()
+    pet.makeNoise() // prints "woof"
+    pet = &Cat()
+    pet.makeNoise() // prints "meow"
+}
+
+
+
+
+// Examples of type definitions:
+alias MyAlias = int
+
+struct MyStruct = int
+
+struct Point {
+    x, y int
+}
+
+// Behaves like an enum with the given cases.
+struct Direction cases {
+    n, s, e, w
+}
+
+
+
+
+// Example of a type with fields and cases:
+package colors
+
+// Behaves like an enum with cases that have the given fields.
+struct Color {
+    r, g, b uint8
+} cases {
+    default black = (0, 0, 0)
+    white = (255, 255, 255)
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
+}
+
+func main() {
+    var color mut Color
+    print(color) // prints "Color.black(r=0, g=0, b=0)"
+    color = Color.red
+    print(color.r) // prints "255"
+    color = .blue // shorthand for "Color.blue"
+    print(color.g) // prints "0"
+}
+
+
+
+
+// Example of a type with cases that are themselves types:
+package shapes
+import std.math.pi
+import std.io.printLine
 
 struct Shape {
-    ufloat64 area(this);
+    area(this)
 } cases {
-    struct Rectangle {
-        ufloat64 width, height;
-    }
-
-    struct Triangle {
-        ufloat64 base, height;
-    }
-
-    struct Circle {
-        ufloat64 radius;
-    }
+    struct Circle {radius float64}
+    struct Rectangle {width, height float64}
+    struct Triangle {base, height float64}
 }
 
-ufloat64 area(Shape.Rectangle rectangle) {
-    return rectangle.width*rectangle.height;
-}
+func area(c Shape.Circle) => pi*c.radius*c.radius
+func area(r Shape.Rectangle) => r.width*r.height
+func area(t Shape.Triangle) => 0.5*t.base*t.height
 
-ufloat64 area(Shape.Triangle triangle) {
-    return 0.5*triangle.base*triangle.height;
-}
-
-ufloat64 area(Shape.Circle circle) {
-    return pi*pow(circle.radius, 2);
-}
-
-void main() {
-    mut Shape shape = .Rectangle(2, 5);
-    printLine(shape.area());
-    shape = .Triangle(2, 5);
-    printLine(shape.area());
+func main() {
+    var shape mut Shape = .Circle(2) // Shorthand for "Shape.Circle(2)"
+    printLine(shape.area()) // prints "12.566..."
+    shape = .Rectangle(2, 5)
+    printLine(shape.area()) // prints "10"
+    shape = .Trianlge(2, 5) // prints "5"
 }
 
 
 
 
-public package physics;
-import std.operations;
+// Examples of function types:
+func(int, x string, bool) // unnamed int, int named x, unnamed bool
+func(a int, b string) // int named a, string named b
+func(a, b int) // int named a, int named b
 
-public struct Entity {
-    public Vector position, velocity, acceleration;
-    public void udpate(*mut this);
-} cases {
-    struct Circle {
-        public ufloat64 radius;
-    }
 
-    struct Mesh {
-        public owned []Vector vertices;
-    }
-}
 
-public struct Vector {
-    from std.operations embed Arithmetic, Equality;
-    public float64 x, y, z;
-}
 
-public ufloat64 length(*Vector vector);
-
-public void update(*mut Entity.Circle entity);
-
-public void update(*mut Entity.Mesh entity);
-
-
-
-
-public package std.math;
-
-public ufloat64 pi;
-public ufloat64 tau;
-public ufloat64 e;
-public ufloat64 inf;
-
-public T abs[T embeds Number](T x);
-public T min[T embeds Number]([]T values);
-public T min[T embeds Number](T.. values);
-
-public float radToDeg(float x);
-public float64 radToDeg(float64 x);
-public float degToRad(float x);
-public float64 degToRad(float64 x);
-
-public float sin(float x);
-public float64 sin(float64 x);
-public float sinD(float x);
-public float64 sinD(float64 x);
-
-
-
-
-public package std.language;
-
-public struct TokenType cases {
-    default invalid;
-    newline, number, character, string, identifier;
-}
-
-public struct Token {
-    public TokenType type;
-    public string text;
-    public usize index;
-    public usize row, column;
-}
-
-public struct LexingError {
-    embed Error;
-    public string message;
-    public usize index;
-    public usize row, column;
-}
-
-public struct LexingResult = owned []Token or LexingError;
-
-public LexingResult or FileError lexFile(string path);
-
-public LexingResult or FileError lexFile(File file);
-
-public LexingResult lex(string text);
-
-
-public package language;
-
-public struct NodeType cases {
-    program, importStatement, ...;
-}
-
-public struct Node {
-    public NodeType type;
-    public owned [](owned *Node or Token) children;
-}
-
-public struct ParsingError {
-    embed Error;
-    public string message;
-    public usize index;
-}
-
-public struct ParsingResult = owned *Node or ParsingError;
-
-public ParsingResult or FileError parseFile(string path);
-
-public ParsingResult or FileError parseFile(File file);
-
-public ParsingResult parse(string text);
-
-
-
-
-struct Direction cases {
-    n, s, e, w;
-}
-
-struct Color {
-    uint8 r, g, b;
-} cases {
-    default struct Rgb;
-    red = (255, 0, 0);
-    green = (0, 255, 0);
-    blue = (0, 0, 255);
-}
-
-
-
-
-public package list;
-import std.operations;
-
-public struct List[T] {
-    from std.operations embed GetElement, SetElement;
-    mut opt owned *Node[T] start;
-    mut opt *Node[T] end;
-    mut usize length;
-}
-
-public usize .length(*List list) => auto;
-
-public void append[T](*mut List[T] list, T value) {
-    var next = new Node[T](value, previous=list.end, next=None);
-    if list.end {
-        list.end.next = next;
-    } else {
-        list.start = next;
-    }
-    list.end = next;
-}
-
-public T or IndexOutOfBoundsError getElement[T](*List[T] list, usize index);
-
-public opt IndexOutOfBoundsError setElement[T](*mut List[T] list, usize index, T value);
-
-struct Node[T] {
-    mut T value;
-    mut opt owned *This next;
-    mut opt *This previous;
-}
-
-
-
-
-package textEditor;
-
-struct Editor {
-    owned []Tab tabs;
-    usize currentTabIndex;
-    owned []Clipboard clipboards;
-    usize currentClipboardIndex;
-}
-
-struct Tab {
-    owned *Buffer buffer;
-    owned []Cursor cursors;
-}
-
-struct Buffer {
-    owned []owned string rows;
-}
-
-struct Cursor {
-    usize row, column;
-}
-
-struct Clipboard {
-    owned []owned string rows;
-}
-
-
-
-
-struct Union cases {
-    float a;
-    [4]uint8 b;
-}
-
-
-
-
-owned *int a = new 1;
-owned *mut int b = move a;
-
-shared *int a = new 1;
-shared *mut int b = a;
-
-weak *int a = new 1;
-weak *mut int b = move a;
-
-
-
-
-for uint i in 0..10 // exclusive
-for uint i in 0...10 // inclusive
-
-for string i in {"hello", "world", "goodbye"}
-for var i in 0..10 // type inference (i is usize)
-for usize i, char x in std.iterators.enumerate("abc")
-
-char x;
-for usize i; x in std.iterators.enumerate("abc") // use `x` from above
-
-
-
-
-[10]char array = {1 = 'a'};
-Map[string, int] map = (("a", 1), ("b", 2));
-struct Point {int x, y;}
-Point a = (1, 2);
-var b = Point(x = 1, y = 2);
-[4]Point points = {0=(x=1), 3=(y=2)};
-(int, string) a = (1, "hi");
-
-void new(*Map map); // constructor
-void drop(*Map map); // destructor
-
-void f[int n](); // static expression.
-void f[T embeds Trait](); // type constraint.
-
-
-
-
-public struct BlockHeader {
-    public usize strongReferences;
-    public usize weakReferences;
-    public usize size;
-}
-
-public struct Block {
-    public *Block next, previous;
-    embed BlockHeader;
-    public [0]byte data; // Flexible array field.
-}
-
-public struct Allocator[T] {
-    public owned *T allocate(*mut this); // The returned pointer must include a BlockHeader above it.
-    public void deallocate(*mut this, owned *T value);
-}
-
-
-
-
-mut string foo;
-[]mut char foo;
-owned string foo;
-
-struct string = string;
-struct mut string = mut []mut char;
-mut string foo; // Same as `mut []mut char foo;`.
-
-
-
-
-// Crash if you free data while it still has weak pointers?
-owned *int a = new 1;
-weak *int b = a;
-drop a;
-// memory error
-
-// Or only crash if you dereference a weak pointer after the data is freed?
-owned *int a = new 1;
-weak *int b = a;
-drop a;
-if a->isAlive() {
-    printLine("a is alive");
-} else {
-    printLine("a is dead");
-}
-// a is dead
-
-
-
-
-struct Array[T, N usize] {
-    [N]T elements;
-}
-
-var a = Array[int, 3]();
+// Built-in types:
+Error None Maybe[T] Any[T..] All[T..]
+Owned[T] Shared[T] Weak[T]
