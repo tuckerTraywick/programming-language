@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -std=gnu17 -O -g -Wall -Wextra -Wpedantic
+CFLAGS := -std=c99 -O -g -Wall -Wextra -Wpedantic
 VFLAGS := --leak-check=yes
 INCLUDE := -Isource -Iinclude
 TEST_INCLUDE := -Itest
