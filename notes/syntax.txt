@@ -78,10 +78,10 @@ struct Direction cases {
 
 
 
-// Example of a type with fields and cases:
+// Example of a type with both fields and cases:
 package colors
 
-// Behaves like an enum with cases that have the given fields.
+// Behaves like an enum with cases that have the given fields. See below for usage.
 struct Color {
     r, g, b uint8
 } cases {
