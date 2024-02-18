@@ -104,7 +104,7 @@ func main() {
 
 
 
-// Example of a type with cases that are themselves types:
+// Example of a struct with cases that are themselves structs:
 package shapes
 import std.math.pi
 import std.io.printLine
