@@ -1,27 +1,24 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
-#include <stddef.h>
+#include <stdint.h>
 
 #ifndef STARTING_STACK_SIZE
     #define STARTING_STACK_SIZE 1024*1024 // 1MB
 #endif // STARTING_STACK_SIZE
 
-// Represnets the types of arguments instructions can have.
+#define MODE(source, dest) (((uint8_t)(source) << 4) | (uint8_t)(dest))
+
+// Represents the addressing mode of the source/destination for a copy.
 enum AddressingMode {
     IMMEDIATE,
-
-    ARGUMENT,
-    ARGUMENT_REF,
-    ARGUMENT_DEREF,
-
-    LOCAL,
-    LOCAL_REF,
-    LOCAL_DEREF,
-
+    POINTER,
     STACK,
-    STACK_REF,
-    STACK_DEREF,
+    LOCAL,
+    ARGUMENT,
+    STACK_POINTER,
+    LOCAL_POINTER,
+    ARGUMENT_POINTER,
 };
 
 // Represents an opcode.
@@ -36,6 +33,6 @@ enum Opcode {
 };
 
 // Runs the given code. Multi-byte values are little-endian.
-void run(char *code);
+void run(uint8_t *code);
 
 #endif // INTERPRETER_H

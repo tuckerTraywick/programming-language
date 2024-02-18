@@ -55,7 +55,15 @@
     - 0-8 operand B
     - 0-8 operand C
 
-- Opcodes (174 total):
+- Addressing mode format:
+    - 4 bits dest mode
+    - 4 bits source mode
+
+- Opcodes (176 total):
+    2
+    - 1 noop
+    - 1 halt
+
     24
     - 1  zero
       1  zero size

@@ -1,8 +1,11 @@
-#include <stdio.h> // printf()
+#include <stdint.h>
+#include <stdio.h>
 #include "interpreter.h"
 
-static char code[] = {
-    NOOP, NOOP, HALT,
+static uint8_t code[] = {
+    COPY8, MODE(IMMEDIATE, STACK), 255,
+    PRINT8,
+    HALT,
 };
 
 int main(void) {
