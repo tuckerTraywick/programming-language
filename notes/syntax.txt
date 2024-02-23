@@ -1,10 +1,10 @@
-// Example of the basic syntax:
+// Example of the basic syntax
 package example
 import std.io.printLine
 
 var a = 1
-var b int = 2
-var c string
+var b string
+var c int = 2
 
 func foo(x) => x + 1
 func bar(x, y int) int {
@@ -23,7 +23,7 @@ func main() {
 
 
 
-// Example of struct embedding and methods:
+// Example of struct embedding and methods
 pub package animals
 import std.io.printLine
 
@@ -61,7 +61,7 @@ pub func main() {
 
 
 
-// Examples of type definitions:
+// Examples of type definitions
 alias MyAlias = int
 
 struct MyStruct = int
@@ -76,9 +76,7 @@ struct Direction cases {
 }
 
 
-
-
-// Example of a type with both fields and cases:
+// Example of a type with both fields and cases
 package colors
 
 // Behaves like an enum with cases that have the given fields. See below for usage.
@@ -94,17 +92,15 @@ struct Color {
 
 func main() {
     var color mut Color
-    print(color) // prints "Color.black(r=0, g=0, b=0)"
+    printLine(color) // prints "Color.black(r = 0, g = 0, b = 0)"
     color = Color.red
-    print(color.r) // prints "255"
+    printLine(color.r) // prints "255"
     color = .blue // shorthand for "Color.blue"
-    print(color.g) // prints "0"
+    printLine(color.g) // prints "0"
 }
 
 
-
-
-// Example of a struct with cases that are themselves structs:
+// Example of a struct with cases that are themselves structs
 package shapes
 import std.math.pi
 import std.io.printLine
@@ -132,14 +128,71 @@ func main() {
 
 
 
-// Examples of function types:
-func(int, x string, bool) // unnamed int, int named x, unnamed bool
-func(a int, b string) // int named a, string named b
-func(a, b int) // int named a, int named b
+// Example of smart pointers
+pub package std.collections
+import std.operations
+
+pub struct List[T] {
+    embed std.operations.GetElement, .SetElement
+    first maybe[owned[&Node[T]]]
+    last maybe[&Node[T]]
+    length usize
+}
+
+struct Node[T] {
+    data T
+    next maybe[owned[&this]]
+    previous maybe[&this]
+}
 
 
 
 
-// Built-in types:
-Error None Maybe[T] Any[T..] All[T..]
-Owned[T] Shared[T] Weak[T]
+// Standard library types:
+error none maybe[T] any[T..] all[T..]
+owned[T..] shared[T..] weak[T..]
+
+// Examples of function signatures/function types with implicitly typed parameters:
+// You can only have named parameters or unnamed parameters in function/tuple types, not both
+// You tell whether the parameters are named by whether it has to names not separated by a space.
+func add(a, b int) int // allowed. int named a, int named b
+func(a, int, b string) // allowed. string named a, string named int, string named b
+func(int, string, x) // allowed. unnamed int, unnamed string, unnamed x
+func(a int, string) // not allowed. can't mix named and unnamed parameters.
+
+// Multiple field access syntax:
+var point = (x=1, y=2, z=3)
+f(point.x, .y, .z)
+
+// Multiple import syntax:
+import std.math.sin, .cos, .pi
+
+// If you import a package it does not bring it into the current namespace
+// If you import a struct, function, or variable it does
+import std.io
+std.io.printLine("hi")
+
+import std.io.printLine
+printLine("hi")
+
+
+// Multiple field access + tuples = easy swizzling
+struct Vector {
+    x, y, z float64
+}
+var point = Vector(1, 2, 3)
+var yxz = (point.y, .x, .z)
+var xyzzy = (point.x, .y, .z, .z, .y)
+var array = [point.y, .x, .z]
+
+
+// When a `.` could mean a field access or a struct case, the compiler assumes field access.
+struct Color {
+    r, g, b uint8
+} cases {
+    red = (225,0,0), green = (0,255,0), blue = (0,0,255)
+}
+var pair = (first = Color.blue, second = Color.red)
+var colors []Color = [pair.second, .first, .green] // invalid
+var colors2 []Color = [pair.second, .first, Color.green] // valid
+var colors3 []Color = [.red, pair.second, .first] // valid. unambiguous
