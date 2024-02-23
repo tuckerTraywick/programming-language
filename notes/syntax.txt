@@ -92,7 +92,7 @@ struct Color {
 
 func main() {
     var color mut Color
-    printLine(color) // prints "Color.black(r = 0, g = 0, b = 0)"
+    printLine(color) // prints "Color.black(r=0, g=0, b=0)"
     color = Color.red
     printLine(color.r) // prints "255"
     color = .blue // shorthand for "Color.blue"
