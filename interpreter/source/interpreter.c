@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -21,10 +20,12 @@ void run(uint8_t *code) {
             case NOOP:
                 // Does nothing.
                 continue;
+
             case HALT:
                 // Exits the program.
                 keepRunning = false;
                 break;
+
             case COPY8:
                 // Copies a source to a destination.
                 uint8_t addressingMode = *ip;
@@ -56,11 +57,13 @@ void run(uint8_t *code) {
 
                 *destination = *source;
                 break;
+
             case PRINT8:
                 // Prints an 8-bit value from the stack.
                 --sp;
                 printf("%d\n", *sp);
                 break;
+                
             default:
                 assert(0 && "Invalid opcode.");
                 keepRunning = false;
