@@ -19,14 +19,14 @@
     - &l[+i]
     - &a[-i]
 
-- 7 destination addressing modes (7 total, 3 bits):
+- 7 destination addressing modes (4 total, 2 bits):
     - immediate pointer
     - s[-i]
     - l[+i]
     - a[-i]
-    - *s[-i]
-    - *l[+i]
-    - *a[-i]
+//    - *s[-i]
+//    - *l[+i]
+//    - *a[-i]
 
 - Argument sizes (4 total):
     - 8

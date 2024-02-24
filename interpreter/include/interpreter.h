@@ -3,19 +3,18 @@
 
 #include <stdint.h>
 
-#ifndef STARTING_STACK_SIZE
-    #define STARTING_STACK_SIZE 1024*1024 // 1MB
-#endif // STARTING_STACK_SIZE
-
+#define STARTING_STACK_SIZE 1024*1024 // 1MB
 #define MODE(source, dest) (((uint8_t)(source) << 4) | (uint8_t)(dest))
 
 // Represents the addressing mode of the source/destination for a copy.
 enum AddressingMode {
     IMMEDIATE,
     POINTER,
-    STACK,
-    LOCAL,
-    ARGUMENT,
+    STACK_TOP,
+    STACK_OFFSET,
+    LOCAL_OFFSET,
+    ARGUMENT_OFFSET,
+    STACK_TOP_POINTER,
     STACK_POINTER,
     LOCAL_POINTER,
     ARGUMENT_POINTER,

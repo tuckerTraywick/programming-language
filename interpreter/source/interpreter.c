@@ -5,16 +5,29 @@
 #include <stdio.h>
 #include "interpreter.h"
 
+// Represents the state of the virtual machine.
+struct Interpreter {
+    uint8_t *code;
+    uint8_t *stack;
+    uint8_t *ip;
+    uint8_t *fp;
+    uint8_t *sp;
+};
+
 void run(uint8_t *code) {
     uint8_t *stack = malloc(STARTING_STACK_SIZE);
-    uint8_t *ip = code;
-    uint8_t *fp = stack;
-    uint8_t *sp = stack;
+
+    struct Interpreter interpreter = {
+        .stack = malloc(STARTING_STACK_SIZE),
+        .ip = code,
+        .fp = stack,
+        .sp = stack,
+    };
 
     bool keepRunning = true;
     while (keepRunning) {
-        uint8_t opcode = *ip;
-        ++ip;
+        uint8_t opcode = *interpreter.ip;
+        ++interpreter.ip;
 
         switch (opcode) {
             case NOOP:
@@ -28,14 +41,14 @@ void run(uint8_t *code) {
 
             case COPY8:
                 // Copies a source to a destination.
-                uint8_t addressingMode = *ip;
-                ++ip;
+                uint8_t addressingMode = *interpreter.ip;
+                ++interpreter.ip;
 
                 uint8_t *source = NULL;
                 switch ((addressingMode&0b11110000) >> 4) {
                     case IMMEDIATE:
-                        source = ip;
-                        ++ip;
+                        source = interpreter.ip;
+                        ++interpreter.ip;
                         break;
                     default:
                         assert(0 && "Invalid opcode.");
@@ -45,9 +58,9 @@ void run(uint8_t *code) {
 
                 uint8_t *destination = NULL;
                 switch (addressingMode&0b00001111) {
-                    case STACK:
-                        destination = sp;
-                        ++sp;
+                    case STACK_TOP:
+                        destination = interpreter.sp;
+                        ++interpreter.sp;
                         break;
                     default:
                         assert(0 && "Invalid opcode.");
@@ -60,8 +73,8 @@ void run(uint8_t *code) {
 
             case PRINT8:
                 // Prints an 8-bit value from the stack.
-                --sp;
-                printf("%d\n", *sp);
+                --interpreter.sp;
+                printf("%d\n", *interpreter.sp);
                 break;
                 
             default:

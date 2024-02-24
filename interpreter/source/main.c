@@ -3,7 +3,9 @@
 #include "interpreter.h"
 
 static uint8_t code[] = {
-    COPY8, MODE(IMMEDIATE, STACK), 255,
+    COPY8, MODE(IMMEDIATE, STACK_TOP), 255,
+    COPY8, MODE(IMMEDIATE, STACK_TOP), 123,
+    PRINT8,
     PRINT8,
     HALT,
 };
