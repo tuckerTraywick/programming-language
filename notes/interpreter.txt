@@ -5,7 +5,7 @@
     - fp: frame pointer
     - sp: stack pointer
 
-- Instead of a bunch of different push instructions, there's just one pop instruction with two forms:
+- Instead of a bunch of different load instructions, there's just one pop instruction with two forms:
     - copy(size_t size, void *dest, void *source)
     - copy(void *dest, void *source) // `size` is on the stack.
 
@@ -24,9 +24,9 @@
     - s[-i]
     - l[+i]
     - a[-i]
-//    - *s[-i]
-//    - *l[+i]
-//    - *a[-i]
+    - *s[-i]
+    - *l[+i]
+    - *a[-i]
 
 - Argument sizes (4 total):
     - 8
@@ -68,9 +68,9 @@
     - 1  zero
       1  zero size
       4  zeroN
-    - 1  push
-      1  push size
-      4  pushN
+    - 1  load
+      1  load size
+      4  loadN
     - 1  pop
       1  pop size
       4  popN
@@ -154,3 +154,27 @@ var b = &a
 
 copy32 1, s[0]
 copy64 &l[0], s[0]
+
+
+
+
+func add(a, b int) int {
+  return a + b
+}
+
+func main() {
+  add(1, 2)
+}
+
+add:
+  copy32 a, s[0]
+  copy32 b, s[0]
+  call addi32
+
+main:
+  zero32
+  copy32 1, s[0]
+  copy32 2, s[0]
+  call add
+  pop32
+  return0
