@@ -15,9 +15,9 @@ enum AddressingMode {
     LOCAL_OFFSET,
     ARGUMENT_OFFSET,
     STACK_TOP_POINTER,
-    STACK_POINTER,
-    LOCAL_POINTER,
-    ARGUMENT_POINTER,
+    STACK_OFFSET_POINTER,
+    LOCAL_OFFSET_POINTER,
+    ARGUMENT_OFFSET_POINTER,
 };
 
 // Represents an opcode.
@@ -27,8 +27,13 @@ enum Opcode {
     HALT,
 
     COPY8,
+    COPY16,
+
+    ADDU8,
+    ADDU16,
 
     PRINT8,
+    PRINT16,
 };
 
 // Runs the given code. Multi-byte values are little-endian.

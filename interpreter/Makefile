@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -O -g3 -std=c99 -Wall -Wextra -Wpedantic
+CFLAGS := -O -g3 -std=gnu99 -Wall -Wextra -Wpedantic
 INCLUDE := -Iinclude
 
 SOURCE_FILES := $(shell find source -name '*.c')
