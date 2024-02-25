@@ -36,8 +36,7 @@ static uint8_t *getSource(struct Interpreter *interpreter, uint8_t width, uint8_
         case STACK_OFFSET:
             offset = *interpreter->ip;
             interpreter->ip += sizeof(ptrdiff_t);
-            interpreter->sp = interpreter->sp - offset - 1;
-            source = interpreter->sp;
+            source = interpreter->sp - offset - 1;
             break;
         default:
             assert(0 && "Invalid opcode.");
