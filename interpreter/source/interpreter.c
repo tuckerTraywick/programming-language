@@ -11,11 +11,18 @@
 struct Interpreter {
     uint8_t *code;
     uint8_t *stack;
-    uint8_t *ip;
-    uint8_t *fp;
-    uint8_t *sp;
+    uint8_t *ip; // Instruction pointer.
+    uint8_t *fp; // Frame pointer.
+    uint8_t *sp; // Stack pointer. The NEXT available byte of the stack.
     bool keepRunning;
 };
+
+// Returns 2^`power`. `power` is a number from 0-3 representing which size of operand an instruction
+// takes.
+static uint8_t getWidth(uint8_t power) {
+    assert(power <= 3 && "Max power is 3.");
+    return 1 << power;
+}
 
 // Gets the pointer to the source for a copy instruction.
 static uint8_t *getSource(struct Interpreter *interpreter, uint8_t width, uint8_t addressingMode) {
@@ -37,6 +44,16 @@ static uint8_t *getSource(struct Interpreter *interpreter, uint8_t width, uint8_
             offset = *interpreter->ip;
             interpreter->ip += sizeof(ptrdiff_t);
             source = interpreter->sp - offset - 1;
+            break;
+        case LOCAL_OFFSET:
+            offset = *interpreter->ip;
+            interpreter->ip += sizeof(ptrdiff_t);
+            source = interpreter->fp + offset;
+            break;
+        case ARGUMENT_OFFSET:
+            offset = *interpreter->ip;
+            interpreter->ip += sizeof(ptrdiff_t);
+            source = interpreter->fp - offset - 1;
             break;
         default:
             assert(0 && "Invalid opcode.");
@@ -83,7 +100,7 @@ static uint64_t pop(struct Interpreter *interpreter, uint8_t width) {
 }
 
 void run(uint8_t *code) {
-    uint8_t *stack = malloc(STARTING_STACK_SIZE);
+    uint8_t *stack = malloc(STACK_SIZE);
     struct Interpreter interpreter = {
         .stack = stack,
         .ip = code,
@@ -110,7 +127,7 @@ void run(uint8_t *code) {
 
             case COPY8...COPY16:
                 // Copies a source to a destination.
-                width = opcode - COPY8 + 1;
+                width = getWidth(opcode - COPY8);
                 uint8_t addressingMode = *interpreter.ip;
                 ++interpreter.ip;
                 uint8_t *source = getSource(&interpreter, width, addressingMode);
@@ -120,18 +137,16 @@ void run(uint8_t *code) {
 
             case ADDU8...ADDU16:
                 // Adds 2 unsigned integers.
-                width = opcode - ADDU8 + 1;
+                width = getWidth(opcode - ADDU8);
                 uint64_t a = pop(&interpreter, width);
                 uint64_t b = pop(&interpreter, width);
                 uint64_t maxValue = getMask(width);
                 push(&interpreter, width, (a + b)%maxValue);
-                printf("a    = %4.d %.64b\n", a, a);
-                printf("b    = %4.d %.64b\n", b, b);
                 break;
 
             case PRINT8...PRINT16:
-                // Prints an 8-bit value from the stack.
-                width = opcode - PRINT8 + 1;
+                // Prints a value from the stack.
+                width = getWidth(opcode - PRINT8);
                 uint64_t value = pop(&interpreter, width);
                 printf("%d\n", value);
                 break;

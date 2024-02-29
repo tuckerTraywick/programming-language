@@ -1,13 +1,14 @@
-- 64-bit stack based virtual machine
+- 64-bit stack based virtual machine.
 
 - Registers:
     - ip: instruction pointer
     - fp: frame pointer
     - sp: stack pointer
 
-- Instead of a bunch of different load instructions, there's just one pop instruction with two forms:
-    - copy(size_t size, void *dest, void *source)
-    - copy(void *dest, void *source) // `size` is on the stack.
+- Instead of a bunch of different load/store instructions, there's just one copy instruction with
+  two forms:
+    - void copy(size_t size, void *source, void *destination);
+    - void copy(void *source, void *destination); // `size` is on the stack.
 
 - 8 source addressing modes (8 total, 3 bits):
     - immediate value (only for known size)
@@ -121,7 +122,23 @@
     - 4  ltN
     - 4  lteN
 
+- Calling convention:
+  - The caller allocates space for the return value and pushes a pointer to it.
+  - `sp` must be 8 byte aligned before a `call` instruction and before the entrypoint is reached.
 
+  top
+    ...          -,
+    local1        |-> Pushed by callee, cleaned by `return` instruction.
+    local0       -'
+    
+    fp           ---> Pushed by `call` instruction, cleaned by `return` instruction.
+    sp           -'
+
+    rp           ---> Pushed by caller, cleaned by `return` instruction.
+    arg0         ---> Pushed by caller, cleaned by caller.
+    arg1          |
+    return value -'
+  bottom
 
 
 var a = 1
@@ -169,12 +186,15 @@ func main() {
 add:
   copy32 a, s[0]
   copy32 b, s[0]
-  call addi32
+  addi32
+  copy32 s[4], rp
+  return
 
 main:
   zero32
   copy32 1, s[0]
   copy32 2, s[0]
+  copy64 &l[0], rp
   call add
   pop32
-  return0
+  return

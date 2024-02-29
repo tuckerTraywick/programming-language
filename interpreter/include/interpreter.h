@@ -3,7 +3,10 @@
 
 #include <stdint.h>
 
-#define STARTING_STACK_SIZE 1024*1024 // 1MB
+#define STACK_SIZE 1024*1024 // 1MB
+
+// Combines `source` and `dest` into one byte representing the addressing mode for a copy
+// instruction. The source is in the first 4 bits, the destination is in the last 4 bits.
 #define MODE(source, dest) (((uint8_t)(source) << 4) | (uint8_t)(dest))
 
 // Represents the addressing mode of the source/destination for a copy.
@@ -20,7 +23,7 @@ enum AddressingMode {
     ARGUMENT_OFFSET_POINTER,
 };
 
-// Represents an opcode.
+// Represents the first byte of an opcode.
 enum Opcode {
     NOOP,
 
@@ -36,7 +39,7 @@ enum Opcode {
     PRINT16,
 };
 
-// Runs the given code. Multi-byte values are little-endian.
+// Multi-byte values are little-endian.
 void run(uint8_t *code);
 
 #endif // INTERPRETER_H
