@@ -14,6 +14,7 @@ struct Interpreter {
     uint8_t *ip; // Instruction pointer.
     uint8_t *fp; // Frame pointer.
     uint8_t *sp; // Stack pointer. The NEXT available byte of the stack.
+    uint64_t immediate; // Immediate value you can take the address of.
     bool keepRunning;
 };
 
@@ -55,6 +56,27 @@ static uint8_t *getSource(struct Interpreter *interpreter, uint8_t width, uint8_
             interpreter->ip += sizeof(ptrdiff_t);
             source = interpreter->fp - offset - 1;
             break;
+        case STACK_TOP_POINTER:
+            source = (uint8_t*)&interpreter->sp;
+            break;
+        case STACK_OFFSET_POINTER:
+            offset = *interpreter->ip;
+            interpreter->ip += sizeof(ptrdiff_t);
+            interpreter->immediate = (uint64_t)(interpreter->sp - offset - 1);
+            source = (uint8_t*)&interpreter->immediate;
+            break;
+        case LOCAL_OFFSET_POINTER:
+            offset = *interpreter->ip;
+            interpreter->ip += sizeof(ptrdiff_t);
+            interpreter->immediate = (uint64_t)(interpreter->fp + offset);
+            source = (uint8_t*)&interpreter->immediate;
+            break;
+        case ARGUMENT_OFFSET_POINTER:
+            offset = *interpreter->ip;
+            interpreter->ip += sizeof(ptrdiff_t);
+            interpreter->immediate = (uint64_t)(interpreter->fp - offset - 1);
+            source = (uint8_t*)&interpreter->immediate;
+            break;
         default:
             assert(0 && "Invalid opcode.");
             interpreter->keepRunning = false;
@@ -81,12 +103,12 @@ static uint8_t *getDestination(struct Interpreter *interpreter, uint8_t width, u
 
 // Returns a 64-bit value with the first `width*8` bits set.
 static uint64_t getMask(uint8_t width) {
-    return ~(~0u << width*8);
+    // TODO: Make this neater.
+    return (width < 3) ? ~(~(uint64_t)0u << width*8) : ~(uint64_t)0u;
 }
 
 // Pushes a value of the given width to the stack.
 static void push(struct Interpreter *interpreter, uint8_t width, uint64_t value) {
-    uint64_t top = *(uint64_t*)interpreter->sp;
     uint64_t mask = getMask(width);
     *(uint64_t*)interpreter->sp = value & mask;
     interpreter->sp += width;
@@ -96,7 +118,10 @@ static void push(struct Interpreter *interpreter, uint8_t width, uint64_t value)
 static uint64_t pop(struct Interpreter *interpreter, uint8_t width) {
     interpreter->sp -= width;
     uint64_t mask = getMask(width);
-    return *(uint64_t*)interpreter->sp & mask;
+    // printf("value = %ld\n", *(uint64_t*)interpreter->sp);
+    // printf("width = %ld\n", width);
+    // printf("mask = %ld\n", mask);
+    return (*(uint64_t*)interpreter->sp) & mask;
 }
 
 void run(uint8_t *code) {
@@ -125,7 +150,7 @@ void run(uint8_t *code) {
                 interpreter.keepRunning = false;
                 break;
 
-            case COPY8...COPY16:
+            case COPY8...COPY64:
                 // Copies a source to a destination.
                 width = getWidth(opcode - COPY8);
                 uint8_t addressingMode = *interpreter.ip;
@@ -144,11 +169,11 @@ void run(uint8_t *code) {
                 push(&interpreter, width, (a + b)%maxValue);
                 break;
 
-            case PRINT8...PRINT16:
+            case PRINT8...PRINT64:
                 // Prints a value from the stack.
                 width = getWidth(opcode - PRINT8);
                 uint64_t value = pop(&interpreter, width);
-                printf("%d\n", value);
+                printf("%ld\n", value);
                 break;
                 
             default:

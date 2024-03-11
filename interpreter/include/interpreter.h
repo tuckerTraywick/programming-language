@@ -31,12 +31,16 @@ enum Opcode {
 
     COPY8,
     COPY16,
+    COPY32,
+    COPY64,
 
     ADDU8,
     ADDU16,
 
     PRINT8,
     PRINT16,
+    PRINT32,
+    PRINT64,
 };
 
 // Multi-byte values are little-endian.
