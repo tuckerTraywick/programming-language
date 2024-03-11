@@ -122,7 +122,8 @@ func main() {
     printLine(shape.area()) // prints "12.566..."
     shape = .Rectangle(2, 5)
     printLine(shape.area()) // prints "10"
-    shape = .Trianlge(2, 5) // prints "5"
+    shape = .Triangle(2, 5)
+    printLine(shape.area()) // prints "5"
 }
 
 
@@ -154,7 +155,7 @@ owned[T..] shared[T..] weak[T..]
 
 // Examples of function signatures/function types with implicitly typed parameters:
 // You can only have named parameters or unnamed parameters in function/tuple types, not both
-// You tell whether the parameters are named by whether it has to names not separated by a space.
+// You tell whether the parameters are named by whether it has two names not separated by a space.
 func add(a, b int) int // allowed. int named a, int named b
 func(a, int, b string) // allowed. string named a, string named int, string named b
 func(int, string, x) // allowed. unnamed int, unnamed string, unnamed x
@@ -182,7 +183,6 @@ struct Vector {
 }
 var point = Vector(1, 2, 3)
 var yxz = (point.y, .x, .z)
-var xyzzy = (point.x, .y, .z, .z, .y)
 var array = [point.y, .x, .z]
 
 
