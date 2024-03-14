@@ -36,6 +36,8 @@ enum Opcode {
 
     ADDU8,
     ADDU16,
+    ADDU32,
+    ADDU64,
 
     PRINT8,
     PRINT16,
