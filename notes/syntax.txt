@@ -196,3 +196,19 @@ var pair = (first = Color.blue, second = Color.red)
 var colors []Color = [pair.second, .first, .green] // invalid
 var colors2 []Color = [pair.second, .first, Color.green] // valid
 var colors3 []Color = [.red, pair.second, .first] // valid. unambiguous
+
+
+
+
+func foo[T impl To[string]](x T) { // can't be dynamically linked
+    var temp = x // can copy (uses stack, can be copied directly as argument)
+    qux(x)
+}
+
+func bar(x &To[string]) { // can be dynamically linked
+    var temp = // can't copy
+}
+
+func baz(x &all[Sized, To[string]]) { // can be dynamically linked
+    var temp owned &all[Sized, To[string]] = x.copy() // can copy (uses heap)
+}

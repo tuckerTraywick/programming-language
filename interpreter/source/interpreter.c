@@ -118,9 +118,6 @@ static void push(struct Interpreter *interpreter, uint8_t width, uint64_t value)
 static uint64_t pop(struct Interpreter *interpreter, uint8_t width) {
     interpreter->sp -= width;
     uint64_t mask = getMask(width);
-    // printf("value = %ld\n", *(uint64_t*)interpreter->sp);
-    // printf("width = %ld\n", width);
-    // printf("mask = %ld\n", mask);
     return (*(uint64_t*)interpreter->sp) & mask;
 }
 
@@ -160,7 +157,7 @@ void run(uint8_t *code) {
                 memcpy(destination, source, width);
                 break;
 
-            case ADDU8...ADDU16:
+            case ADDU8...ADDU64:
                 // Adds 2 unsigned integers.
                 width = getWidth(opcode - ADDU8);
                 uint64_t a = pop(&interpreter, width);
