@@ -135,6 +135,7 @@
     sp           -'
 
     rp           ---> Pushed by caller, cleaned by `return` instruction.
+
     arg0         ---> Pushed by caller, cleaned by caller.
     arg1          |
     return value -'
@@ -147,6 +148,14 @@ var b = a
 copy32 1, s[0]
 zero32
 copy32 l[0], l[4]
+//
+push32 1
+zero32
+push64 offset(a)
+pushap
+push64 offset(b)
+pushap
+copy32
 
 
 var a = [1, 2, 3]
@@ -155,14 +164,36 @@ var b = a
 copy 3*4, data, s[0]
 copy 3*4, l[0], l[3*4]
 data: i32 1, 2, 3
+//
+zero 24
+push64 &data
+push64 offset(a)
+pushap
+push64 12
+copy
+push64 offset(a)
+pushap
+push64 offset(b)
+pushap
+push64 12
+copy
+data: i32 1, 2, 3
 
 
 var a [6]int = [1, 2, 3, 4, 5, 6]
 var b [3]int = a[1...3]
 
 copy 6*4, data, s[0]
-zero 6*4
+zero 3*4
 copy 3*4, l[4], l[6*4]
+data: i32 1, 2, 3, 4, 5, 6
+//
+zero 6*4 + 3*4
+push64 &data
+push64 offset(a)
+pushap
+push64 3*4
+copy
 data: i32 1, 2, 3, 4, 5, 6
 
 
@@ -189,6 +220,15 @@ add:
   addi32
   copy32 s[4], rp
   return
+
+  push64 offset(a)
+  pusha32
+  push64 offset(b)
+  pusha32
+  addi32
+  push64 4
+  pushsp
+  copy32
 
 main:
   zero32
