@@ -11,10 +11,20 @@ enum Opcode {
 
     HALT,
 
+    PUSH8,
+    PUSH16,
+    PUSH32,
+    PUSH64,
+
     ADDU8,
     ADDU16,
     ADDU32,
     ADDU64,
+
+    ADDI8,
+    ADDI16,
+    ADDI32,
+    ADDI64,
 
     PRINT8,
     PRINT16,

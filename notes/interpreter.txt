@@ -2,22 +2,22 @@
 
 - Calling convention:
     - The caller allocates space for the return value and pushes a pointer to it.
-    - `sp` must be 8 byte aligned before a `call` instruction and before the entrypoint is reached.
+    // - `sp` must be 8 byte aligned before a `call` instruction and before the entrypoint is reached.
+- Stack layout:
+    top
+        ...          -,
+        local1        |-> Pushed by callee, cleaned by `return` instruction.
+        local0       -'
 
-top
-    ...          -,
-    local1        |-> Pushed by callee, cleaned by `return` instruction.
-    local0       -'
+        fp           ---> Pushed by `call` instruction, cleaned by `return` instruction.
+        sp           -'
 
-    fp           ---> Pushed by `call` instruction, cleaned by `return` instruction.
-    sp           -'
+        rp           ---> Pushed by caller, cleaned by `return` instruction.
 
-    rp           ---> Pushed by caller, cleaned by `return` instruction.
-
-    arg1         -,
-    arg0          |-> Pushed by caller, cleaned by caller.
-    return value -'
-bottom
+        arg1         -,
+        arg0          |-> Pushed by caller, cleaned by caller.
+        return value -'
+    bottom
 
 - Registers:
     - ip: instruction pointer
@@ -26,14 +26,14 @@ bottom
 
 - Instruction format:
     - opcode (1 byte)
-    - immediate (0 or 8 bytes)
+    - immediate (0-8 bytes)
 - If an immediate needs to be aligned, the padding comes in the form of noops before the opcode.
 
 - Instructions:
     - noop
     - halt
     
-    - push8-64 immediate
+    - push immediate
     - pushso [offset]
     - pushsp
     - pushfo [offset]
@@ -122,6 +122,8 @@ bottom
     - lt8-64 [b] [a]
     - ge8-64 [b] [a]
     - le8-64 [b] [a]
+
+
 
 
 var a = 1
