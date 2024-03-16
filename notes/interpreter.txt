@@ -1,136 +1,14 @@
-- 64-bit stack based virtual machine.
-
-- Registers:
-    - ip: instruction pointer
-    - fp: frame pointer
-    - sp: stack pointer
-
-- Instead of a bunch of different load/store instructions, there's just one copy instruction with
-  two forms:
-    - void copy(size_t size, void *source, void *destination);
-    - void copy(void *source, void *destination); // `size` is on the stack.
-
-- 8 source addressing modes (8 total, 3 bits):
-    - immediate value (only for known size)
-    - immediate pointer
-    - s[-i]
-    - l[+i]
-    - a[-i]
-    - &s[-i]
-    - &l[+i]
-    - &a[-i]
-
-- 7 destination addressing modes (4 total, 2 bits):
-    - immediate pointer
-    - s[-i]
-    - l[+i]
-    - a[-i]
-    - *s[-i]
-    - *l[+i]
-    - *a[-i]
-
-- Argument sizes (4 total):
-    - 8
-    - 16
-    - 32
-    - 64
-
-- Operator argument types (12 total, 4 bits):
-    - i8
-    - i16
-    - i32
-    - i64
-    - u8
-    - u16
-    - u32
-    - u64
-    - f8
-    - f16
-    - f32
-    - f64
-
-- Opcode format (1-2 bytes for opcode, 0-24 bytes for operands):
-    - 1   opcode
-    - 0-1 addressing mode
-    - 0-8 operand A
-    - 0-8 operand B
-    - 0-8 operand C
-
-- Addressing mode format:
-    - 4 bits dest mode
-    - 4 bits source mode
-
-- Opcodes (176 total):
-    2
-    - 1 noop
-    - 1 halt
-
-    24
-    - 1  zero
-      1  zero size
-      4  zeroN
-    - 1  load
-      1  load size
-      4  loadN
-    - 1  pop
-      1  pop size
-      4  popN
-    - 1  dup
-      1  dup size
-      4  dupN
-
-    5
-    - 1  copy size, source, dest: takes 1 extra byte for addressing mode
-      4  copyN source, dest: takes 1 extra byte for addressing mode
-
-    21
-    - 1  jump
-      1  jump address
-    - 1  jumpt size
-      4  jumptN
-    - 1  jumpf size
-      4  jumpfN
-    - 1  call
-      1  call address
-    - 1  return
-      1  return size
-      1  return0
-      4  returnN
-    
-    60
-    - 12 addT
-    - 12 subT
-    - 12 mulT
-    - 12 divT
-    - 12 modT
-
-    64
-    - 4  notN
-    - 4  andN
-    - 4  orN
-    - 4  xorN
-    - 4  lshiftN
-    - 4  rshiftN
-    - 4  lnotN
-    - 4  landN
-    - 4  lorN
-    - 4  lxorN
-    - 4  eqN
-    - 4  neN
-    - 4  gtN
-    - 4  gteN
-    - 4  ltN
-    - 4  lteN
+- 64 bit stack-based virtual machine.
 
 - Calling convention:
-  - The caller allocates space for the return value and pushes a pointer to it.
-  - `sp` must be 8 byte aligned before a `call` instruction and before the entrypoint is reached.
+    - The caller allocates space for the return value and pushes a pointer to it.
+    - `sp` must be 8 byte aligned before a `call` instruction and before the entrypoint is reached.
 
-  top
+top
     ...          -,
     local1        |-> Pushed by callee, cleaned by `return` instruction.
     local0       -'
-    
+
     fp           ---> Pushed by `call` instruction, cleaned by `return` instruction.
     sp           -'
 
@@ -139,60 +17,138 @@
     arg0         ---> Pushed by caller, cleaned by caller.
     arg1          |
     return value -'
-  bottom
+bottom
+
+- Registers:
+    - ip: instruction pointer
+    - fp: frame pointer
+    - sp: stack pointer
+
+- Instructions:
+    - noop
+    - halt
+    
+    - push8-64 immediate
+    - pushso [offset]
+    - pushsp
+    - pushfo [offset]
+    - pushfp
+
+    - pop8-32
+    - pop [size]
+
+    - zero8-64
+    - zero [size]
+
+    - load8-64 [source]
+    - load [size] [source]
+
+    - store8-64 [destination] [value]
+    - store [size] [destination]
+
+    - copy8-64 [destination] [source]
+    - copy [size] [destination] [source]
+
+    - jmp [address]
+    - jmpt [address] [boolean]
+    - jmpf [address] [boolean]
+
+    - call [address]
+
+    - rets8-64 [value]
+    - rets [size] [value]
+    - retp8-64 [source]
+    - retp [size] [source]
+    - ret
+
+    - addi8-64 [b] [a]
+    - addu8-64 [b] [a]
+    - addf32-64 [b] [a]
+
+    - subi8-64 [b] [a]
+    - subu8-64 [b] [a]
+    - subf32-64 [b] [a]
+
+    - muli8-64 [b] [a]
+    - mulu8-64 [b] [a]
+    - mulf32-64 [b] [a]
+
+    - divi8-64 [b] [a]
+    - divu8-64 [b] [a]
+    - divf32-64 [b] [a]
+
+    - modi8-64 [b] [a]
+    - modu8-64 [b] [a]
+    - modf32-64 [b] [a]
+
+    - absi8-64 [a]
+    - absf32-64 [a]
+
+    - sqrt32-64 [a]
+
+    - floor32-64 [a]
+
+    - ceil32-64 [a]
+
+    - round32-64 [a]
+
+    - bnot8-64 [a]
+    - band8-64 [b] [a]
+    - bor8-64 [b] [a]
+    - bxor8-64 [b] [a]
+    - bnand8-64 [b] [a]
+    - bnor8-64 [b] [a]
+    - bnxor8-64 [b] [a]
+
+    - lnot8-64 [a]
+    - land8-64 [b] [a]
+    - lor8-64 [b] [a]
+    - lxor8-64 [b] [a]
+    - lnand8-64 [b] [a]
+    - lnor8-64 [b] [a]
+    - lnxor8-64 [b] [a]
+
+    - eq8-64 [b] [a]
+    - neq8-64 [b] [a]
+    - gt8-64 [b] [a]
+    - lt8-64 [b] [a]
+    - ge8-64 [b] [a]
+    - le8-64 [b] [a]
 
 
 var a = 1
 var b = a
 
-copy32 1, s[0]
-zero32
-copy32 l[0], l[4]
-//
 push32 1
 zero32
-push64 offset(a)
-pushap
-push64 offset(b)
-pushap
+pushfp
+push64 4
+pushfo
 copy32
 
 
 var a = [1, 2, 3]
 var b = a
 
-copy 3*4, data, s[0]
-copy 3*4, l[0], l[3*4]
-data: i32 1, 2, 3
-//
-zero 24
 push64 &data
-push64 offset(a)
-pushap
 push64 12
-copy
-push64 offset(a)
-pushap
-push64 offset(b)
-pushap
+load
 push64 12
-copy
+dup
 data: i32 1, 2, 3
 
 
 var a [6]int = [1, 2, 3, 4, 5, 6]
 var b [3]int = a[1...3]
 
-copy 6*4, data, s[0]
-zero 3*4
-copy 3*4, l[4], l[6*4]
-data: i32 1, 2, 3, 4, 5, 6
-//
-zero 6*4 + 3*4
 push64 &data
-push64 offset(a)
-pushap
-push64 3*4
+push64 24
+load
+push64 4
+pushfo
+push64 24
+pushfo
+push64 12
 copy
 data: i32 1, 2, 3, 4, 5, 6
 
@@ -200,41 +156,34 @@ data: i32 1, 2, 3, 4, 5, 6
 var a = 1
 var b = &a
 
-copy32 1, s[0]
-copy64 &l[0], s[0]
+push32 1
+pushfp
 
 
 
 
 func add(a, b int) int {
-  return a + b
+    return a + b
 }
 
 func main() {
-  add(1, 2)
+    add(1, 2)
 }
 
 add:
-  copy32 a, s[0]
-  copy32 b, s[0]
-  addi32
-  copy32 s[4], rp
-  return
-
-  push64 offset(a)
-  pusha32
-  push64 offset(b)
-  pusha32
-  addi32
-  push64 4
-  pushsp
-  copy32
+    push64 offset(a)
+    loada32
+    push64 offset(b)
+    loada32
+    addi32
+    push64 4
+    pushso
+    rets32
 
 main:
-  zero32
-  copy32 1, s[0]
-  copy32 2, s[0]
-  copy64 &l[0], rp
-  call add
-  pop32
-  return
+    push32 1
+    push32 2
+    zero32
+    call add
+    pop32
+    ret
