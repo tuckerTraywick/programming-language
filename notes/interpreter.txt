@@ -14,8 +14,8 @@ top
 
     rp           ---> Pushed by caller, cleaned by `return` instruction.
 
-    arg0         ---> Pushed by caller, cleaned by caller.
-    arg1          |
+    arg1         -,
+    arg0          |-> Pushed by caller, cleaned by caller.
     return value -'
 bottom
 
@@ -23,6 +23,11 @@ bottom
     - ip: instruction pointer
     - fp: frame pointer
     - sp: stack pointer
+
+- Instruction format:
+    - opcode (1 byte)
+    - immediate (0 or 8 bytes)
+- If an immediate needs to be aligned, the padding comes in the form of noops before the opcode.
 
 - Instructions:
     - noop
@@ -39,6 +44,9 @@ bottom
 
     - zero8-64
     - zero [size]
+
+    - bump8-64
+    - bump [size]
 
     - load8-64 [source]
     - load [size] [source]
