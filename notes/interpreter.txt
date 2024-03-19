@@ -33,11 +33,11 @@
     - noop
     - halt
     
-    - push immediate
-    - pushso [offset]
+    - push8-64 immediate
     - pushsp
-    - pushfo [offset]
+    - pushso [offset]
     - pushfp
+    - pushfo [offset]
 
     - pop8-32
     - pop [size]
@@ -70,11 +70,9 @@
     - ret
 
     - addi8-64 [b] [a]
-    - addu8-64 [b] [a]
     - addf32-64 [b] [a]
 
     - subi8-64 [b] [a]
-    - subu8-64 [b] [a]
     - subf32-64 [b] [a]
 
     - muli8-64 [b] [a]
@@ -117,11 +115,19 @@
     - lnxor8-64 [b] [a]
 
     - eq8-64 [b] [a]
-    - neq8-64 [b] [a]
-    - gt8-64 [b] [a]
-    - lt8-64 [b] [a]
-    - ge8-64 [b] [a]
-    - le8-64 [b] [a]
+    - ne8-64 [b] [a]
+
+    - gti8-64 [b] [a]
+    - gtf8-64 [b] [a]
+
+    - lti8-64 [b] [a]
+    - ltf8-64 [b] [a]
+
+    - gei8-64 [b] [a]
+    - gef8-64 [b] [a]
+
+    - lei8-64 [b] [a]
+    - lef8-64 [b] [a]
 
 
 
