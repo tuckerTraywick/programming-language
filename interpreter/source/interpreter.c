@@ -28,6 +28,8 @@ static uint64_t pop(struct Interpreter *interpreter, uint8_t width) {
 }
 
 void run(uint8_t *code) {
+    // TODO: Add support for passing a pointer to an existing stack.
+    // TODO: Rename local variables.
     uint8_t *stack = malloc(STACK_SIZE);
     struct Interpreter interpreter = {
         .stack = stack,
@@ -40,30 +42,31 @@ void run(uint8_t *code) {
 
     while (interpreter.keepRunning) {
         uint8_t width = 0;
+        uint64_t value = 0;
         uint8_t opcode = *interpreter.ip;
         ++interpreter.ip;
 
-        static char *ops[] = {
-            "NOOP",
-            "HALT",
-            "PUSH8",
-            "PUSH16",
-            "PUSH32",
-            "PUSH64",
-            "PUSHSP",
-            "PUSHSO",
-            "PUSHFP",
-            "PUSHFO",
-            "ADDI8",
-            "ADDI16",
-            "ADDI32",
-            "ADDI64",
-            "PRINT8",
-            "PRINT16",
-            "PRINT32",
-            "PRINT64",
-        };
-        char *op = ops[opcode];
+        // static char *ops[] = {
+        //     "NOOP",
+        //     "HALT",
+        //     "PUSH8",
+        //     "PUSH16",
+        //     "PUSH32",
+        //     "PUSH64",
+        //     "PUSHSP",
+        //     "PUSHSO",
+        //     "PUSHFP",
+        //     "PUSHFO",
+        //     "ADDI8",
+        //     "ADDI16",
+        //     "ADDI32",
+        //     "ADDI64",
+        //     "PRINT8",
+        //     "PRINT16",
+        //     "PRINT32",
+        //     "PRINT64",
+        // };
+        // char *op = ops[opcode];
         // printf("op=%-8s, ip=%.3zu, fp=%.3zu, sp=%.3zu\n", op, interpreter.ip-code-1, interpreter.fp-interpreter.stack, interpreter.sp-interpreter.stack);
 
         switch (opcode) {
@@ -96,9 +99,60 @@ void run(uint8_t *code) {
 
             case PUSHFO:
                 // `- 8` to account for the constant pushed on the stack for the offset.
-                push(&interpreter, 8, (uint64_t)interpreter.fp + pop(&interpreter, 8) - 8);
+                push(&interpreter, 8, (uint64_t)interpreter.fp + pop(&interpreter, 8));
                 break;
                 
+            case POP8...POP64:
+                width = getWidth(opcode - POP8);
+                interpreter.sp -= width;
+                break;
+
+            case POP:
+                interpreter.sp -= pop(&interpreter, 8);
+                break;
+
+            case ZERO8...ZERO64:
+                width = getWidth(opcode - ZERO8);
+                push(&interpreter, width, 0);
+                break;
+
+            case ZERO:
+                width = pop(&interpreter, 8);
+                memset(interpreter.sp, 0, (int)width);
+                interpreter.sp += width;
+                break;
+
+            case BUMP8...BUMP64:
+                width = getWidth(opcode - BUMP8);
+                interpreter.sp += width;
+                break;
+
+            case BUMP:
+                width = pop(&interpreter, 8);
+                interpreter.sp += width;
+                break;
+
+            case LOAD8...LOAD64:
+                width = getWidth(opcode - LOAD8);
+                value = pop(&interpreter, 8);
+                memcpy(interpreter.sp, (void*)value, width);
+                interpreter.sp += width;
+                break;
+
+            case LOAD:
+                width = pop(&interpreter, 8);
+                value = pop(&interpreter, 8);
+                memcpy(interpreter.sp, (void*)value, width);
+                interpreter.sp += width;
+                break;
+
+            case STORE8...STORE64:
+                width = getWidth(opcode - STORE8);
+                uint64_t destination = pop(&interpreter, 8);
+                memcpy((void*)destination, interpreter.sp - width, width);
+                interpreter.sp -= width;
+                break;
+
             case ADDI8...ADDI64:
                 width = getWidth(opcode - ADDI8);
                 push(&interpreter, width, pop(&interpreter, width) + pop(&interpreter, width));

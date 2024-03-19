@@ -31,6 +31,35 @@ enum Opcode {
     PUSHFP,
     PUSHFO,
 
+    POP8,
+    POP16,
+    POP32,
+    POP64,
+    POP,
+
+    ZERO8,
+    ZERO16,
+    ZERO32,
+    ZERO64,
+    ZERO,
+
+    BUMP8,
+    BUMP16,
+    BUMP32,
+    BUMP64,
+    BUMP,
+
+    LOAD8,
+    LOAD16,
+    LOAD32,
+    LOAD64,
+    LOAD,
+
+    STORE8,
+    STORE16,
+    STORE32,
+    STORE64,
+
     ADDI8,
     ADDI16,
     ADDI32,

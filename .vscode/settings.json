@@ -1,6 +1,7 @@
 {
     "makefile.makefilePath": "compiler-c/Makefile",
     "files.associations": {
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "interpreter.h": "c"
     }
 }

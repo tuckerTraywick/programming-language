@@ -52,7 +52,7 @@
     - load [size] [source]
 
     - store8-64 [destination] [value]
-    - store [size] [destination]
+    - store [size] [destination] [value]
 
     - copy8-64 [destination] [source]
     - copy [size] [destination] [source]
@@ -188,9 +188,11 @@ func main() {
 
 add:
     push64 offset(a)
-    loada32
+    pushfo
+    load32
     push64 offset(b)
-    loada32
+    pushfo
+    load32
     addi32
     push64 4
     pushso
