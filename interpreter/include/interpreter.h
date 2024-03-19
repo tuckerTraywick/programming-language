@@ -2,8 +2,19 @@
 #define INTERPRETER_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define STACK_SIZE 5*1024*1024 // 5MB
+
+// Represents the state of the virtual machine.
+struct Interpreter {
+    uint8_t *code;
+    uint8_t *stack;
+    uint8_t *ip; // Instruction pointer.
+    uint8_t *fp; // Frame pointer.
+    uint8_t *sp; // Stack pointer. The NEXT available byte of the stack.
+    bool keepRunning;
+};
 
 // Represents the operation being performed by an isntruction.
 enum Opcode {
@@ -15,11 +26,10 @@ enum Opcode {
     PUSH16,
     PUSH32,
     PUSH64,
-
-    ADDU8,
-    ADDU16,
-    ADDU32,
-    ADDU64,
+    PUSHSP,
+    PUSHSO,
+    PUSHFP,
+    PUSHFO,
 
     ADDI8,
     ADDI16,
