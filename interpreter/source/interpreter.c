@@ -7,16 +7,6 @@
 #include <stdio.h>
 #include "interpreter.h"
 
-// Represents the state of the virtual machine.
-struct Interpreter {
-    uint8_t *code;
-    uint8_t *stack;
-    uint8_t *ip; // Instruction pointer.
-    uint8_t *fp; // Frame pointer.
-    uint8_t *sp; // Stack pointer. The NEXT available byte of the stack.
-    bool keepRunning;
-};
-
 // Gets the width of the operand of an instruction.
 static uint8_t getWidth(uint8_t opcodeIndex) {
     static uint8_t widths[] = {1, 2, 4, 8};
@@ -53,6 +43,29 @@ void run(uint8_t *code) {
         uint8_t opcode = *interpreter.ip;
         ++interpreter.ip;
 
+        static char *ops[] = {
+            "NOOP",
+            "HALT",
+            "PUSH8",
+            "PUSH16",
+            "PUSH32",
+            "PUSH64",
+            "PUSHSP",
+            "PUSHSO",
+            "PUSHFP",
+            "PUSHFO",
+            "ADDI8",
+            "ADDI16",
+            "ADDI32",
+            "ADDI64",
+            "PRINT8",
+            "PRINT16",
+            "PRINT32",
+            "PRINT64",
+        };
+        char *op = ops[opcode];
+        // printf("op=%-8s, ip=%.3zu, fp=%.3zu, sp=%.3zu\n", op, interpreter.ip-code-1, interpreter.fp-interpreter.stack, interpreter.sp-interpreter.stack);
+
         switch (opcode) {
             case NOOP:
                 continue;
@@ -68,14 +81,27 @@ void run(uint8_t *code) {
                 interpreter.ip += width;
                 break;
 
-            case ADDU8...ADDU64:
-                width = getWidth(opcode - ADDU8);
-                push(&interpreter, width, pop(&interpreter, width) + pop(&interpreter, width));
+            case PUSHSP:
+                push(&interpreter, 8, (uint64_t)interpreter.sp);
                 break;
 
+            case PUSHSO:
+                // `- 8` to account for the constant pushed on the stack for the offset.
+                push(&interpreter, 8, (uint64_t)interpreter.sp - pop(&interpreter, 8) - 8);
+                break;
+                
+            case PUSHFP:
+                push(&interpreter, 8, (uint64_t)interpreter.fp);
+                break;
+
+            case PUSHFO:
+                // `- 8` to account for the constant pushed on the stack for the offset.
+                push(&interpreter, 8, (uint64_t)interpreter.fp + pop(&interpreter, 8) - 8);
+                break;
+                
             case ADDI8...ADDI64:
                 width = getWidth(opcode - ADDI8);
-                push(&interpreter, width, (int64_t)pop(&interpreter, width) + (int64_t)pop(&interpreter, width));
+                push(&interpreter, width, pop(&interpreter, width) + pop(&interpreter, width));
                 break;
 
             case PRINT8...PRINT64:
