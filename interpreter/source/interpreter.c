@@ -43,6 +43,9 @@ void run(uint8_t *code) {
     while (interpreter.keepRunning) {
         uint8_t width = 0;
         uint64_t value = 0;
+        uint64_t source = 0;
+        uint64_t destination = 0;
+        uint64_t size = 0;
         uint8_t opcode = *interpreter.ip;
         ++interpreter.ip;
 
@@ -148,9 +151,30 @@ void run(uint8_t *code) {
 
             case STORE8...STORE64:
                 width = getWidth(opcode - STORE8);
-                uint64_t destination = pop(&interpreter, 8);
+                destination = pop(&interpreter, 8);
                 memcpy((void*)destination, interpreter.sp - width, width);
                 interpreter.sp -= width;
+                break;
+
+            case STORE:
+                size = pop(&interpreter, 8);
+                destination = pop(&interpreter, 8);
+                memcpy((void*)destination, interpreter.sp - size, size);
+                interpreter.sp -= size;
+                break;
+
+            case COPY8...COPY64:
+                width = getWidth(opcode - COPY8);
+                destination = pop(&interpreter, 8);
+                source = pop(&interpreter, 8);
+                memcpy((void*)destination, (void*)source, width);
+                break;
+
+            case COPY:
+                size = pop(&interpreter, 8);
+                destination = pop(&interpreter, 8);
+                source = pop(&interpreter, 8);
+                memcpy((void*)destination, (void*)source, size);
                 break;
 
             case ADDI8...ADDI64:

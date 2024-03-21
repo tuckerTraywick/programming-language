@@ -59,6 +59,13 @@ enum Opcode {
     STORE16,
     STORE32,
     STORE64,
+    STORE,
+
+    COPY8,
+    COPY16,
+    COPY32,
+    COPY64,
+    COPY,
 
     ADDI8,
     ADDI16,
