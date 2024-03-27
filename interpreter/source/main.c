@@ -3,17 +3,13 @@
 #include "interpreter.h"
 
 static uint8_t code[] = {
-    PUSH16, 1, 2,
-    PUSH16, 0, 0,
-
-    PUSHFP,
-
-    PUSH64, 2,0,0,0, 0,0,0,0,
-    PUSHFO,
-
-    PUSH64, 2,0,0,0, 0,0,0,0,
-    COPY,
-    
+    PUSH8, 1,
+    PUSH8, 2,
+    PUSHL, 0,0,0,0, 0,0,0,0,
+    LOAD8,
+    PUSHL, 1,0,0,0, 0,0,0,0,
+    LOAD8,
+    ADDI8,
     HALT,
 };
 

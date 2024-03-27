@@ -26,10 +26,10 @@ enum Opcode {
     PUSH16,
     PUSH32,
     PUSH64,
-    PUSHSP,
-    PUSHSO,
-    PUSHFP,
-    PUSHFO,
+    PUSHL,
+    PUSHA,
+    PUSHT,
+    PUSHD,
 
     POP8,
     POP16,
@@ -37,6 +37,12 @@ enum Opcode {
     POP64,
     POP,
 
+    DUP8,
+    DUP16,
+    DUP32,
+    DUP64,
+    DUP,
+    
     ZERO8,
     ZERO16,
     ZERO32,
@@ -66,6 +72,10 @@ enum Opcode {
     COPY32,
     COPY64,
     COPY,
+
+    JMP,
+    JMPT,
+    JMPF,
 
     ADDI8,
     ADDI16,

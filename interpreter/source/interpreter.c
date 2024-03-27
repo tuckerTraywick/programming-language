@@ -49,29 +49,6 @@ void run(uint8_t *code) {
         uint8_t opcode = *interpreter.ip;
         ++interpreter.ip;
 
-        // static char *ops[] = {
-        //     "NOOP",
-        //     "HALT",
-        //     "PUSH8",
-        //     "PUSH16",
-        //     "PUSH32",
-        //     "PUSH64",
-        //     "PUSHSP",
-        //     "PUSHSO",
-        //     "PUSHFP",
-        //     "PUSHFO",
-        //     "ADDI8",
-        //     "ADDI16",
-        //     "ADDI32",
-        //     "ADDI64",
-        //     "PRINT8",
-        //     "PRINT16",
-        //     "PRINT32",
-        //     "PRINT64",
-        // };
-        // char *op = ops[opcode];
-        // printf("op=%-8s, ip=%.3zu, fp=%.3zu, sp=%.3zu\n", op, interpreter.ip-code-1, interpreter.fp-interpreter.stack, interpreter.sp-interpreter.stack);
-
         switch (opcode) {
             case NOOP:
                 continue;
@@ -87,24 +64,24 @@ void run(uint8_t *code) {
                 interpreter.ip += width;
                 break;
 
-            case PUSHSP:
-                push(&interpreter, 8, (uint64_t)interpreter.sp);
+            case PUSHL:
+                push(&interpreter, 8, (uint64_t)(interpreter.fp + *(ptrdiff_t*)interpreter.ip));
+                interpreter.ip += 8;
                 break;
 
-            case PUSHSO:
-                // `- 8` to account for the constant pushed on the stack for the offset.
-                push(&interpreter, 8, (uint64_t)interpreter.sp - pop(&interpreter, 8) - 8);
-                break;
-                
-            case PUSHFP:
-                push(&interpreter, 8, (uint64_t)interpreter.fp);
+            case PUSHA:
+                // TODO: Implement this instruction.
                 break;
 
-            case PUSHFO:
-                // `- 8` to account for the constant pushed on the stack for the offset.
-                push(&interpreter, 8, (uint64_t)interpreter.fp + pop(&interpreter, 8));
+            case PUSHT:
+                // `- 8` to account for the offset popped from the stack.
+                push(&interpreter, 8, (uint64_t)interpreter.sp - pop(&interpreter, 8));
                 break;
-                
+
+            case PUSHD:
+                // TODO: Implement this instruction.
+                break;
+
             case POP8...POP64:
                 width = getWidth(opcode - POP8);
                 interpreter.sp -= width;
@@ -132,6 +109,12 @@ void run(uint8_t *code) {
 
             case BUMP:
                 width = pop(&interpreter, 8);
+                interpreter.sp += width;
+                break;
+
+            case DUP8...DUP64:
+                width = getWidth(opcode - DUP8);
+                memcpy(interpreter.sp, interpreter.sp - width, width);
                 interpreter.sp += width;
                 break;
 
@@ -175,6 +158,27 @@ void run(uint8_t *code) {
                 destination = pop(&interpreter, 8);
                 source = pop(&interpreter, 8);
                 memcpy((void*)destination, (void*)source, size);
+                break;
+
+            case JMP:
+                destination = pop(&interpreter, 8);
+                interpreter.ip = (uint8_t*)(code + destination);
+                break;
+
+            case JMPT:
+                value = pop(&interpreter, 1);
+                destination = pop(&interpreter, 8);
+                if (value) {
+                    interpreter.ip = (uint8_t*)destination;
+                }
+                break;
+
+            case JMPF:
+                value = pop(&interpreter, 1);
+                destination = pop(&interpreter, 8);
+                if (!value) {
+                    interpreter.ip = (uint8_t*)destination;
+                }
                 break;
 
             case ADDI8...ADDI64:

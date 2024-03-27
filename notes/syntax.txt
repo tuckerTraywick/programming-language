@@ -219,5 +219,5 @@ func baz(x &all[Sized, To[string]]) { // can be dynamically linked
 int8-64 uint8-64 isize usize
 float32-64
 bool
-char8-32 achar
-string[T=char8] astring
+char8-64
+string[T=char8]

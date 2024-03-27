@@ -3,16 +3,16 @@
 - Calling convention:
     - The caller allocates space for the return value and pushes a pointer to it.
     // - `sp` must be 8 byte aligned before a `call` instruction and before the entrypoint is reached.
+
 - Stack layout:
     top
         ...          -,
         local1        |-> Pushed by callee, cleaned by `return` instruction.
         local0       -'
 
-        fp           ---> Pushed by `call` instruction, cleaned by `return` instruction.
-        sp           -'
-
-        rp           ---> Pushed by caller, cleaned by `return` instruction.
+        sp           -,
+        fp            |-> Pushed by `call` instruction, cleaned by `return` instruction.
+        ip           -'
 
         arg1         -,
         arg0          |-> Pushed by caller, cleaned by caller.
@@ -24,23 +24,21 @@
     - fp: frame pointer
     - sp: stack pointer
 
-- Instruction format:
-    - opcode (1 byte)
-    - immediate (0-8 bytes)
-- If an immediate needs to be aligned, the padding comes in the form of noops before the opcode.
-
 - Instructions:
     - noop
     - halt
-    
-    - push8-64 immediate
-    - pushsp
-    - pushso [offset]
-    - pushfp
-    - pushfo [offset]
 
-    - pop8-32
+    - push8-64 immediate
+    - pushl local offset
+    - pusha argument offset
+    - pusht temporary offset
+    - pushd data offset
+
+    - pop8-64
     - pop [size]
+
+    - dup8-64 [data]
+    - dup [size] [data]
 
     - zero8-64
     - zero [size]
@@ -48,14 +46,14 @@
     - bump8-64
     - bump [size]
 
-    - load8-64 [source]
-    - load [size] [source]
+    - load8-64 [*source]
+    - load [size] [*source]
 
-    - store8-64 [destination] [value]
-    - store [size] [destination] [value]
+    - store8-64 [*destination] [data]
+    - store [size] [*destination] [data]
 
-    - copy8-64 [destination] [source]
-    - copy [size] [destination] [source]
+    - copy8-64 [*destination] [*source]
+    - copy [*destination] [*source] [size]
 
     - jmp [address]
     - jmpt [address] [boolean]
@@ -63,71 +61,67 @@
 
     - call [address]
 
-    - rets8-64 [value]
-    - rets [size] [value]
-    - retp8-64 [source]
-    - retp [size] [source]
     - ret
 
-    - addi8-64 [b] [a]
-    - addf32-64 [b] [a]
+    - addi8-64
+    - addf32-64
 
-    - subi8-64 [b] [a]
-    - subf32-64 [b] [a]
+    - subi8-64
+    - subf32-64
 
-    - muli8-64 [b] [a]
-    - mulu8-64 [b] [a]
-    - mulf32-64 [b] [a]
+    - muli8-64
+    - mulu8-64
+    - mulf32-64
 
-    - divi8-64 [b] [a]
-    - divu8-64 [b] [a]
-    - divf32-64 [b] [a]
+    - divi8-64
+    - divu8-64
+    - divf32-64
 
-    - modi8-64 [b] [a]
-    - modu8-64 [b] [a]
-    - modf32-64 [b] [a]
+    - modi8-64
+    - modu8-64
+    - modf32-64
 
-    - absi8-64 [a]
-    - absf32-64 [a]
+    - absi8-64
+    - absf32-64
 
-    - sqrt32-64 [a]
+    - sqrt32-64
 
-    - floor32-64 [a]
+    - floor32-64
 
-    - ceil32-64 [a]
+    - ceil32-64
 
-    - round32-64 [a]
+    - round32-64
 
-    - bnot8-64 [a]
-    - band8-64 [b] [a]
-    - bor8-64 [b] [a]
-    - bxor8-64 [b] [a]
-    - bnand8-64 [b] [a]
-    - bnor8-64 [b] [a]
-    - bnxor8-64 [b] [a]
+    - bnot8-64
+    - band8-64
+    - bol8-64
+    - bxol8-64
+    - bnand8-64
+    - bnol8-64
+    - bnxol8-64
 
-    - lnot8-64 [a]
-    - land8-64 [b] [a]
-    - lor8-64 [b] [a]
-    - lxor8-64 [b] [a]
-    - lnand8-64 [b] [a]
-    - lnor8-64 [b] [a]
-    - lnxor8-64 [b] [a]
+    - lnot8-64
+    - land8-64
+    - lol8-64
+    - lxol8-64
+    - lnand8-64
+    - lnol8-64
+    - lnxol8-64
 
-    - eq8-64 [b] [a]
-    - ne8-64 [b] [a]
+    - eq8-64
+    - ne8-64
 
-    - gti8-64 [b] [a]
-    - gtf8-64 [b] [a]
+    - gti8-64
+    - gtf8-64
 
-    - lti8-64 [b] [a]
-    - ltf8-64 [b] [a]
+    - lti8-64
+    - ltf8-64
 
-    - gei8-64 [b] [a]
-    - gef8-64 [b] [a]
+    - gei8-64
+    - gef8-64
 
-    - lei8-64 [b] [a]
-    - lef8-64 [b] [a]
+    - lei8-64
+    - lef8-64
 
 
 
@@ -135,35 +129,57 @@
 var a = 1
 var b = a
 
+copy32 1, l0
+copy32 l0, l4
+//
 push32 1
-zero32
-pushfp
-push64 4
-pushfo
-copy32
+dup32
+
+
+var a = 1
+var b = 2
+var c = a + b
+
+copy32 1, l0
+copy32 2, l4
+addi32 l0, l4, l8
+//
+push32 1
+push32 2
+pushl 0
+load32
+pushl 4
+load32
+addi32
 
 
 var a = [1, 2, 3]
 var b = a
 
-push64 &data
+copy &data, l0, 12
+copy l0, l12, 12
+data: i32 1, 2, 3
+//
+pushd data
+pushl 0
 push64 12
-load
-push64 12
-dup
+copy
 data: i32 1, 2, 3
 
 
 var a [6]int = [1, 2, 3, 4, 5, 6]
 var b [3]int = a[1...3]
 
-push64 &data
+copy data, l0, 24
+copy l4, l24, 12
+data: i32 1, 2, 3, 4, 5, 6
+//
+pushd data
+pushl 0
 push64 24
-load
-push64 4
-pushfo
-push64 24
-pushfo
+copy
+pushl 4
+pusht 0
 push64 12
 copy
 data: i32 1, 2, 3, 4, 5, 6
@@ -172,13 +188,32 @@ data: i32 1, 2, 3, 4, 5, 6
 var a = 1
 var b = &a
 
+copy32 1, l0
+ref l0, l4
+deref32 l4, l0
+//
 push32 1
-pushfp
+pushl 0
 
 
+var a, b &[10]int32
+*a = *b
+
+copy64 0, l0
+copy64 0, l8
+deref l8, l0
+//
+zero64
+zero64
+pushl 0
+load64
+pushl 8
+laod64
+push64 40
+copy
 
 
-func add(a, b int) int {
+func add(a, b int32) int32 {
     return a + b
 }
 
@@ -187,21 +222,60 @@ func main() {
 }
 
 add:
-    push64 offset(a)
-    pushfo
+    pusha 7
     load32
-    push64 offset(b)
-    pushfo
+    pusha 3
     load32
     addi32
-    push64 4
-    pushso
-    rets32
-
+    pusha 11
+    store32
+    ret
 main:
+    bump32
     push32 1
     push32 2
-    zero32
     call add
     pop32
+    ret
+
+
+func fib(n uint32) uint32 {
+    var a = 0u
+    var b = 1u
+    for i in 0..n {
+        var sum = a + b
+        a = b
+        b = sum
+    }
+    return b
+}
+
+fib:
+    zero32 // a 0
+    push32 1 // b 4
+    push32 1 // i 8
+loop:
+    pushl 8
+    load32
+    pusha 3 // n
+    load32
+    ltu32
+    push64 end
+
+    pushl 0
+    load32
+    pushl 4
+    load32
+    addi32
+
+    pushl 0
+    pushl 4
+    copy32
+
+    pushl 12
+    pushl 4
+    copy32
+    push64 loop
+    jmp
+end:
     ret
