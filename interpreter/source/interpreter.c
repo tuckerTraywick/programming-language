@@ -9,8 +9,7 @@
 
 // Gets the width of the operand of an instruction.
 static uint8_t getWidth(uint8_t opcodeIndex) {
-    static uint8_t widths[] = {1, 2, 4, 8};
-    return widths[opcodeIndex];
+    return 1 << opcodeIndex; // 2^opcodeIndex
 }
 
 // Pushes a value.
@@ -91,15 +90,27 @@ void run(uint8_t *code) {
                 interpreter.sp -= pop(&interpreter, 8);
                 break;
 
+            case DUP8...DUP64:
+                width = getWidth(opcode - DUP8);
+                memcpy(interpreter.sp, interpreter.sp - width, width);
+                interpreter.sp += width;
+                break;
+
+            case DUP:
+                size = pop(&interpreter, 8);
+                memcpy(interpreter.sp, interpreter.sp - size, size);
+                interpreter.sp += size;
+                break;
+
             case ZERO8...ZERO64:
                 width = getWidth(opcode - ZERO8);
                 push(&interpreter, width, 0);
                 break;
 
             case ZERO:
-                width = pop(&interpreter, 8);
-                memset(interpreter.sp, 0, (int)width);
-                interpreter.sp += width;
+                size = pop(&interpreter, 8);
+                memset(interpreter.sp, 0, (int)size);
+                interpreter.sp += size;
                 break;
 
             case BUMP8...BUMP64:
@@ -108,14 +119,8 @@ void run(uint8_t *code) {
                 break;
 
             case BUMP:
-                width = pop(&interpreter, 8);
-                interpreter.sp += width;
-                break;
-
-            case DUP8...DUP64:
-                width = getWidth(opcode - DUP8);
-                memcpy(interpreter.sp, interpreter.sp - width, width);
-                interpreter.sp += width;
+                size = pop(&interpreter, 8);
+                interpreter.sp += size;
                 break;
 
             case LOAD8...LOAD64:
@@ -126,10 +131,10 @@ void run(uint8_t *code) {
                 break;
 
             case LOAD:
-                width = pop(&interpreter, 8);
+                size = pop(&interpreter, 8);
                 value = pop(&interpreter, 8);
-                memcpy(interpreter.sp, (void*)value, width);
-                interpreter.sp += width;
+                memcpy(interpreter.sp, (void*)value, size);
+                interpreter.sp += size;
                 break;
 
             case STORE8...STORE64:
