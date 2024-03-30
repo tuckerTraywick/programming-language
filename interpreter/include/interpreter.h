@@ -77,6 +77,10 @@ enum Opcode {
     JMPT,
     JMPF,
 
+    CALL,
+
+    RET,
+
     ADDI8,
     ADDI16,
     ADDI32,

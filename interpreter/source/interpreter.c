@@ -46,6 +46,7 @@ void run(uint8_t *code) {
         uint64_t destination = 0;
         uint64_t size = 0;
         uint8_t opcode = *interpreter.ip;
+        printf("ip=%d, opcode=%d\n", interpreter.ip - code, opcode);
         ++interpreter.ip;
 
         switch (opcode) {
@@ -69,7 +70,8 @@ void run(uint8_t *code) {
                 break;
 
             case PUSHA:
-                // TODO: Implement this instruction.
+                push(&interpreter, 8, (uint64_t)(interpreter.fp - 24 - *(ptrdiff_t*)interpreter.ip));
+                interpreter.ip += 8;
                 break;
 
             case PUSHT:
@@ -184,6 +186,23 @@ void run(uint8_t *code) {
                 if (!value) {
                     interpreter.ip = (uint8_t*)destination;
                 }
+                break;
+
+            case CALL:
+                destination = pop(&interpreter, 8);
+                push(&interpreter, 8, (uint64_t)interpreter.sp);
+                push(&interpreter, 8, (uint64_t)interpreter.fp);
+                push(&interpreter, 8, (uint64_t)interpreter.ip);
+                printf("ip push=%d\n", interpreter.ip);
+                // printf("ip pop=%d\n", pop(&interpreter, 8));
+                interpreter.ip = code + destination;
+                break;
+
+            case RET:
+                interpreter.ip = (uint8_t*)pop(&interpreter, 8);
+                interpreter.fp = (uint8_t*)pop(&interpreter, 8);
+                interpreter.sp = (uint8_t*)pop(&interpreter, 8);
+                printf("ip pop=%d\n", interpreter.ip);
                 break;
 
             case ADDI8...ADDI64:

@@ -10,9 +10,9 @@
         local1        |-> Pushed by callee, cleaned by `return` instruction.
         local0       -'
 
-        sp           -,
+        ip           -,
         fp            |-> Pushed by `call` instruction, cleaned by `return` instruction.
-        ip           -'
+        sp           -'
 
         arg1         -,
         arg0          |-> Pushed by caller, cleaned by caller.
@@ -97,16 +97,16 @@
     - bol8-64
     - bxol8-64
     - bnand8-64
-    - bnol8-64
-    - bnxol8-64
+    - bnor8-64
+    - bnxor8-64
 
     - lnot8-64
     - land8-64
-    - lol8-64
-    - lxol8-64
+    - lor8-64
+    - lxor8-64
     - lnand8-64
-    - lnol8-64
-    - lnxol8-64
+    - lnor8-64
+    - lnxor8-64
 
     - eq8-64
     - ne8-64
