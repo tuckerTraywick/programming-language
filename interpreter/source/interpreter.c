@@ -70,7 +70,7 @@ void run(uint8_t *code) {
                 break;
 
             case PUSHA:
-                push(&interpreter, 8, (uint64_t)(interpreter.fp - 24 - *(ptrdiff_t*)interpreter.ip));
+                push(&interpreter, 8, (uint64_t)(interpreter.fp - 16 - *(ptrdiff_t*)interpreter.ip));
                 interpreter.ip += 8;
                 break;
 
@@ -194,7 +194,6 @@ void run(uint8_t *code) {
                 push(&interpreter, 8, (uint64_t)interpreter.fp);
                 push(&interpreter, 8, (uint64_t)interpreter.ip);
                 printf("ip push=%d\n", interpreter.ip);
-                // printf("ip pop=%d\n", pop(&interpreter, 8));
                 interpreter.ip = code + destination;
                 break;
 
