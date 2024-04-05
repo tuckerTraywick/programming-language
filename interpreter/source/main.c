@@ -3,19 +3,15 @@
 #include "interpreter.h"
 
 static uint8_t code[] = {
-    PUSH16, 1, 0,
-    PUSH64, 13,0,0,0, 0,0,0,0,
-    CALL,
-
-    PUSHA, 2,0,0,0, 0,0,0,0,
+    PUSH64, 0,0,0,0, 0,0,0,0,
+    PUSHD,
     LOAD16,
-    PUSH16, 1, 0,
-    ADDI16,
+    PRINT16,
     HALT,
 };
 
 static uint8_t data[] = {
-    1,
+    2, 1,
 };
 
 int main(void) {

@@ -70,7 +70,7 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case PUSHA:
-                push(&interpreter, 8, (uint64_t)(interpreter.fp - *(ptrdiff_t*)interpreter.ip - 24));
+                push(&interpreter, 8, (uint64_t)(interpreter.fp - *(ptrdiff_t*)interpreter.ip - 25));
                 interpreter.ip += 8;
                 break;
 
@@ -79,7 +79,7 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case PUSHD:
-                // TODO: Implement this instruction.
+                push(&interpreter, 8, (uint64_t)data + pop(&interpreter, 8));                
                 break;
 
             case POP8...POP64:
