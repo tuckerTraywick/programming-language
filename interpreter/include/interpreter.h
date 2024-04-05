@@ -123,6 +123,6 @@ enum Opcode {
 };
 
 // Multi-byte values are little-endian.
-void run(uint8_t *code);
+void run(uint8_t *code, uint8_t *data);
 
 #endif // INTERPRETER_H

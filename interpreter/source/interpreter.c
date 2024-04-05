@@ -26,7 +26,7 @@ static uint64_t pop(struct Interpreter *interpreter, uint8_t width) {
     return result;
 }
 
-void run(uint8_t *code) {
+void run(uint8_t *code, uint8_t *data) {
     // TODO: Add support for passing a pointer to an existing stack.
     // TODO: Rename local variables.
     uint8_t *stack = malloc(STACK_SIZE);
@@ -46,7 +46,7 @@ void run(uint8_t *code) {
         uint64_t destination = 0;
         uint64_t size = 0;
         uint8_t opcode = *interpreter.ip;
-        printf("ip=%d, opcode=%d\n", interpreter.ip - code, opcode);
+        // printf("ip=%d, opcode=%d\n", interpreter.ip - code, opcode);
         ++interpreter.ip;
 
         switch (opcode) {
@@ -70,12 +70,11 @@ void run(uint8_t *code) {
                 break;
 
             case PUSHA:
-                push(&interpreter, 8, (uint64_t)(interpreter.fp - 16 - *(ptrdiff_t*)interpreter.ip));
+                push(&interpreter, 8, (uint64_t)(interpreter.fp - *(ptrdiff_t*)interpreter.ip - 24));
                 interpreter.ip += 8;
                 break;
 
             case PUSHT:
-                // `- 8` to account for the offset popped from the stack.
                 push(&interpreter, 8, (uint64_t)interpreter.sp - pop(&interpreter, 8));
                 break;
 
@@ -193,15 +192,16 @@ void run(uint8_t *code) {
                 push(&interpreter, 8, (uint64_t)interpreter.sp);
                 push(&interpreter, 8, (uint64_t)interpreter.fp);
                 push(&interpreter, 8, (uint64_t)interpreter.ip);
-                printf("ip push=%d\n", interpreter.ip);
+                // printf("ip push=%d\n", interpreter.ip);
                 interpreter.ip = code + destination;
+                interpreter.fp = interpreter.sp;
                 break;
 
             case RET:
                 interpreter.ip = (uint8_t*)pop(&interpreter, 8);
                 interpreter.fp = (uint8_t*)pop(&interpreter, 8);
                 interpreter.sp = (uint8_t*)pop(&interpreter, 8);
-                printf("ip pop=%d\n", interpreter.ip);
+                // printf("ip pop=%d\n", interpreter.ip);
                 break;
 
             case ADDI8...ADDI64:
