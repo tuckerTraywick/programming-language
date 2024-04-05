@@ -99,6 +99,10 @@ enum Opcode {
     MULI16,
     MULI32,
     MULI64,
+    MULU8,
+    MULU16,
+    MULU32,
+    MULU64,
     MULF32,
     MULF64,
 
@@ -122,7 +126,7 @@ enum Opcode {
     PRINT64,
 };
 
-// Multi-byte values are little-endian.
+// Multi-byte values are little-endian. `data` points to the data section.
 void run(uint8_t *code, uint8_t *data);
 
 #endif // INTERPRETER_H

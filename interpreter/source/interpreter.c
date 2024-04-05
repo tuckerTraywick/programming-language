@@ -27,7 +27,7 @@ static uint64_t pop(struct Interpreter *interpreter, uint8_t width) {
 }
 
 void run(uint8_t *code, uint8_t *data) {
-    // TODO: Add support for passing a pointer to an existing stack.
+    // TODO: Add support for passing a pointer to an existing stack??
     // TODO: Rename local variables.
     uint8_t *stack = malloc(STACK_SIZE);
     struct Interpreter interpreter = {
@@ -45,6 +45,8 @@ void run(uint8_t *code, uint8_t *data) {
         uint64_t source = 0;
         uint64_t destination = 0;
         uint64_t size = 0;
+        uint64_t a = 0;
+        uint64_t b = 0;
         uint8_t opcode = *interpreter.ip;
         // printf("ip=%d, opcode=%d\n", interpreter.ip - code, opcode);
         ++interpreter.ip;
@@ -207,6 +209,13 @@ void run(uint8_t *code, uint8_t *data) {
             case ADDI8...ADDI64:
                 width = getWidth(opcode - ADDI8);
                 push(&interpreter, width, pop(&interpreter, width) + pop(&interpreter, width));
+                break;
+
+            case SUBI8...SUBI64:
+                width = getWidth(opcode - SUBI8);
+                b = pop(&interpreter, width);
+                a = pop(&interpreter, width);
+                push(&interpreter, width, a - b);
                 break;
 
             case PRINT8...PRINT64:
