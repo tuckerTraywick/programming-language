@@ -3,9 +3,9 @@
 #include "interpreter.h"
 
 static uint8_t code[] = {
-    PUSH8, 0,
-    PUSH8, 3,
-    SUBI8,
+    PUSH8, 98,
+    PUSH8, 2,
+    MODI8,
     HALT,
 };
 

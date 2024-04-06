@@ -218,6 +218,25 @@ void run(uint8_t *code, uint8_t *data) {
                 push(&interpreter, width, a - b);
                 break;
 
+            case MULI8...MULI64:
+                width = getWidth(opcode - MULI8);
+                push(&interpreter, width, pop(&interpreter, width) * pop(&interpreter, width));
+                break;
+
+            case DIVI8...DIVI64:
+                width = getWidth(opcode - DIVI8);
+                b = pop(&interpreter, width);
+                a = pop(&interpreter, width);
+                push(&interpreter, width, a / b);
+                break;
+
+            case MODI8...MODI64:
+                width = getWidth(opcode - MODI8);
+                b = pop(&interpreter, width);
+                a = pop(&interpreter, width);
+                push(&interpreter, width, a % b);
+                break;
+
             case PRINT8...PRINT64:
                 width = getWidth(opcode - PRINT8);
                 printf("%zu\n", pop(&interpreter, width));
