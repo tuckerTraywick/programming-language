@@ -18,11 +18,39 @@ static void push(struct Interpreter *interpreter,  uint8_t width, uint64_t value
     interpreter->sp += width;
 }
 
+// This function exists to make 32 bit floating point instructions easier to implement.
+static void pushFloat(struct Interpreter *interpreter, float value) {
+    memcpy(interpreter->sp, &value, sizeof(float));
+    interpreter->sp += sizeof(float);
+}
+
+// This function exists to make 64 bit floating point instructions easier to implement.
+static void pushDouble(struct Interpreter *interpreter, double value) {
+    memcpy(interpreter->sp, &value, sizeof(double));
+    interpreter->sp += sizeof(double);
+}
+
 // Pops a value and pads it to 8 bytes.
 static uint64_t pop(struct Interpreter *interpreter, uint8_t width) {
     uint64_t result = 0;
-    memcpy(&result, interpreter->sp - width, width);
     interpreter->sp -= width;
+    memcpy(&result, interpreter->sp, width);
+    return result;
+}
+
+// This function exists to make 32 bit floating point instructions easier to implement.
+static float popFloat(struct Interpreter *interpreter) {
+    float result = 0.0;
+    interpreter->sp -= sizeof(float);
+    memcpy(&result, interpreter->sp, sizeof(float));
+    return result;
+}
+
+// This function exists to make 64 bit floating point instructions easier to implement.
+static double popDouble(struct Interpreter *interpreter) {
+    double result = 0.0;
+    interpreter->sp -= sizeof(double);
+    memcpy(&result, interpreter->sp, sizeof(double));
     return result;
 }
 
@@ -44,9 +72,10 @@ void run(uint8_t *code, uint8_t *data) {
         uint64_t value = 0;
         uint64_t source = 0;
         uint64_t destination = 0;
-        uint64_t size = 0;
-        uint64_t a = 0;
-        uint64_t b = 0;
+        uint64_t ai = 0, bi = 0;
+        float af = 0.0, bf = 0.0;
+        double ad = 0.0, bd = 0.0;
+        
         uint8_t opcode = *interpreter.ip;
         // printf("ip=%d, opcode=%d\n", interpreter.ip - code, opcode);
         ++interpreter.ip;
@@ -100,9 +129,9 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case DUP:
-                size = pop(&interpreter, 8);
-                memcpy(interpreter.sp, interpreter.sp - size, size);
-                interpreter.sp += size;
+                width = pop(&interpreter, 8);
+                memcpy(interpreter.sp, interpreter.sp - width, width);
+                interpreter.sp += width;
                 break;
 
             case ZERO8...ZERO64:
@@ -111,9 +140,9 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case ZERO:
-                size = pop(&interpreter, 8);
-                memset(interpreter.sp, 0, (int)size);
-                interpreter.sp += size;
+                width = pop(&interpreter, 8);
+                memset(interpreter.sp, 0, (int)width);
+                interpreter.sp += width;
                 break;
 
             case BUMP8...BUMP64:
@@ -122,8 +151,8 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case BUMP:
-                size = pop(&interpreter, 8);
-                interpreter.sp += size;
+                width = pop(&interpreter, 8);
+                interpreter.sp += width;
                 break;
 
             case LOAD8...LOAD64:
@@ -134,10 +163,10 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case LOAD:
-                size = pop(&interpreter, 8);
+                width = pop(&interpreter, 8);
                 value = pop(&interpreter, 8);
-                memcpy(interpreter.sp, (void*)value, size);
-                interpreter.sp += size;
+                memcpy(interpreter.sp, (void*)value, width);
+                interpreter.sp += width;
                 break;
 
             case STORE8...STORE64:
@@ -148,10 +177,10 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case STORE:
-                size = pop(&interpreter, 8);
+                width = pop(&interpreter, 8);
                 destination = pop(&interpreter, 8);
-                memcpy((void*)destination, interpreter.sp - size, size);
-                interpreter.sp -= size;
+                memcpy((void*)destination, interpreter.sp - width, width);
+                interpreter.sp -= width;
                 break;
 
             case COPY8...COPY64:
@@ -162,10 +191,10 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case COPY:
-                size = pop(&interpreter, 8);
+                width = pop(&interpreter, 8);
                 destination = pop(&interpreter, 8);
                 source = pop(&interpreter, 8);
-                memcpy((void*)destination, (void*)source, size);
+                memcpy((void*)destination, (void*)source, width);
                 break;
 
             case JMP:
@@ -211,37 +240,54 @@ void run(uint8_t *code, uint8_t *data) {
                 push(&interpreter, width, pop(&interpreter, width) + pop(&interpreter, width));
                 break;
 
-            case SUBI8...SUBI64:
-                width = getWidth(opcode - SUBI8);
-                b = pop(&interpreter, width);
-                a = pop(&interpreter, width);
-                push(&interpreter, width, a - b);
+            case ADDF32:
+                bf = popFloat(&interpreter);
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, bf + af);
                 break;
 
-            case MULI8...MULI64:
-                width = getWidth(opcode - MULI8);
+            case ADDF64:
+                bd = popDouble(&interpreter);
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, bd + ad);
+                break;
+
+            case SUBI8...SUBI64:
+                width = getWidth(opcode - SUBI8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, width, ai - bi);
+                break;
+
+            case MULU8...MULU64:
+                width = getWidth(opcode - MULU8);
                 push(&interpreter, width, pop(&interpreter, width) * pop(&interpreter, width));
                 break;
 
-            case DIVI8...DIVI64:
-                width = getWidth(opcode - DIVI8);
-                b = pop(&interpreter, width);
-                a = pop(&interpreter, width);
-                push(&interpreter, width, a / b);
+            case DIVU8...DIVU64:
+                width = getWidth(opcode - DIVU8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, width, ai / bi);
                 break;
 
             case MODI8...MODI64:
                 width = getWidth(opcode - MODI8);
-                b = pop(&interpreter, width);
-                a = pop(&interpreter, width);
-                push(&interpreter, width, a % b);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, width, ai % bi);
                 break;
 
-            case PRINT8...PRINT64:
-                width = getWidth(opcode - PRINT8);
+            case PRINTU8...PRINTU64:
+                width = getWidth(opcode - PRINTU8);
                 printf("%zu\n", pop(&interpreter, width));
                 break;
-                
+
+            case PRINTF32:
+                printf("sp=%zu\n", interpreter.sp - interpreter.fp);
+                printf("%f\n", popFloat(&interpreter));
+                break;
+
             default:
                 assert(0 && "Invalid opcode.");
                 interpreter.keepRunning = false;

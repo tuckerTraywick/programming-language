@@ -110,6 +110,10 @@ enum Opcode {
     DIVI16,
     DIVI32,
     DIVI64,
+    DIVU8,
+    DIVU16,
+    DIVU32,
+    DIVU64,
     DIVF32,
     DIVF64,
 
@@ -117,13 +121,18 @@ enum Opcode {
     MODI16,
     MODI32,
     MODI64,
+    MODU8,
+    MODU16,
+    MODU32,
+    MODU64,
     MODF32,
     MODF64,
 
-    PRINT8,
-    PRINT16,
-    PRINT32,
-    PRINT64,
+    PRINTU8,
+    PRINTU16,
+    PRINTU32,
+    PRINTU64,
+    PRINTF32,
 };
 
 // Multi-byte values are little-endian. `data` points to the data section.
