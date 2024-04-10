@@ -127,15 +127,20 @@ enum Opcode {
     MODU64,
     MODF32,
     MODF64,
-
+    
+    PRINTI8,
+    PRINTI16,
+    PRINTI32,
+    PRINTI64,
     PRINTU8,
     PRINTU16,
     PRINTU32,
     PRINTU64,
     PRINTF32,
+    PRINTF64,
 };
 
-// Multi-byte values are little-endian. `data` points to the data section.
+// Multi-byte values are little endian. `data` points to the data section.
 void run(uint8_t *code, uint8_t *data);
 
 #endif // INTERPRETER_H

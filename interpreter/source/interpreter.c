@@ -243,13 +243,13 @@ void run(uint8_t *code, uint8_t *data) {
             case ADDF32:
                 bf = popFloat(&interpreter);
                 af = popFloat(&interpreter);
-                pushFloat(&interpreter, bf + af);
+                pushFloat(&interpreter, af + bf);
                 break;
 
             case ADDF64:
                 bd = popDouble(&interpreter);
                 ad = popDouble(&interpreter);
-                pushDouble(&interpreter, bd + ad);
+                pushDouble(&interpreter, ad + bd);
                 break;
 
             case SUBI8...SUBI64:
@@ -259,9 +259,45 @@ void run(uint8_t *code, uint8_t *data) {
                 push(&interpreter, width, ai - bi);
                 break;
 
+            case SUBF32:
+                bf = popFloat(&interpreter);
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, af - bf);
+                break;
+
+            case SUBF64:
+                bd = popDouble(&interpreter);
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, ad - bd);
+                break;
+
+            case MULI8...MULI64:
+                width = getWidth(opcode - MULI8);
+                push(&interpreter, width, (int64_t)pop(&interpreter, width) * (int64_t)pop(&interpreter, width));
+                break;
+
             case MULU8...MULU64:
                 width = getWidth(opcode - MULU8);
                 push(&interpreter, width, pop(&interpreter, width) * pop(&interpreter, width));
+                break;
+
+            case MULF32:
+                bf = popFloat(&interpreter);
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, af * bf);
+                break;
+
+            case MULF64:
+                bd = popDouble(&interpreter);
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, ad * bd);
+                break;
+
+            case DIVI8...DIVI64:
+                width = getWidth(opcode - DIVI8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, width, (int64_t)ai / (int64_t)bi);
                 break;
 
             case DIVU8...DIVU64:
@@ -271,11 +307,21 @@ void run(uint8_t *code, uint8_t *data) {
                 push(&interpreter, width, ai / bi);
                 break;
 
-            case MODI8...MODI64:
-                width = getWidth(opcode - MODI8);
-                bi = pop(&interpreter, width);
-                ai = pop(&interpreter, width);
-                push(&interpreter, width, ai % bi);
+            case DIVF32:
+                bf = popFloat(&interpreter);
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, af / bf);
+                break;
+
+            case DIVF64:
+                bd = popDouble(&interpreter);
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, ad / bd);
+                break;
+
+            case PRINTI8...PRINTI64:
+                width = getWidth(opcode - PRINTI8);
+                printf("%d\n", (int64_t)pop(&interpreter, width));
                 break;
 
             case PRINTU8...PRINTU64:
@@ -284,8 +330,13 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case PRINTF32:
-                printf("sp=%zu\n", interpreter.sp - interpreter.fp);
+                // printf("sp=%zu\n", interpreter.sp - interpreter.fp);
                 printf("%f\n", popFloat(&interpreter));
+                break;
+
+            case PRINTF64:
+                // printf("sp=%zu\n", interpreter.sp - interpreter.fp);
+                printf("%f\n", popDouble(&interpreter));
                 break;
 
             default:

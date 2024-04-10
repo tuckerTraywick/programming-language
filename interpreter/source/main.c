@@ -3,10 +3,8 @@
 #include "interpreter.h"
 
 static uint8_t code[] = {
-    PUSH32, 0,0,0,0,
-    PUSH32, 0,0,0,0,
-    ADDF32,
-    PRINTF32,
+    PUSH8, -3,
+    PRINTI8,
     HALT,
 };
 
@@ -15,7 +13,5 @@ static uint8_t data[] = {
 };
 
 int main(void) {
-    *(float*)(code + 1) = 3.4;
-    *(float*)(code + 6) = 4.4;
     run(code, data);
 }
