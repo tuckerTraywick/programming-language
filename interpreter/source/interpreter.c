@@ -319,6 +319,38 @@ void run(uint8_t *code, uint8_t *data) {
                 pushDouble(&interpreter, ad / bd);
                 break;
 
+            case MODI8...MODI64:
+                width = getWidth(opcode - MODI8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, width, (int64_t)ai % (int64_t)bi);
+                break;
+
+            case MODU8...MODU64:
+                width = getWidth(opcode - MODU8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, width, ai % bi);
+                break;
+
+            case NEGI8...NEGI64:
+                width = getWidth(opcode - NEGI8);
+                ai = pop(&interpreter, width);
+                push(&interpreter, width, -ai);
+                break;
+
+            case NEGF32:
+                width = getWidth(opcode - NEGF32);
+                af = pop(&interpreter, width);
+                push(&interpreter, width, -ai);
+                break;
+
+            case NEGF64:
+                width = getWidth(opcode - NEGF64);
+                ad = pop(&interpreter, width);
+                push(&interpreter, width, -ai);
+                break;
+
             case PRINTI8...PRINTI64:
                 width = getWidth(opcode - PRINTI8);
                 printf("%d\n", (int64_t)pop(&interpreter, width));

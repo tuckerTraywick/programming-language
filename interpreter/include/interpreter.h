@@ -125,9 +125,106 @@ enum Opcode {
     MODU16,
     MODU32,
     MODU64,
-    MODF32,
-    MODF64,
-    
+
+    NEGI8,
+    NEGI16,
+    NEGI32,
+    NEGI64,
+
+    NEGF32,
+    NEGF64,
+
+    ABSI8,
+    ABSI16,
+    ABSI32,
+    ABSI64,
+    ABSF32,
+    ABSF64,
+
+    FLOOR32,
+    FLOOR64,
+
+    CEIL32,
+    CEIL64,
+
+    ROUND32,
+    ROUND64,
+
+    SQRT32,
+    SQRT64,
+
+    GTI8,
+    GTI16,
+    GTI32,
+    GTI64,
+
+    GTU8,
+    GTU16,
+    GTU32,
+    GTU64,
+
+    GTF32,
+    GTF64,
+
+    GTEI8,
+    GTEI16,
+    GTEI32,
+    GTEI64,
+
+    GTEU8,
+    GTEU16,
+    GTEU32,
+    GTEU64,
+
+    GTEF32,
+    GTEF64,
+
+    LTI8,
+    LTI16,
+    LTI32,
+    LTI64,
+
+    LTU8,
+    LTU16,
+    LTU32,
+    LTU64,
+
+    LTF32,
+    LTF64,
+
+    LTEI8,
+    LTEI16,
+    LTEI32,
+    LTEI64,
+
+    LTEU8,
+    LTEU16,
+    LTEU32,
+    LTEU64,
+
+    LTEF32,
+    LTEF64,
+
+    EQ,
+    EQ8,
+    EQ16,
+    EQ32,
+    EQ64,
+
+    NEQ,
+    NEQ8,
+    NEQ16,
+    NEQ32,
+    NEQ64,
+
+    BNOT,
+    BAND,
+    BOL,
+    BXOL,
+    BNAND,
+    BNOR,
+    BNXOR,
+
     PRINTI8,
     PRINTI16,
     PRINTI32,
