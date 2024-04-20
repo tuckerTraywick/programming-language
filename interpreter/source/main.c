@@ -3,8 +3,11 @@
 #include "interpreter.h"
 
 static uint8_t code[] = {
-    PUSH8, -3,
-    PRINTI8,
+    PUSH16, 255, 255,
+    DUP16,
+    PRINTI16,
+    ABSI16,
+    PRINTI16,
     HALT,
 };
 

@@ -130,7 +130,6 @@ enum Opcode {
     NEGI16,
     NEGI32,
     NEGI64,
-
     NEGF32,
     NEGF64,
 
@@ -157,12 +156,10 @@ enum Opcode {
     GTI16,
     GTI32,
     GTI64,
-
     GTU8,
     GTU16,
     GTU32,
     GTU64,
-
     GTF32,
     GTF64,
 
@@ -170,12 +167,10 @@ enum Opcode {
     GTEI16,
     GTEI32,
     GTEI64,
-
     GTEU8,
     GTEU16,
     GTEU32,
     GTEU64,
-
     GTEF32,
     GTEF64,
 
@@ -183,12 +178,10 @@ enum Opcode {
     LTI16,
     LTI32,
     LTI64,
-
     LTU8,
     LTU16,
     LTU32,
     LTU64,
-
     LTF32,
     LTF64,
 
@@ -196,12 +189,10 @@ enum Opcode {
     LTEI16,
     LTEI32,
     LTEI64,
-
     LTEU8,
     LTEU16,
     LTEU32,
     LTEU64,
-
     LTEF32,
     LTEF64,
 

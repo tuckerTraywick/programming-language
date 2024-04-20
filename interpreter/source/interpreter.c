@@ -7,12 +7,12 @@
 #include <stdio.h>
 #include "interpreter.h"
 
-// Gets the width of the operand of an instruction.
+#define abs(x) (((x) < 0) ? (-(x)) : (x))
+
 static uint8_t getWidth(uint8_t opcodeIndex) {
     return 1 << opcodeIndex; // 2^opcodeIndex
 }
 
-// Pushes a value.
 static void push(struct Interpreter *interpreter,  uint8_t width, uint64_t value) {
     memcpy(interpreter->sp, &value, width);
     interpreter->sp += width;
@@ -336,24 +336,67 @@ void run(uint8_t *code, uint8_t *data) {
             case NEGI8...NEGI64:
                 width = getWidth(opcode - NEGI8);
                 ai = pop(&interpreter, width);
-                push(&interpreter, width, -ai);
+                push(&interpreter, width, -(int64_t)ai);
                 break;
 
             case NEGF32:
                 width = getWidth(opcode - NEGF32);
                 af = pop(&interpreter, width);
-                push(&interpreter, width, -ai);
+                push(&interpreter, width, -af);
                 break;
 
             case NEGF64:
                 width = getWidth(opcode - NEGF64);
                 ad = pop(&interpreter, width);
-                push(&interpreter, width, -ai);
+                push(&interpreter, width, -ad);
                 break;
 
-            case PRINTI8...PRINTI64:
-                width = getWidth(opcode - PRINTI8);
-                printf("%d\n", (int64_t)pop(&interpreter, width));
+            case ABSI8:
+                ai = pop(&interpreter, 1);
+                push(&interpreter, 1, abs((int8_t)ai));
+                break;
+
+            case ABSI16:
+                ai = pop(&interpreter, 2);
+                push(&interpreter, 2, abs((int16_t)ai));
+                break;
+
+            case ABSI32:
+                ai = pop(&interpreter, 4);
+                push(&interpreter, 4, abs((int32_t)ai));
+                break;
+
+            case ABSI64:
+                ai = pop(&interpreter, 8);
+                push(&interpreter, 8, abs((int64_t)ai));
+                break;
+
+            case ABSF32:
+                width = getWidth(opcode - ABSF32);
+                af = pop(&interpreter, width);
+                push(&interpreter, width, abs(af));
+                break;
+
+            case ABSF64:
+                width = getWidth(opcode - ABSF64);
+                ad = pop(&interpreter, width);
+                push(&interpreter, width, abs(ad));
+                break;
+
+            case PRINTI8:
+                printf("%d\n", (int8_t)pop(&interpreter, 1));
+                break;
+
+            case PRINTI16:
+                printf("%d\n", (int16_t)pop(&interpreter, 2));
+                break;
+
+            case PRINTI32:
+                printf("%d\n", (int32_t)pop(&interpreter, 4));
+                break;
+
+            case PRINTI64:
+                printf("%d\n", (int64_t)pop(&interpreter, 8));
                 break;
 
             case PRINTU8...PRINTU64:
@@ -362,12 +405,10 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case PRINTF32:
-                // printf("sp=%zu\n", interpreter.sp - interpreter.fp);
                 printf("%f\n", popFloat(&interpreter));
                 break;
 
             case PRINTF64:
-                // printf("sp=%zu\n", interpreter.sp - interpreter.fp);
                 printf("%f\n", popDouble(&interpreter));
                 break;
 
