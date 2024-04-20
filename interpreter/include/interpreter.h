@@ -16,7 +16,7 @@ struct Interpreter {
     bool keepRunning;
 };
 
-// Represents the operation being performed by an isntruction.
+// Represents the operation being performed by an instruction.
 enum Opcode {
     NOOP,
 
@@ -72,6 +72,10 @@ enum Opcode {
     COPY32,
     COPY64,
     COPY,
+
+    FIRST16,
+    FIRST32,
+    FIRST64,
 
     JMP,
     JMPT,
@@ -152,6 +156,49 @@ enum Opcode {
     SQRT32,
     SQRT64,
 
+    BNOT8,
+    BNOT16,
+    BNOT32,
+    BNOT64,
+
+    BAND8,
+    BAND16,
+    BAND32,
+    BAND64,
+
+    BOR8,
+    BOR16,
+    BOR32,
+    BOR64,
+
+    BXOR8,
+    BXOR16,
+    BXOR32,
+    BXOR64,
+
+    BNAND8,
+    BNAND16,
+    BNAND32,
+    BNAND64,
+
+    BNOR8,
+    BNOR16,
+    BNOR32,
+    BNOR64,
+
+    BXNOR8,
+    BXNOR16,
+    BXNOR32,
+    BXNOR64,
+
+    LNOT,
+    LAND,
+    LOR,
+    LXOR,
+    LNAND,
+    LNOR,
+    LXNOR,
+
     GTI8,
     GTI16,
     GTI32,
@@ -196,25 +243,15 @@ enum Opcode {
     LTEF32,
     LTEF64,
 
-    EQ,
     EQ8,
     EQ16,
     EQ32,
     EQ64,
 
-    NEQ,
     NEQ8,
     NEQ16,
     NEQ32,
     NEQ64,
-
-    BNOT,
-    BAND,
-    BOL,
-    BXOL,
-    BNAND,
-    BNOR,
-    BNXOR,
 
     PRINTI8,
     PRINTI16,

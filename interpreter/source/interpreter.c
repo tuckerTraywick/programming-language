@@ -5,15 +5,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #include "interpreter.h"
 
+// Redefining `abs` so it works for different types.
 #define abs(x) (((x) < 0) ? (-(x)) : (x))
 
-static uint8_t getWidth(uint8_t opcodeIndex) {
+static uint64_t getWidth(uint64_t opcodeIndex) {
     return 1 << opcodeIndex; // 2^opcodeIndex
 }
 
-static void push(struct Interpreter *interpreter,  uint8_t width, uint64_t value) {
+static void push(struct Interpreter *interpreter,  uint64_t width, uint64_t value) {
     memcpy(interpreter->sp, &value, width);
     interpreter->sp += width;
 }
@@ -31,7 +33,7 @@ static void pushDouble(struct Interpreter *interpreter, double value) {
 }
 
 // Pops a value and pads it to 8 bytes.
-static uint64_t pop(struct Interpreter *interpreter, uint8_t width) {
+static uint64_t pop(struct Interpreter *interpreter, uint64_t width) {
     uint64_t result = 0;
     interpreter->sp -= width;
     memcpy(&result, interpreter->sp, width);
@@ -55,7 +57,7 @@ static double popDouble(struct Interpreter *interpreter) {
 }
 
 void run(uint8_t *code, uint8_t *data) {
-    // TODO: Add support for passing a pointer to an existing stack??
+    // TODO: Add support for passing a pointer to an existing stack?
     // TODO: Rename local variables.
     uint8_t *stack = malloc(STACK_SIZE);
     struct Interpreter interpreter = {
@@ -68,7 +70,7 @@ void run(uint8_t *code, uint8_t *data) {
     assert(stack && "`malloc()` failed.");
 
     while (interpreter.keepRunning) {
-        uint8_t width = 0;
+        uint64_t width = 0;
         uint64_t value = 0;
         uint64_t source = 0;
         uint64_t destination = 0;
@@ -195,6 +197,11 @@ void run(uint8_t *code, uint8_t *data) {
                 destination = pop(&interpreter, 8);
                 source = pop(&interpreter, 8);
                 memcpy((void*)destination, (void*)source, width);
+                break;
+
+            case FIRST16...FIRST64:
+                width = getWidth(opcode - FIRST16 + 1);
+                push(&interpreter, 1, *(uint8_t*)(interpreter.sp - width));
                 break;
 
             case JMP:
@@ -340,15 +347,13 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case NEGF32:
-                width = getWidth(opcode - NEGF32);
-                af = pop(&interpreter, width);
-                push(&interpreter, width, -af);
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, -af);
                 break;
 
             case NEGF64:
-                width = getWidth(opcode - NEGF64);
-                ad = pop(&interpreter, width);
-                push(&interpreter, width, -ad);
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, -ad);
                 break;
 
             case ABSI8:
@@ -372,15 +377,225 @@ void run(uint8_t *code, uint8_t *data) {
                 break;
 
             case ABSF32:
-                width = getWidth(opcode - ABSF32);
-                af = pop(&interpreter, width);
-                push(&interpreter, width, abs(af));
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, abs(af));
                 break;
 
             case ABSF64:
-                width = getWidth(opcode - ABSF64);
-                ad = pop(&interpreter, width);
-                push(&interpreter, width, abs(ad));
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, abs(ad));
+                break;
+
+            case FLOOR32:
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, floorf(af));
+                break;
+
+            case FLOOR64:
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, floor(ad));
+                break;
+
+            case CEIL32:
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, ceilf(af));
+                break;
+
+            case CEIL64:
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, ceil(ad));
+                break;
+
+            case ROUND32:
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, roundf(af));
+                break;
+
+            case ROUND64:
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, round(ad));
+                break;
+
+            case SQRT32:
+                af = popFloat(&interpreter);
+                pushFloat(&interpreter, sqrtf(af));
+                break;
+
+            case SQRT64:
+                ad = popDouble(&interpreter);
+                pushDouble(&interpreter, sqrt(ad));
+                break;
+
+            case BNOT8...BNOT64:
+                width = getWidth(opcode - BNOT8);
+                push(&interpreter, width, ~pop(&interpreter, width));
+                break;
+
+            case BAND8...BAND64:
+                width = getWidth(opcode - BAND8);
+                push(&interpreter, width, pop(&interpreter, width) & pop(&interpreter, width));
+                break;
+
+            case BOR8...BOR64:
+                width = getWidth(opcode - BOR8);
+                push(&interpreter, width, pop(&interpreter, width) | pop(&interpreter, width));
+                break;
+
+            case BXOR8...BXOR64:
+                width = getWidth(opcode - BXOR8);
+                push(&interpreter, width, pop(&interpreter, width) ^ pop(&interpreter, width));
+                break;
+
+            case BNAND8...BNAND64:
+                width = getWidth(opcode - BNAND8);
+                push(&interpreter, width, ~(pop(&interpreter, width) & pop(&interpreter, width)));
+                break;
+
+            case BNOR8...BNOR64:
+                width = getWidth(opcode - BNOR8);
+                push(&interpreter, width, ~(pop(&interpreter, width) | pop(&interpreter, width)));
+                break;
+
+            case BXNOR8...BXNOR64:
+                width = getWidth(opcode - BXNOR8);
+                push(&interpreter, width, ~(pop(&interpreter, width) ^ pop(&interpreter, width)));
+                break;
+
+            case LNOT:
+                push(&interpreter, 1, ~pop(&interpreter, 1));
+                break;
+
+            case LAND:
+                push(&interpreter, 1, pop(&interpreter, 1) && pop(&interpreter, 1));
+                break;
+
+            case LOR:
+                push(&interpreter, 1, pop(&interpreter, 1) || pop(&interpreter, 1));
+                break;
+
+            case LXOR:
+                push(&interpreter, 1, !pop(&interpreter, 1) != !pop(&interpreter, 1));
+                break;
+
+            case LNAND:
+                push(&interpreter, 1, !(pop(&interpreter, 1) && pop(&interpreter, 1)));
+                break;
+
+            case LNOR:
+                push(&interpreter, 1, !(pop(&interpreter, 1) || pop(&interpreter, 1)));
+                break;
+
+            case LXNOR:
+                push(&interpreter, 1, !pop(&interpreter, 1) == !pop(&interpreter, 1));
+                break;
+
+            case GTI8...GTI64:
+                width = getWidth(opcode - GTI8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, 1, (uint8_t)((int64_t)ai > (int64_t)bi));
+                break;
+
+            case GTU8...GTU64:
+                width = getWidth(opcode - GTU8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, 1, (uint8_t)(ai > bi));
+                break;
+
+            case GTF32:
+                bf = popFloat(&interpreter);
+                af = popFloat(&interpreter);
+                push(&interpreter, 1, (uint8_t)(af > bf));
+                break;
+
+            case GTF64:
+                bd = popDouble(&interpreter);
+                ad = popDouble(&interpreter);
+                push(&interpreter, 1, (uint8_t)(ad > bd));
+                break;
+
+            case GTEI8...GTEI64:
+                width = getWidth(opcode - GTEI8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, 1, (uint8_t)((int64_t)ai >= (int64_t)bi));
+                break;
+
+            case GTEU8...GTEU64:
+                width = getWidth(opcode - GTEU8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, 1, (uint8_t)(ai >= bi));
+                break;
+
+            case GTEF32:
+                bf = popFloat(&interpreter);
+                af = popFloat(&interpreter);
+                push(&interpreter, 1, (uint8_t)(af >= bf));
+                break;
+
+            case GTEF64:
+                bd = popDouble(&interpreter);
+                ad = popDouble(&interpreter);
+                push(&interpreter, 1, (uint8_t)(ad >= bd));
+                break;
+
+            case LTI8...LTI64:
+                width = getWidth(opcode - LTI8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, 1, (uint8_t)((int64_t)ai < (int64_t)bi));
+                break;
+
+            case LTU8...LTU64:
+                width = getWidth(opcode - LTU8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, 1, (uint8_t)(ai < bi));
+                break;
+
+            case LTF32:
+                bf = popFloat(&interpreter);
+                af = popFloat(&interpreter);
+                push(&interpreter, 1, (uint8_t)(af < bf));
+                break;
+
+            case LTF64:
+                bd = popDouble(&interpreter);
+                ad = popDouble(&interpreter);
+                push(&interpreter, 1, (uint8_t)(ad < bd));
+                break;
+
+            case LTEI8...LTEI64:
+                width = getWidth(opcode - LTEI8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, 1, (uint8_t)((int64_t)ai <= (int64_t)bi));
+                break;
+
+            case LTEU8...LTEU64:
+                width = getWidth(opcode - LTEU8);
+                bi = pop(&interpreter, width);
+                ai = pop(&interpreter, width);
+                push(&interpreter, 1, (uint8_t)(ai <= bi));
+                break;
+
+            case LTEF32:
+                bf = popFloat(&interpreter);
+                af = popFloat(&interpreter);
+                push(&interpreter, 1, (uint8_t)(af <= bf));
+                break;
+
+            case LTEF64:
+                bd = popDouble(&interpreter);
+                ad = popDouble(&interpreter);
+                push(&interpreter, 1, (uint8_t)(ad <= bd));
+                break;
+
+            case EQ8...EQ64:
+                width = getWidth(opcode - EQ8);
+                push(&interpreter, 1, (uint8_t)(pop(&interpreter, width) == pop(&interpreter, width)));
                 break;
 
             case PRINTI8:

@@ -94,19 +94,11 @@
 
     - bnot8-64
     - band8-64
-    - bol8-64
-    - bxol8-64
+    - bor8-64
+    - bxor8-64
     - bnand8-64
     - bnor8-64
     - bnxor8-64
-
-    - lnot8-64
-    - land8-64
-    - lor8-64
-    - lxor8-64
-    - lnand8-64
-    - lnor8-64
-    - lnxor8-64
 
     - eq8-64
     - ne8-64
