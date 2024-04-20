@@ -1,3 +1,11 @@
+lang build dir
+lang run thing.exe
+lang run dir
+lang compile a.lang
+lang link a.langobj b.obj
+
+
+
 - 64 bit stack-based virtual machine.
 
 - Calling convention:

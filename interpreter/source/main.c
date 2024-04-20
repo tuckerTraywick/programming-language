@@ -13,5 +13,5 @@ static uint8_t data[] = {
 };
 
 int main(void) {
-    run(code, data);
+    runCode(code, data);
 }

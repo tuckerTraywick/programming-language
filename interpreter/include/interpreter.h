@@ -265,7 +265,29 @@ enum Opcode {
     PRINTF64,
 };
 
-// Multi-byte values are little endian. `data` points to the data section.
-void run(uint8_t *code, uint8_t *data);
+enum ObjectFlags {
+    STATIC = 1,
+    DYNAMIC = 1 << 1,
+    EXECUTABLE = 1 << 2,
+};
+
+struct Object {
+    enum ObjectFlags flags;
+    uint64_t data;
+    uint64_t dataSize;
+    uint64_t code;
+    uint64_t codeSize;
+    uint64_t symbolTable;
+    uint64_t entryPoint;
+    char *bytes;
+};
+
+void destroyObject(struct Object *object);
+
+struct Object *loadObject(FILE *file);
+
+void runObject(struct Object *object);
+
+void runCode(uint8_t *code, uint8_t *data);
 
 #endif // INTERPRETER_H

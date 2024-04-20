@@ -56,7 +56,7 @@ static double popDouble(struct Interpreter *interpreter) {
     return result;
 }
 
-void run(uint8_t *code, uint8_t *data) {
+void runCode(uint8_t *code, uint8_t *data) {
     // TODO: Add support for passing a pointer to an existing stack?
     // TODO: Rename local variables.
     uint8_t *stack = malloc(STACK_SIZE);
@@ -639,3 +639,5 @@ void run(uint8_t *code, uint8_t *data) {
 
     free(stack);
 }
+
+
