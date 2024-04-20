@@ -79,7 +79,6 @@ void run(uint8_t *code, uint8_t *data) {
         double ad = 0.0, bd = 0.0;
         
         uint8_t opcode = *interpreter.ip;
-        // printf("ip=%d, opcode=%d\n", interpreter.ip - code, opcode);
         ++interpreter.ip;
 
         switch (opcode) {
@@ -230,7 +229,6 @@ void run(uint8_t *code, uint8_t *data) {
                 push(&interpreter, 8, (uint64_t)interpreter.sp);
                 push(&interpreter, 8, (uint64_t)interpreter.fp);
                 push(&interpreter, 8, (uint64_t)interpreter.ip);
-                // printf("ip push=%d\n", interpreter.ip);
                 interpreter.ip = code + destination;
                 interpreter.fp = interpreter.sp;
                 break;
@@ -239,7 +237,6 @@ void run(uint8_t *code, uint8_t *data) {
                 interpreter.ip = (uint8_t*)pop(&interpreter, 8);
                 interpreter.fp = (uint8_t*)pop(&interpreter, 8);
                 interpreter.sp = (uint8_t*)pop(&interpreter, 8);
-                // printf("ip pop=%d\n", interpreter.ip);
                 break;
 
             case ADDI8...ADDI64:
