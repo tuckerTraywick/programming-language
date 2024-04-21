@@ -265,21 +265,37 @@ enum Opcode {
     PRINTF64,
 };
 
-enum ObjectFlags {
-    STATIC = 1,
-    DYNAMIC = 1 << 1,
-    EXECUTABLE = 1 << 2,
+struct Object {
+    bool executable;
+    uint64_t symbolTable; // struct SymbolTableNode*
+    uint64_t immutableData; // const char*
+    uint64_t mutableData; // char*
+    uint64_t uninitializedDataSize; // char*
+    uint64_t code; // char*
+    uint64_t entryPoint; // char*
+    uint64_t dependencies; // char**
+    uint64_t dependenciesLength;
+    char bytes[1];
 };
 
-struct Object {
-    enum ObjectFlags flags;
-    uint64_t data;
-    uint64_t dataSize;
-    uint64_t code;
-    uint64_t codeSize;
-    uint64_t symbolTable;
-    uint64_t entryPoint;
-    char *bytes;
+enum SymbolCategory {
+    VARIABLE,
+    FUNCTION,
+    STRUCT,
+};
+
+struct Symbol {
+    enum SymbolCategory category;
+    uint64_t type; // struct Type*
+    uint64_t offset;
+    char name[1];
+};
+
+struct SymbolTableNode {
+    struct Symbol symbol;
+    uint64_t next; // struct SymbolTableNode*
+    uint64_t child; // struct SymbolTableNode*
+    char text[2]; // 1 character for the null terminator + at least 1 character to match when searching.
 };
 
 void destroyObject(struct Object *object);

@@ -149,6 +149,12 @@ struct Node[T] {
 
 
 
+// Built-in types:
+int8-64 uint8-64 isize usize
+float32-64
+bool
+char8-32
+string[T=char8]
 // Standard library types:
 error none maybe[T] any[T..] all[T..]
 owned[T..] shared[T..] weak[T..]
@@ -216,8 +222,11 @@ func baz(x &all[Sized, To[string]]) { // can be dynamically linked
 
 
 
-int8-64 uint8-64 isize usize
-float32-64
-bool
-char8-32
-string[T=char8]
+package hotloading
+import std.linker
+
+func main() {
+    var plugin = std.linker.load("myLib.do")->unwrap("Couldn't find plugin.")
+    var square = std.linker.findSymbol[func(int) int](&plugin, "foo")->unwrap("Couldn't find square().")
+    printLine(f"2^2 = {square(2)}")
+}
