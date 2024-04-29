@@ -265,6 +265,7 @@ enum Opcode {
     PRINTF64,
 };
 
+// All offsets in this struct are relative to the beginning of `bytes`.
 struct Object {
     bool executable;
     uint64_t symbolTable; // struct SymbolTableNode*
