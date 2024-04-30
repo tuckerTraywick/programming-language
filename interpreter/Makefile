@@ -1,7 +1,7 @@
 CC := gcc
 CFLAGS := -O -g3 -std=c99 -Wall -Wextra -Wpedantic
 INCLUDE := -Iinclude
-LIBRARIES :=  -lm
+LIBRARIES := -lm
 
 SOURCE_FILES := $(shell find source -name '*.c')
 OBJECT_FILES := $(SOURCE_FILES:source/%.c=build/%.o)
