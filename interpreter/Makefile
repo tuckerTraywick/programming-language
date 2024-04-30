@@ -11,7 +11,7 @@ build: binary/run
 
 binary/run: $(OBJECT_FILES)
 	@mkdir -p binary
-	@$(CC) $(CFLAGS) $(LIBRARIES) $^ -o $@
+	@$(CC) $^ -o $@ $(LIBRARIES)
 
 build/%.o: source/%.c
 	@mkdir -p build
