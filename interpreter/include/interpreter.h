@@ -268,36 +268,14 @@ enum Opcode {
 // All offsets in this struct are relative to the beginning of `bytes`.
 struct Object {
     bool executable;
-    uint64_t symbolTable; // struct SymbolTableNode*
-    uint64_t immutableData; // const char*
-    uint64_t mutableData; // char*
-    uint64_t uninitializedDataSize; // char*
     uint64_t code; // char*
     uint64_t entryPoint; // char*
-    uint64_t dependencies; // char**
-    uint64_t dependenciesLength;
-    char bytes[1];
+    uint64_t size;
+    char *bytes;
 };
 
-enum SymbolCategory {
-    VARIABLE,
-    FUNCTION,
-    STRUCT,
-};
-
-struct Symbol {
-    enum SymbolCategory category;
-    uint64_t type; // struct Type*
-    uint64_t offset;
-    char name[1];
-};
-
-struct SymbolTableNode {
-    struct Symbol symbol;
-    uint64_t next; // struct SymbolTableNode*
-    uint64_t child; // struct SymbolTableNode*
-    char text[2]; // 1 character for the null terminator + at least 1 character to match when searching.
-};
+// Returns a pointer to an empty object.
+struct Object *createObject(size_t size);
 
 void destroyObject(struct Object *object);
 
