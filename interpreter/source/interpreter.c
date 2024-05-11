@@ -72,7 +72,7 @@ void writeObject(FILE *file, struct Object *object) {
 }
 
 void readObject(FILE *file, struct Object *object) {
-    // TODO: Change this function to use `mmap()` instead of allocating a new buffer for the object.
+    // TODO: Change this function to use `mmap()` instead of allocating a new buffer for the object's bytes.
     fread(&object->header, sizeof(struct ObjectHeader), 1, file);
     // TODO: Handle failed `fread()`.
     object->bytes = malloc(object->header.size);
