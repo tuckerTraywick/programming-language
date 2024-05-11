@@ -297,7 +297,7 @@ void printObjectHeader(struct ObjectHeader *header);
 // Runs the code starting at the entrypoint in an object.
 void run(struct Object *object);
 
-// Runs the code pointed to by `code`.
+// Runs the code.
 void runCode(uint8_t *code, uint8_t *data);
 
 #endif // INTERPRETER_H
