@@ -3,13 +3,14 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #define STACK_SIZE 5*1024*1024 // 5MB
 
 // Represents the state of the virtual machine.
 struct Interpreter {
-    uint8_t *code;
-    uint8_t *stack;
+    uint8_t *code; // The entrypoint of the code to be executed.
+    uint8_t *stack; // The stack. Allocated and freed in `runCode()`.
     uint8_t *ip; // Instruction pointer.
     uint8_t *fp; // Frame pointer.
     uint8_t *sp; // Stack pointer. The NEXT available byte of the stack.
@@ -265,24 +266,38 @@ enum Opcode {
     PRINTF64,
 };
 
-// All offsets in this struct are relative to the beginning of `bytes`.
-struct Object {
-    bool executable;
-    uint64_t code; // char*
-    uint64_t entryPoint; // char*
-    uint64_t size;
-    char *bytes;
+// The first section of an object file. Gives general info about the object and its size.
+struct ObjectHeader {
+    uint64_t size; // Size of the object (excluding the header).
+    uint64_t code; // The offset from the end of the header.
+    uint64_t data; // The offset from the end of the header.
+    uint64_t entryPoint; // The offset the end of the header. Where the interpreter starts executing.
+    bool executable; // Whether the object can be executed.
 };
 
-// Returns a pointer to an empty object.
-struct Object *createObject(size_t size);
+// All offsets in this struct are relative to the beginning of `bytes`.
+struct Object {
+    struct ObjectHeader header;
+    uint8_t *bytes; // The bytes of the object. Contains the code and data.
+    bool isMemoryMapped; // If true, the object's bytes were mapped from a file. Else, they were `malloc()`ed.
+};
 
+// Destroys an object and frees or unmaps its memory.
 void destroyObject(struct Object *object);
 
-struct Object *loadObject(FILE *file);
+// Writes an object to a file. The object and file still need to be destroyed after use.
+void writeObject(FILE *file, struct Object *object);
 
-void runObject(struct Object *object);
+// Loads an object from a file. The returned object must be destroyed with `destroyObject()`.
+void readObject(FILE *file, struct Object *object);
 
+// Prints an object header nicely.
+void printObjectHeader(struct ObjectHeader *header);
+
+// Runs the code starting at the entrypoint in an object.
+void run(struct Object *object);
+
+// Runs the code pointed to by `code`.
 void runCode(uint8_t *code, uint8_t *data);
 
 #endif // INTERPRETER_H
