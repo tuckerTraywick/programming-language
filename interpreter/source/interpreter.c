@@ -696,6 +696,8 @@ uint64_t getSymbol(uint8_t *bytes, struct SymbolTableNode *node, char *name) {
             printf("match\n");
             node = (struct SymbolTableNode*)(bytes + node->child);
             ++ch;
+        } else if (node->next == 0) {
+            return 0;
         } else {
             node = (struct SymbolTableNode*)(bytes + node->next);
         }

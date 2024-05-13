@@ -9,9 +9,9 @@ static struct SymbolTableNode symbols[] = {
     {.ch='a', .child=24}, // 0
     {.ch='b', .child=48}, // 24
     {.ch='x', .child=72, .next=96}, // 48
-    {.ch='\0', .child=0}, // 72
+    {.ch='\0', .child=1}, // 72
     {.ch='c', .child=120}, // 96
-    {.ch='\0', .child=1}, // 120
+    {.ch='\0', .child=2}, // 120
 };
 
 static uint8_t bytes[] = {
@@ -48,7 +48,7 @@ int main(void) {
     // run(&object);
 
     // memcpy(bytes + 20, (uint8_t*)symbols, sizeof(symbols));
-    printf("offset = %ld\n", getSymbol(symbols, symbols, "abx"));
+    printf("offset = %ld\n", getSymbol(symbols, symbols, ""));
 
     return 0;
 }
