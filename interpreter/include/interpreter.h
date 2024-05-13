@@ -271,8 +271,9 @@ struct ObjectHeader {
     uint64_t size; // Size of the object (excluding the header).
     uint64_t code; // The offset from the end of the header.
     uint64_t data; // The offset from the end of the header.
+    uint64_t symbols; // The offset of the symbol table from the end of the header. Points to a `SymbolTableNode`.
     uint64_t entryPoint; // The offset the end of the header. Where the interpreter starts executing.
-    bool executable; // Whether the object can be executed.
+    bool executable; // Whether the object can be executed. This is the last field for alignment purposes.
 };
 
 // All offsets in this struct are relative to the beginning of `bytes`.
@@ -280,6 +281,14 @@ struct Object {
     struct ObjectHeader header;
     uint8_t *bytes; // The bytes of the object. Contains the code and data.
     bool isMemoryMapped; // If true, the object's bytes were mapped from a file. Else, they were `malloc()`ed.
+};
+
+// A node in the trie that maps symbol names to offsets in the file.
+struct SymbolTableNode {
+    uint64_t next; // The offset of the next node to match should a symbol name not match this node's character.
+    uint64_t child; // The offset of next node in this sequence of nodes.
+                    // If this node is the last child of a sequence, this field holds the offset the symbol maps to.
+    char ch; // The character on the node's vertex. If this node is the last child of a sequence, this field is a '\0'.
 };
 
 // Destroys an object and frees or unmaps its memory.
@@ -299,5 +308,8 @@ void run(struct Object *object);
 
 // Runs the code.
 void runCode(uint8_t *code, uint8_t *data);
+
+// Returns the offset a name is mapped to in a symbol table. Returns 0 if the name is not found.
+uint64_t getSymbol(uint8_t *bytes, struct SymbolTableNode *node, char *name);
 
 #endif // INTERPRETER_H

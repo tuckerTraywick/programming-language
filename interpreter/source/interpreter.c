@@ -80,6 +80,7 @@ void readObject(FILE *file, struct Object *object) {
     assert(object->bytes);
     fread(object->bytes, 1, object->header.size, file);
     // TODO: Handle failed `fread()`.
+    // TODO: Set `isMemoryMapped` to true when I change this.
     object->isMemoryMapped = false;
 }
 
@@ -681,4 +682,22 @@ void runCode(uint8_t *code, uint8_t *data) {
     printf("| %d\n", *interpreter.sp);
 
     free(stack);
+}
+
+uint64_t getSymbol(uint8_t *bytes, struct SymbolTableNode *node, char *name) {
+    char *ch = name;
+    while (true) {
+        printf("ch=%c, node->ch=%c, child=%ld\n", *ch, node->ch, node->child);
+        if (*ch == '\0' && node->ch == '\0') {
+            return node->child;
+        } else if (*ch == '\0' || node->ch == '\0') {
+            return 0;
+        } else if (*ch == node->ch) {
+            printf("match\n");
+            node = (struct SymbolTableNode*)(bytes + node->child);
+            ++ch;
+        } else {
+            node = (struct SymbolTableNode*)(bytes + node->next);
+        }
+    }
 }
