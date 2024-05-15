@@ -47,8 +47,8 @@ int main(void) {
 
     // run(&object);
 
-    // memcpy(bytes + 20, (uint8_t*)symbols, sizeof(symbols));
-    printf("offset = %ld\n", getSymbol(symbols, symbols, ""));
+    struct SymbolTable table = {.nodeCapacity=6, .nodeCount=6, .nodes=symbols};
+    printf("offset = %ld\n", getSymbol(symbols, &table, "abcd"));
 
     return 0;
 }

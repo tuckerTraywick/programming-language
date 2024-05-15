@@ -684,8 +684,9 @@ void runCode(uint8_t *code, uint8_t *data) {
     free(stack);
 }
 
-uint64_t getSymbol(uint8_t *bytes, struct SymbolTableNode *node, char *name) {
+uint64_t getSymbol(uint8_t *bytes, struct SymbolTable *table, char *name) {
     char *ch = name;
+    struct SymbolTableNode *node = table->nodes;
     while (true) {
         printf("ch=%c, node->ch=%c, child=%ld\n", *ch, node->ch, node->child);
         if (*ch == '\0' && node->ch == '\0') {
@@ -701,5 +702,12 @@ uint64_t getSymbol(uint8_t *bytes, struct SymbolTableNode *node, char *name) {
         } else {
             node = (struct SymbolTableNode*)(bytes + node->next);
         }
+    }
+}
+
+void addSymbol(struct SymbolTable *table, char *name, uint64_t offset) {
+    char *ch = name;
+    while (ch != '\0') {
+
     }
 }

@@ -266,6 +266,20 @@ enum Opcode {
     PRINTF64,
 };
 
+// A node in the symbol table trie.
+struct SymbolTableNode {
+    uint64_t next; // The offset of the next node to match should a symbol name not match this node's character.
+    uint64_t child; // The offset of next node in this sequence of nodes. If this node is the last child of a sequence, this field holds the offset the symbol maps to.
+    char ch; // The character on the node's vertex. If this node is the last child of a sequence, this field is a '\0'.
+};
+
+// A trie mapping symbol names to offsets within the object's bytes.
+struct SymbolTable {
+    struct SymbolTableNode *nodes; // The nodes of the trie.
+    uint64_t nodeCount; // The current number of nodes in the trie.
+    uint64_t nodeCapacity; // The maximum number of nodes in the trie.
+};
+
 // The first section of an object file. Gives general info about the object and its size.
 struct ObjectHeader {
     uint64_t size; // Size of the object (excluding the header).
@@ -276,19 +290,14 @@ struct ObjectHeader {
     bool executable; // Whether the object can be executed. This is the last field for alignment purposes.
 };
 
-// All offsets in this struct are relative to the beginning of `bytes`.
+// Represents an object currently loaded into memory + some metadata. All offsets in this struct are relative to the beginning of `bytes`.
 struct Object {
     struct ObjectHeader header;
     uint8_t *bytes; // The bytes of the object. Contains the code and data.
+    uint8_t *code; // The beginning of the code segment.
+    uint8_t *data; // The beginning of the data segment.
+    struct SymbolTable *symbolTable; // A mapping of symbols to offsets.
     bool isMemoryMapped; // If true, the object's bytes were mapped from a file. Else, they were `malloc()`ed.
-};
-
-// A node in the trie that maps symbol names to offsets in the file.
-struct SymbolTableNode {
-    uint64_t next; // The offset of the next node to match should a symbol name not match this node's character.
-    uint64_t child; // The offset of next node in this sequence of nodes.
-                    // If this node is the last child of a sequence, this field holds the offset the symbol maps to.
-    char ch; // The character on the node's vertex. If this node is the last child of a sequence, this field is a '\0'.
 };
 
 // Destroys an object and frees or unmaps its memory.
@@ -309,7 +318,16 @@ void run(struct Object *object);
 // Runs the code.
 void runCode(uint8_t *code, uint8_t *data);
 
+// Allocates a new symbol table. The returned table must be destroyed with `destroySymbolTable()`.
+struct SymbolTableNode *createSymbolTable(size_t capacity);
+
+// Deallocates and zeroes out a symbol table.
+void destroySymbolTable(struct SymbolTableNode *table);
+
 // Returns the offset a name is mapped to in a symbol table. Returns 0 if the name is not found.
-uint64_t getSymbol(uint8_t *bytes, struct SymbolTableNode *node, char *name);
+uint64_t getSymbol(uint8_t *bytes, struct SymbolTable *table, char *name);
+
+// Adds a new mapping to the symbol table.
+void addSymbol(struct SymbolTable *table, char *name, uint64_t offset);
 
 #endif // INTERPRETER_H
