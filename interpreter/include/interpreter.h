@@ -14,7 +14,7 @@ struct Interpreter {
     uint8_t *ip; // Instruction pointer.
     uint8_t *fp; // Frame pointer.
     uint8_t *sp; // Stack pointer. The NEXT available byte of the stack.
-    bool keepRunning;
+    bool keepRunning; // Set to false by `HALT` instruction.
 };
 
 // Represents the operation being performed by an instruction.
@@ -273,7 +273,7 @@ struct SymbolTableNode {
     char ch; // The character on the node's vertex. If this node is the last child of a sequence, this field is a '\0'.
 };
 
-// A trie mapping symbol names to offsets within the object's bytes.
+// A trie that maps symbol names to offsets within the object's bytes.
 struct SymbolTable {
     struct SymbolTableNode *nodes; // The nodes of the trie.
     uint64_t nodeCount; // The current number of nodes in the trie.
@@ -290,13 +290,13 @@ struct ObjectHeader {
     bool executable; // Whether the object can be executed. This is the last field for alignment purposes.
 };
 
-// Represents an object currently loaded into memory + some metadata. All offsets in this struct are relative to the beginning of `bytes`.
+// Represents an object currently loaded into memory + some metadata. All offsets in the header are relative to the beginning of `bytes`.
 struct Object {
     struct ObjectHeader header;
     uint8_t *bytes; // The bytes of the object. Contains the code and data.
     uint8_t *code; // The beginning of the code segment.
     uint8_t *data; // The beginning of the data segment.
-    struct SymbolTable *symbolTable; // A mapping of symbols to offsets.
+    struct SymbolTable symbolTable; // A mapping of symbols to offsets.
     bool isMemoryMapped; // If true, the object's bytes were mapped from a file. Else, they were `malloc()`ed.
 };
 
@@ -318,14 +318,15 @@ void run(struct Object *object);
 // Runs the code.
 void runCode(uint8_t *code, uint8_t *data);
 
-// Allocates a new symbol table. The returned table must be destroyed with `destroySymbolTable()`.
-struct SymbolTableNode *createSymbolTable(size_t capacity);
+// Initializes a new symbol table and allocates memory for its nodes. The returned table must be
+// destroyed with `destroySymbolTable()`.
+void initializeSymbolTable(struct SymbolTable *table, size_t capacity);
 
-// Deallocates and zeroes out a symbol table.
-void destroySymbolTable(struct SymbolTableNode *table);
+// Deallocates a table's nodes and zeroes out its memory.
+void destroySymbolTable(struct SymbolTable *table);
 
 // Returns the offset a name is mapped to in a symbol table. Returns 0 if the name is not found.
-uint64_t getSymbol(uint8_t *bytes, struct SymbolTable *table, char *name);
+uint64_t getSymbol(struct SymbolTable *table, char *name);
 
 // Adds a new mapping to the symbol table.
 void addSymbol(struct SymbolTable *table, char *name, uint64_t offset);

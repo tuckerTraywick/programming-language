@@ -6,12 +6,12 @@
 #include "interpreter.h"
 
 static struct SymbolTableNode symbols[] = {
-    {.ch='a', .child=24}, // 0
-    {.ch='b', .child=48}, // 24
-    {.ch='x', .child=72, .next=96}, // 48
-    {.ch='\0', .child=1}, // 72
-    {.ch='c', .child=120}, // 96
-    {.ch='\0', .child=2}, // 120
+    {.ch='a', .child=1}, // 0
+    {.ch='b', .child=2}, // 1
+    {.ch='x', .child=3, .next=4}, // 2
+    {.ch='\0', .child=123}, // 3
+    {.ch='c', .child=5}, // 4
+    {.ch='\0', .child=456}, // 5
 };
 
 static uint8_t bytes[] = {
@@ -48,7 +48,7 @@ int main(void) {
     // run(&object);
 
     struct SymbolTable table = {.nodeCapacity=6, .nodeCount=6, .nodes=symbols};
-    printf("offset = %ld\n", getSymbol(symbols, &table, "abcd"));
+    printf("offset = %ld\n", getSymbol(&table, "abc"));
 
     return 0;
 }

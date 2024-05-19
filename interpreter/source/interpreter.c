@@ -104,6 +104,8 @@ void runCode(uint8_t *code, uint8_t *data) {
     // TODO: Add support for passing a pointer to an existing stack?
     // TODO: Rename local variables.
     uint8_t *stack = malloc(STACK_SIZE);
+    // TODO: Handle failed `malloc()`.
+    assert(stack && "`malloc()` failed.");
     struct Interpreter interpreter = {
         .stack = stack,
         .ip = code,
@@ -111,7 +113,6 @@ void runCode(uint8_t *code, uint8_t *data) {
         .sp = stack,
         .keepRunning = true,
     };
-    assert(stack && "`malloc()` failed.");
 
     while (interpreter.keepRunning) {
         uint64_t width = 0;
@@ -684,30 +685,45 @@ void runCode(uint8_t *code, uint8_t *data) {
     free(stack);
 }
 
-uint64_t getSymbol(uint8_t *bytes, struct SymbolTable *table, char *name) {
+void initializeSymbolTable(struct SymbolTable *table, size_t capacity) {
+    *table = (struct SymbolTable){
+        .nodeCapacity = capacity,
+        .nodeCount = 0,
+        .nodes = malloc(capacity),
+    };
+    // TODO: Handle failed `malloc()`.
+    assert(table->nodes && "`malloc()` failed.");
+}
+
+void destroySymbolTable(struct SymbolTable *table) {
+    free(table->nodes);
+    *table = (struct SymbolTable){0};
+}
+
+uint64_t getSymbol(struct SymbolTable *table, char *name) {
     char *ch = name;
     struct SymbolTableNode *node = table->nodes;
     while (true) {
-        printf("ch=%c, node->ch=%c, child=%ld\n", *ch, node->ch, node->child);
+        // printf("ch=%c, node->ch=%c, child=%ld\n", *ch, node->ch, node->child);
         if (*ch == '\0' && node->ch == '\0') {
             return node->child;
         } else if (*ch == '\0' || node->ch == '\0') {
             return 0;
         } else if (*ch == node->ch) {
-            printf("match\n");
-            node = (struct SymbolTableNode*)(bytes + node->child);
+            // printf("match\n");
+            node = table->nodes + node->child;
             ++ch;
         } else if (node->next == 0) {
             return 0;
         } else {
-            node = (struct SymbolTableNode*)(bytes + node->next);
+            node = table->nodes + node->next;
         }
     }
 }
 
 void addSymbol(struct SymbolTable *table, char *name, uint64_t offset) {
     char *ch = name;
-    while (ch != '\0') {
+    while (*ch != '\0') {
 
     }
 }
