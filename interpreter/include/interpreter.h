@@ -328,7 +328,8 @@ void destroySymbolTable(struct SymbolTable *table);
 // Returns the offset a name is mapped to in a symbol table. Returns 0 if the name is not found.
 uint64_t getSymbol(struct SymbolTable *table, char *name);
 
-// Adds a new mapping to the symbol table.
+// Adds a new mapping to the symbol table. `name` must be at least 1 character long and `table` must
+// be initialized.
 void addSymbol(struct SymbolTable *table, char *name, uint64_t offset);
 
 #endif // INTERPRETER_H
