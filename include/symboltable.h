@@ -25,14 +25,14 @@ struct SymbolBucket {
 
 // A hash table that maps symbol names to things in the object.
 struct SymbolTable {
-    struct SymbolBucket *buckets; // The slots available for symbols.
-    uint64_t count; // The number of buckets occupied.
     uint64_t capacity; // The number of buckets allocated.
+    uint64_t size; // The number of buckets occupied.
+    struct SymbolBucket *buckets; // The slots available for symbols.
 };
 
-// Initializes a new symbol table and allocates memory for its buckets. The returned table must be
+// Returns a new symbol table and allocates memory for its buckets. The returned table must be
 // destroyed with `destroySymbolTable()`.
-void initializeSymbolTable(struct SymbolTable *table, size_t capacity);
+struct SymbolTable createSymbolTable(size_t capacity);
 
 // Deallocates a table's buckets and zeroes out its memory.
 void destroySymbolTable(struct SymbolTable *table);
