@@ -17,12 +17,3 @@ void destroySymbolTable(struct SymbolTable *table) {
     free(table->buckets);
     *table = (struct SymbolTable){0};
 }
-
-uint64_t getSymbol(struct SymbolTable *table, char *name) {
-
-}
-
-void addSymbol(struct SymbolTable *table, char *name, uint64_t offset) {
-    // assert(table->nodeCapacity > 0 && table->nodes && "Table must be initialized.");
-    // assert(*name != '\0' && "`name` must be at least one character long.");
-}
