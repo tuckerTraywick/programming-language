@@ -4,8 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "symboltable.h"
 
-#define STACK_SIZE 5*1024*1024 // 5MB
+#define STACK_SIZE 1024*1024 // 1 MB
 
 // Represents the state of the virtual machine.
 struct Interpreter {
@@ -266,31 +267,18 @@ enum Opcode {
     PRINTF64,
 };
 
-// A node in the symbol table trie.
-struct SymbolTableNode {
-    uint64_t next; // The offset of the next node to match should a symbol name not match this node's character.
-    uint64_t child; // The offset of next node in this sequence of nodes. If this node is the last child of a sequence, this field holds the offset the symbol maps to.
-    char ch; // The character on the node's vertex. If this node is the last child of a sequence, this field is a '\0'.
-};
-
-// A trie that maps symbol names to offsets within the object's bytes.
-struct SymbolTable {
-    struct SymbolTableNode *nodes; // The nodes of the trie.
-    uint64_t nodeCount; // The current number of nodes in the trie.
-    uint64_t nodeCapacity; // The maximum number of nodes in the trie.
-};
-
 // The first section of an object file. Gives general info about the object and its size.
 struct ObjectHeader {
     uint64_t size; // Size of the object (excluding the header).
     uint64_t code; // The offset from the end of the header.
     uint64_t data; // The offset from the end of the header.
-    uint64_t symbols; // The offset of the symbol table from the end of the header. Points to a `SymbolTableNode`.
+    uint64_t symbols; // The offset of the symbol table from the end of the header.
     uint64_t entryPoint; // The offset the end of the header. Where the interpreter starts executing.
     bool executable; // Whether the object can be executed. This is the last field for alignment purposes.
 };
 
-// Represents an object currently loaded into memory + some metadata. All offsets in the header are relative to the beginning of `bytes`.
+// Represents an object currently loaded into memory + some metadata. All offsets in the header are
+// relative to the beginning of `bytes`.
 struct Object {
     struct ObjectHeader header;
     uint8_t *bytes; // The bytes of the object. Contains the code and data.
@@ -328,8 +316,8 @@ void destroySymbolTable(struct SymbolTable *table);
 // Returns the offset a name is mapped to in a symbol table. Returns 0 if the name is not found.
 uint64_t getSymbol(struct SymbolTable *table, char *name);
 
-// Adds a new mapping to the symbol table. `name` must be at least 1 character long and `table` must
+// Sets the offset of a symbol. `name` must be at least 1 character long and `table` must
 // be initialized.
-void addSymbol(struct SymbolTable *table, char *name, uint64_t offset);
+void setSymbol(struct SymbolTable *table, char *name, uint64_t offset);
 
 #endif // INTERPRETER_H
