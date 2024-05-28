@@ -72,7 +72,7 @@ pub type Entity {
 }
 
 pub type Vector {
-    embed std.traits.Arithmetic
+    embed default std.traits.Arithmetic, .Equality
     pub x, y float64
 }
 
@@ -88,3 +88,20 @@ pub fun collide(a, b &mut Entity) {
 pub fun .length(vector &Vector) float64 {
     return std.math.sqrt(vector.x*vector.x + vector.y*vector.y)
 }
+
+
+
+
+List[T]
+    Vector[T]
+    LinkedList[T]
+
+Map[T, U]
+    HashTable[T, U]
+    Trie[T, U]
+    RadixTrie[T, U]
+    RBTree[T, U]
+
+Set[T]
+    HashSet[T]
+    ...
