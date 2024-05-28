@@ -4,7 +4,7 @@ from std.io import printLine
 pub type Animal {
     pub name string
     pub age uint
-    pub makeNoise(animal &Animal)
+    pub makeNoise(&this)
 }
 
 pub type Dog {
