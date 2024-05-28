@@ -1,57 +1,31 @@
-// Example of the basic syntax
-package example
-import std.io.printLine
-
-var a = 1
-var b string
-var c int = 2
-
-func foo(x) => x + 1
-func bar(x, y int) int {
-    return x + y
-}
-
-struct Thing {
-    a int
-    b string
-}
-
-func main() {
-    printLine("Hello, world!")
-}
-
-
-
-
-// Example of struct embedding and methods
 pub package animals
-import std.io.printLine
+from std.io import printLine
 
-pub struct Animal {
+pub type Animal {
     pub name string
     pub age uint
-    pub makeNoise(&this)
+    pub makeNoise(animal &Animal)
 }
 
-pub struct Dog {
+pub type Dog {
     embed Animal
     pub tag string
 }
 
-pub struct Cat {
+pub type Cat {
     embed Animal
     pub breed string
 }
 
-pub func makeNoise(dog &Dog) {
+pub fun makeNoise(dog &Dog) {
     printLine("woof")
 }
 
-pub func makeNoise(cat &Cat) {
+pub fun makeNoise(cat &Cat) {
     printLine("meow")
 }
 
-pub func main() {
+pub fun main() {
     var pet mut &Animal = &Dog()
     pet.makeNoise() // prints "woof"
     pet = &Cat()
@@ -59,174 +33,58 @@ pub func main() {
 }
 
 
+package moreAnimals
+from animals import *
 
-
-// Examples of type definitions
-alias MyAlias = int
-
-struct MyStruct = int
-
-struct Point {
-    x, y int
+pub type Pet {
+    embed in Dog, Cat
+    pub walk(&this)
 }
 
-// Behaves like an enum with the given cases.
-struct Direction cases {
-    n, s, e, w
+pub fun walk(dog &Dog) {}
+
+pub fun walk(cat &Cat) {}
+
+pub fun main() {
+    var pet mut &Pet = &Dog()
+    pet.walk()
+    pet = &Cat()
+    pet.walk()
 }
 
 
-// Example of a type with both fields and cases
-package colors
 
-// Behaves like an enum with cases that have the given fields. See below for usage.
-struct Color {
-    r, g, b uint8
+
+pub package physics
+import std.math
+
+pub type Entity {
+    pub pos, vel, acc Vector
+    pub collide(a, b &mut This)
 } cases {
-    default black = (0, 0, 0)
-    white = (255, 255, 255)
-    red = (255, 0, 0)
-    green = (0, 255, 0)
-    blue = (0, 0, 255)
+    type Circle {
+        pub radius float64
+    }
+
+    type Mesh {
+        pub vertices owned[[]Vector]
+    }
 }
 
-func main() {
-    var color mut Color
-    printLine(color) // prints "Color.black(r=0, g=0, b=0)"
-    color = Color.red
-    printLine(color.r) // prints "255"
-    color = .blue // shorthand for "Color.blue"
-    printLine(color.g) // prints "0"
+pub type Vector {
+    embed std.traits.Arithmetic
+    pub x, y float64
 }
 
-
-// Example of a struct with cases that are themselves structs
-package shapes
-import std.math.pi
-import std.io.printLine
-
-struct Shape {
-    area(this)
-} cases {
-    struct Circle {radius float64}
-    struct Rectangle {width, height float64}
-    struct Triangle {base, height float64}
+pub fun collide(a, b &mut Entity) {
+    match a, b {
+        case Circle, Circle:
+        case Mesh, Mesh:
+        case Circle, Mesh:
+        case Mesh, Circle:
+    }
 }
 
-func area(c Shape.Circle) => pi*c.radius*c.radius
-func area(r Shape.Rectangle) => r.width*r.height
-func area(t Shape.Triangle) => 0.5*t.base*t.height
-
-func main() {
-    var shape mut Shape = .Circle(2) // Shorthand for "Shape.Circle(2)"
-    printLine(shape.area()) // prints "12.566..."
-    shape = .Rectangle(2, 5)
-    printLine(shape.area()) // prints "10"
-    shape = .Triangle(2, 5)
-    printLine(shape.area()) // prints "5"
-}
-
-
-
-
-// Example of smart pointers
-pub package std.collections
-import std.operations
-
-pub struct List[T] {
-    embed std.operations.GetElement, .SetElement
-    first maybe[owned[&Node[T]]]
-    last maybe[&Node[T]]
-    length usize
-}
-
-struct Node[T] {
-    data T
-    next maybe[owned[&this]]
-    previous maybe[&this]
-}
-
-
-
-
-// Built-in types:
-int8-64 uint8-64 isize usize
-float32-64
-bool
-char8-32
-string[T=char8]
-// Standard library types:
-error none maybe[T] any[T..] all[T..]
-owned[T..] shared[T..] weak[T..]
-
-// Examples of function signatures/function types with implicitly typed parameters:
-// You can only have named parameters or unnamed parameters in function/tuple types, not both
-// You tell whether the parameters are named by whether it has two names not separated by a space.
-func add(a, b int) int // allowed. int named a, int named b
-func(a, int, b string) // allowed. string named a, string named int, string named b
-func(int, string, x) // allowed. unnamed int, unnamed string, unnamed x
-func(a int, string) // not allowed. can't mix named and unnamed parameters.
-
-// Multiple field access syntax:
-var point = (x=1, y=2, z=3)
-f(point.x, .y, .z)
-
-// Multiple import syntax:
-import std.math.sin, .cos, .pi
-
-// If you import a package it does not bring it into the current namespace
-// If you import a struct, function, or variable it does
-import std.io
-std.io.printLine("hi")
-
-import std.io.printLine
-printLine("hi")
-
-
-// Multiple field access + tuples = easy swizzling
-struct Vector {
-    x, y, z float64
-}
-var point = Vector(1, 2, 3)
-var yxz = (point.y, .x, .z)
-var array = [point.y, .x, .z]
-
-
-// When a `.` could mean a field access or a struct case, the compiler assumes field access.
-struct Color {
-    r, g, b uint8
-} cases {
-    red = (225,0,0), green = (0,255,0), blue = (0,0,255)
-}
-var pair = (first = Color.blue, second = Color.red)
-var colors []Color = [pair.second, .first, .green] // invalid
-var colors2 []Color = [pair.second, .first, Color.green] // valid
-var colors3 []Color = [.red, pair.second, .first] // valid. unambiguous
-
-
-
-
-func foo[T impl To[string]](x T) { // can't be dynamically linked
-    var temp = x // can copy (uses stack, can be copied directly as argument)
-    qux(x)
-}
-
-func bar(x &To[string]) { // can be dynamically linked
-    var temp = // can't copy
-}
-
-func baz(x &all[Sized, To[string]]) { // can be dynamically linked
-    var temp owned &all[Sized, To[string]] = x.copy() // can copy (uses heap)
-}
-
-
-
-
-package hotloading
-import std.linker
-
-func main() {
-    var plugin = std.linker.load("myLib.do")->unwrap("Couldn't find plugin.")
-    var square = std.linker.findSymbol[func(int) int](&plugin, "foo")->unwrap("Couldn't find square().")
-    printLine(f"2^2 = {square(2)}")
+pub fun .length(vector &Vector) float64 {
+    return std.math.sqrt(vector.x*vector.x + vector.y*vector.y)
 }
