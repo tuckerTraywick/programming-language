@@ -32,10 +32,15 @@ void destroySymbolTable(struct SymbolTable *table) {
     *table = (struct SymbolTable){0};
 }
 
-uint64_t getSymbol(struct SymbolTable *table, char *name) {
+struct Symbol *getSymbol(struct SymbolTable *table, char *name) {
     uint64_t hash = getHash(name);
     uint64_t index = hash%table->capacity;
     if (table->buckets[index].hash == hash) {
+        return &table->buckets[index].symbol;
+    }
+
+    // Probe the buckets.
+    for (uint64_t i = 0; i < table->capacity; ++i) {
 
     }
 }
