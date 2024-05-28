@@ -20,7 +20,7 @@ struct Symbol {
 // A bucket in the symbol hash table.
 struct SymbolBucket {
     struct Symbol symbol;
-    uint64_t name;
+    uint64_t hash;
 };
 
 // A hash table that maps symbol names to things in the object.
@@ -29,6 +29,9 @@ struct SymbolTable {
     uint64_t size; // The number of buckets occupied.
     struct SymbolBucket *buckets; // The slots available for symbols.
 };
+
+// Returns the hash value for a string, used by the symbol table.
+uint64_t getHash(char *name);
 
 // Returns a new symbol table and allocates memory for its buckets. The returned table must be
 // destroyed with `destroySymbolTable()`.
@@ -43,6 +46,6 @@ uint64_t getSymbol(struct SymbolTable *table, char *name);
 
 // Sets the offset of a symbol. `name` must be at least 1 character long and `table` must be
 // initialized.
-void setSymbol(struct SymbolTable *table, char *name, uint64_t offset);
+void setSymbol(struct SymbolTable *table, char *name, struct Symbol *symbol);
 
 #endif // SYMBOLTABLE_H
