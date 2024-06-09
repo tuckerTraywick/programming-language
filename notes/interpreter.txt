@@ -31,26 +31,20 @@ Symbol table info:
 
 Hot reloading is done by using a library, it isn't built in.
 
-
+- Builtin types:
 int, float, bool, char
 int, uint, byte, ubyte, float, bool, char
-- Everything is either 8 bytes or 1 byte long.
-- The stack and data section are always aligned to 8 bytes.
-- Objects use normal alignment rules.
-
-
-
-
-
 
 
 
 
 - 64 bit stack-based virtual machine.
+- Everything is either 8 bytes or 1 byte long.
+- Locals and arguments always aligned to 8 bytes.
+- Objects use normal alignment rules.
 
 - Calling convention:
     - The caller allocates space for the return value and pushes a pointer to it.
-    // - `sp` must be 8 byte aligned before a `call` instruction and before the entrypoint is reached.
 
 - Stack layout:
     top
@@ -80,32 +74,31 @@ int, uint, byte, ubyte, float, bool, char
     - noop
     - halt
 
-    - push8-64 immediate
-    - pushl local offset
-    - pusha argument offset
-    - pusht temporary offset
-    - pushd data offset
+    - push[b] immediate
+    - pushl[b] local
+    - pusha[b] argument
+    - pushd[b] data
 
-    - pop8-64
-    - pop [size]
+    - pop[b]
+    - popn [size]
 
-    - dup8-64 [data]
-    - dup [size] [data]
+    - dup[b] [data]
+    - dupn [size] [data]
 
-    - zero8-64
-    - zero [size]
+    - zero[b]
+    - zeron [size]
 
-    - bump8-64
-    - bump [size]
+    - bump[b]
+    - bumpn [size]
 
-    - load8-64 [*source]
-    - load [size] [*source]
+    - load[b] [*source]
+    - loadn [size] [*source]
 
-    - store8-64 [*destination] [data]
-    - store [size] [*destination] [data]
+    - store[b] [*destination] [data]
+    - storen [size] [*destination] [data]
 
-    - copy8-64 [*destination] [*source]
-    - copy [*destination] [*source] [size]
+    - copy[b] [*destination] [*source]
+    - copyn [*destination] [*source] [size]
 
     - jmp [address]
     - jmpt [address] [boolean]
@@ -115,57 +108,57 @@ int, uint, byte, ubyte, float, bool, char
 
     - ret
 
-    - addi8-64
-    - addf32-64
+    - addi[b]
+    - addf
 
-    - subi8-64
-    - subf32-64
+    - subi[b]
+    - subf
 
-    - muli8-64
-    - mulu8-64
-    - mulf32-64
+    - muli[b]
+    - mulu[b]
+    - mulf
 
-    - divi8-64
-    - divu8-64
-    - divf32-64
+    - divi[b]
+    - divu[b]
+    - divf
 
-    - modi8-64
-    - modu8-64
-    - modf32-64
+    - modi[b]
+    - modu[b]
+    - modf
 
-    - absi8-64
-    - absf32-64
+    - absi[b]
+    - absf
 
-    - sqrt32-64
+    - sqrt
 
-    - floor32-64
+    - floor
 
-    - ceil32-64
+    - ceil
 
-    - round32-64
+    - round
 
-    - bnot8-64
-    - band8-64
-    - bor8-64
-    - bxor8-64
-    - bnand8-64
-    - bnor8-64
-    - bnxor8-64
+    - bnot[b]
+    - band[b]
+    - bor[b]
+    - bxor[b]
+    - bnand[b]
+    - bnor[b]
+    - bnxor[b]
 
-    - eq8-64
-    - ne8-64
+    - eq[b]
+    - ne[b]
 
-    - gti8-64
-    - gtf8-64
+    - gti[b]
+    - gtf[b]
 
-    - lti8-64
-    - ltf8-64
+    - lti[b]
+    - ltf[b]
 
-    - gei8-64
-    - gef8-64
+    - gei[b]
+    - gef[b]
 
-    - lei8-64
-    - lef8-64
+    - lei[b]
+    - lef[b]
 
 
 

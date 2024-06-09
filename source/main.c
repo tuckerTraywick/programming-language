@@ -7,10 +7,7 @@
 
 static uint8_t bytes[] = {
     2,1,3,4, 7,8,5,6,
-    PUSH32, 1,2,3,4,
-    FIRST32,
     HALT,
-    [15 ... 100] = 0,
 };
 
 int main(void) {
