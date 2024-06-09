@@ -6,9 +6,9 @@
 #include "interpreter.h"
 
 static uint8_t code[] = {
-    PUSHB, 2,
     PUSHB, 1,
-    ADDIB,
+    PUSHB, 2,
+    POPN,
     HALT,
 };
 

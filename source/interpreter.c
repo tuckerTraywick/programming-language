@@ -71,31 +71,48 @@ void runCode(uint8_t *code, uint8_t *data) {
 
     while (interpreter.keepRunning) {
         uint8_t opcode = *interpreter.ip;
-        uint64_t a = 0;
-        uint64_t b = 0;
+        ++interpreter.ip;
 
         switch (opcode) {
             case NOOP:
-                ++interpreter.ip;
                 continue;
 
             case HALT:
                 interpreter.keepRunning = false;
-                ++interpreter.ip;
                 break;
 
             case PUSH:
-                ++interpreter.ip;
                 push(&interpreter, read(&interpreter));
                 break;
             
             case PUSHB:
-                ++interpreter.ip;
                 pushByte(&interpreter, readByte(&interpreter));
+                break;
+
+            case POP:
+                pop(&interpreter);
+                break;
+
+            // Pops just 1 byte, not an aligned byte.
+            case POPB:
+                --interpreter.fp;
+                break;
+
+            case POPN: {
+                uint64_t n = pop(&interpreter);
+                interpreter.sp -= n;
+                break;
+            }
+
+            case DUP:
+                push(&interpreter, *(uint64_t*)(interpreter.sp - 8));
+                break;
+
+            case DUPB:
+                pushByte(&interpreter, *(interpreter.sp - 8));
                 break;
             
             case ADDIB:
-                ++interpreter.ip;
                 pushByte(&interpreter, popByte(&interpreter) + popByte(&interpreter));
                 break;
 

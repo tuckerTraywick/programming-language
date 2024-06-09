@@ -132,7 +132,6 @@ enum Opcode {
     BXNOR,
     BXNORB,
 
-
     LNOT,
     LNOTB,
 

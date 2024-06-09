@@ -70,11 +70,6 @@ static bool consume(struct Parser *parser, enum TokenType type) {
     return false;
 }
 
-// Begins a new node in the parse tree.
-static bool beginNode(struct Parser *parser, enum NodeType type) {
-    
-}
-
 char *nodeTypeNames[] = {
     [INVALID_NODE] = "Invalid syntax.",
     [PACKAGE_STATEMENT_EXPECTED_PACKAGE_NAME] = "Expected a package name.",

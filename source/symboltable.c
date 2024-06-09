@@ -18,37 +18,7 @@ uint64_t getHash(char *name) {
     return hash;
 }
 
-struct SymbolTable createSymbolTable(size_t capacity) {
-    struct SymbolTable table = {
-        .capacity = capacity,
-        .size = 0,
-        .buckets = malloc(sizeof(struct SymbolBucket)*capacity),
-    };
-    // TODO: Handle failed `malloc()`.
-    assert(table.buckets && "`malloc()` failed.");
-}
-
 void destroySymbolTable(struct SymbolTable *table) {
     free(table->buckets);
     *table = (struct SymbolTable){0};
-}
-
-struct Symbol *getSymbol(struct SymbolTable *table, char *name) {
-    // Hash the name.
-    uint64_t hash = getHash(name);
-    uint64_t index = hash%table->capacity;
-
-    // Return the symbol if it is found.
-    if (table->buckets[index].hash == hash) {
-        return &table->buckets[index].symbol;
-    }
-
-    // Probe the buckets if there is a collision.
-    for (uint64_t i = 0; i < table->capacity; ++i) {
-
-    }
-}
-
-void setSymbol(struct SymbolTable *table, char *name, struct Symbol *symbol) {
-
 }
