@@ -11,6 +11,44 @@
 // Redefining `abs` so it works for different types.
 #define abs(x) (((x) < 0) ? (-(x)) : (x))
 
+// Pushes an 8 byte value to the stack.
+static void push(struct Interpreter *interpreter, uint64_t value) {
+    *(uint64_t*)interpreter->sp = value;
+    interpreter->sp += 8;
+}
+
+// Pushes a single byte to the stack.
+static void pushByte(struct Interpreter *interpreter, uint8_t value) {
+    *interpreter->sp = (uint64_t)value;
+    interpreter->sp += 8;
+}
+
+// Pops an 8 byte value from the stack.
+static uint64_t pop(struct Interpreter *interpreter) {
+    interpreter->sp -= 8;
+    return *(uint64_t*)interpreter->sp;
+}
+
+// Pops a single byte from the stack.
+static uint8_t popByte(struct Interpreter *interpreter) {
+    interpreter->sp -= 8;
+    return *(uint8_t*)interpreter->sp;
+}
+
+// Reads an 8 byte operand from the code.
+static uint64_t read(struct Interpreter *interpreter) {
+    uint64_t value = *(uint64_t*)interpreter->ip;
+    interpreter->ip += 8;
+    return value;
+}
+
+// Reads a single byte from the code.
+static uint8_t readByte(struct Interpreter *interpreter) {
+    uint8_t value = *interpreter->ip;
+    ++interpreter->ip;
+    return value;
+}
+
 void run(struct Object *object) {
     // TODO: Handle passing a non-executable object.
     assert(object->header.executable && "Must pass an executable object.");
@@ -20,8 +58,6 @@ void run(struct Object *object) {
 }
 
 void runCode(uint8_t *code, uint8_t *data) {
-    // TODO: Add support for passing a pointer to an existing stack?
-    // TODO: Rename local variables.
     uint8_t *stack = malloc(STACK_SIZE);
     // TODO: Handle failed `malloc()`.
     assert(stack && "`malloc()` failed.");
@@ -34,26 +70,35 @@ void runCode(uint8_t *code, uint8_t *data) {
     };
 
     while (interpreter.keepRunning) {
-        uint64_t width = 0;
-        uint64_t value = 0;
-        uint64_t source = 0;
-        uint64_t destination = 0;
-        uint64_t ai = 0, bi = 0;
-        float af = 0.0, bf = 0.0;
-        double ad = 0.0, bd = 0.0;
-        
         uint8_t opcode = *interpreter.ip;
-        ++interpreter.ip;
+        uint64_t a = 0;
+        uint64_t b = 0;
 
         switch (opcode) {
             case NOOP:
+                ++interpreter.ip;
                 continue;
 
             case HALT:
                 interpreter.keepRunning = false;
+                ++interpreter.ip;
                 break;
 
+            case PUSH:
+                ++interpreter.ip;
+                push(&interpreter, read(&interpreter));
+                break;
             
+            case PUSHB:
+                ++interpreter.ip;
+                pushByte(&interpreter, readByte(&interpreter));
+                break;
+            
+            case ADDIB:
+                ++interpreter.ip;
+                pushByte(&interpreter, popByte(&interpreter) + popByte(&interpreter));
+                break;
+
             default:
                 assert(0 && "Invalid opcode.");
                 interpreter.keepRunning = false;
