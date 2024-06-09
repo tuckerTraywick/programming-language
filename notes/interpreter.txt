@@ -32,6 +32,15 @@ Symbol table info:
 Hot reloading is done by using a library, it isn't built in.
 
 
+int, float, bool, char
+int, uint, byte, ubyte, float, bool, char
+- Everything is either 8 bytes or 1 byte long.
+- The stack and data section are always aligned to 8 bytes.
+- Objects use normal alignment rules.
+
+
+
+
 
 
 
@@ -62,6 +71,10 @@ Hot reloading is done by using a library, it isn't built in.
     - ip: instruction pointer
     - fp: frame pointer
     - sp: stack pointer
+
+- Instructions:
+    - noop
+    - halt
 
 - Instructions:
     - noop

@@ -5,7 +5,8 @@
 #include "symboltable.h"
 
 uint64_t getHash(char *name) {
-    // Uses the MurmurOAT algorithm: https://stackoverflow.com/questions/7666509/hash-function-for-string
+    // Uses the MurmurOAT algorithm: https://stackoverflow.com/questions/7666509/hash-function-for-string.
+    // I do not understand how this works.
     uint64_t hash = 525201411107845655ull;
     char *ch = name;
     while (*ch != '\0') {
@@ -33,13 +34,16 @@ void destroySymbolTable(struct SymbolTable *table) {
 }
 
 struct Symbol *getSymbol(struct SymbolTable *table, char *name) {
+    // Hash the name.
     uint64_t hash = getHash(name);
     uint64_t index = hash%table->capacity;
+
+    // Return the symbol if it is found.
     if (table->buckets[index].hash == hash) {
         return &table->buckets[index].symbol;
     }
 
-    // Probe the buckets.
+    // Probe the buckets if there is a collision.
     for (uint64_t i = 0; i < table->capacity; ++i) {
 
     }
