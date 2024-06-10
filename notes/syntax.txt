@@ -1,51 +1,51 @@
 pub package animals
 from std.io import printLine
 
-pub type Animal {
+pub struct Animal {
     pub name string
     pub age uint
     pub makeNoise(&this)
 }
 
-pub type Dog {
-    embed Animal
+pub struct Dog {
+    impl Animal
     pub tag string
 }
 
-pub type Cat {
-    embed Animal
+pub struct Cat {
+    impl Animal
     pub breed string
 }
 
-pub fun makeNoise(dog &Dog) {
+pub func makeNoise(dog &Dog) {
     printLine("woof")
 }
 
-pub fun makeNoise(cat &Cat) {
+pub func makeNoise(cat &Cat) {
     printLine("meow")
 }
 
-pub fun main() {
+pub func main() {
     var pet mut &Animal = &Dog()
-    pet.makeNoise() // prints "woof"
+    pet.makeNoise()
     pet = &Cat()
-    pet.makeNoise() // prints "meow"
+    pet.makeNoise()
 }
 
 
-package moreAnimals
+pub package moreAnimals
 from animals import *
 
-pub type Pet {
-    embed in Dog, Cat
+pub struct Pet {
+    impl in Dog, Cat
     pub walk(&this)
 }
 
-pub fun walk(dog &Dog) {}
+pub func walk(dog &Dog) {}
 
-pub fun walk(cat &Cat) {}
+pub func walk(cat &Cat) {}
 
-pub fun main() {
+pub func main() {
     var pet mut &Pet = &Dog()
     pet.walk()
     pet = &Cat()
@@ -57,26 +57,29 @@ pub fun main() {
 
 pub package physics
 import std.math
+import std.traits
 
-pub type Entity {
+pub enum Entity {
     pub pos, vel, acc Vector
-    pub collide(a, b &mut This)
-} cases {
-    type Circle {
-        pub radius float64
-    }
-
-    type Mesh {
-        pub vertices owned[[]Vector]
-    }
+    pub collide(a, b &This)
 }
 
-pub type Vector {
-    embed default std.traits.Arithmetic, .Equality
-    pub x, y float64
+pub struct Circle {
+    impl Entity
+    pub radius float
 }
 
-pub fun collide(a, b &mut Entity) {
+pub struct Mesh {
+    impl Entity
+    pub vertices owned[[]Vector]
+}
+
+pub struct Vector {
+    from std.traits impl default Arithmetic, Equality
+    pub x, y float
+}
+
+pub func collide(a, b &mut Entity) {
     match a, b {
         case Circle, Circle:
         case Mesh, Mesh:
@@ -85,23 +88,40 @@ pub fun collide(a, b &mut Entity) {
     }
 }
 
-pub fun .length(vector &Vector) float64 {
+pub func .length(vector &Vector) float {
     return std.math.sqrt(vector.x*vector.x + vector.y*vector.y)
 }
 
 
 
 
-List[T]
-    Vector[T]
-    LinkedList[T]
+import api
 
-Map[T, U]
-    HashTable[T, U]
-    Trie[T, U]
-    RadixTrie[T, U]
-    RBTree[T, U]
+pub struct Dog {
+    impl api.Animal
+    pub tag string
+}
 
-Set[T]
-    HashSet[T]
-    ...
+from api export Animal->*
+
+
+
+
+struct Vector {
+    x, y, z int
+}
+var v = Vector(1, 2, 3)
+printLine(v.x, .z, .y) // Swizzling
+printLine((v.y, .z, .x)) // Swizzling as a tuple
+printLine(Vector(v.z, .y, .x)) // Swizzling then constructing another instance
+
+
+
+
+pub struct any[T..] {
+    embed in T
+}
+
+pub struct all[T..] {
+    embed T
+}
