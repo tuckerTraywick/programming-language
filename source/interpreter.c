@@ -20,7 +20,7 @@ static void push(struct Interpreter *interpreter, uint64_t value) {
 // Pushes a single byte to the stack.
 static void pushByte(struct Interpreter *interpreter, uint8_t value) {
     *interpreter->sp = (uint64_t)value;
-    interpreter->sp += 8;
+    ++interpreter->sp;
 }
 
 // Pops an 8 byte value from the stack.
@@ -31,7 +31,7 @@ static uint64_t pop(struct Interpreter *interpreter) {
 
 // Pops a single byte from the stack.
 static uint8_t popByte(struct Interpreter *interpreter) {
-    interpreter->sp -= 8;
+    --interpreter->sp;
     return *(uint8_t*)interpreter->sp;
 }
 
@@ -84,18 +84,18 @@ void runCode(uint8_t *code, uint8_t *data) {
             case PUSH:
                 push(&interpreter, read(&interpreter));
                 break;
-            
+
             case PUSHB:
-                pushByte(&interpreter, readByte(&interpreter));
+                *interpreter.sp = readByte(&interpreter);
+                ++interpreter.sp;
                 break;
 
             case POP:
                 pop(&interpreter);
                 break;
 
-            // Pops just 1 byte, not an aligned byte.
             case POPB:
-                --interpreter.fp;
+                popByte(&interpreter);
                 break;
 
             case POPN: {
@@ -109,9 +109,114 @@ void runCode(uint8_t *code, uint8_t *data) {
                 break;
 
             case DUPB:
-                pushByte(&interpreter, *(interpreter.sp - 8));
+                pushByte(&interpreter, *(interpreter.sp - 1));
                 break;
+
+            case DUPN: {
+                uint64_t n = pop(&interpreter);
+                memcpy(interpreter.sp, interpreter.sp - n, n);
+                interpreter.sp += n;
+                break;
+            }
             
+            case ZERO:
+                push(&interpreter, 0);
+                break;
+
+            case ZEROB:
+                pushByte(&interpreter, 0);
+                break;
+
+            case ZERON: {
+                uint64_t n = pop(&interpreter);
+                memset(interpreter.sp, 0, n);
+                interpreter.sp += n;
+                break;
+            }
+
+            case BUMP:
+                interpreter.sp += 8;
+                break;
+
+            case BUMPB:
+                ++interpreter.sp;
+                break;
+
+            case BUMPN: {
+                uint64_t n = pop(&interpreter);
+                interpreter.sp += n;
+                break;
+            }
+
+            case LOAD:
+                push(&interpreter, *(uint64_t*)pop(&interpreter));
+                break;
+
+            case LOADB:
+                pushByte(&interpreter, *(uint8_t*)pop(&interpreter));
+                break;
+
+            case LOADN: {
+                uint64_t n = pop(&interpreter);
+                uint8_t *source = (uint8_t*)pop(&interpreter);
+                memcpy(interpreter.sp, source, n);
+                interpreter.sp += n;
+                break;
+            }
+
+            case STORE:
+                *(uint64_t*)pop(&interpreter) = pop(&interpreter);
+                break;
+
+            case STOREB:
+                *(uint8_t*)pop(&interpreter) = popByte(&interpreter);
+                break;
+
+            case STOREN: {
+                uint64_t n = pop(&interpreter);
+                uint8_t *destination = (uint8_t*)pop(&interpreter);
+                memcpy(destination, interpreter.sp - n, n);
+                break;
+            }
+
+            case COPY:
+                *(uint64_t*)pop(&interpreter) = *(uint64_t*)pop(&interpreter);
+                break;
+
+            case COPYB:
+                *(uint8_t*)pop(&interpreter) = *(uint8_t*)pop(&interpreter);
+                break;
+
+            case COPYN: {
+                uint64_t n = pop(&interpreter);
+                uint8_t *destination = (uint8_t*)pop(&interpreter);
+                uint8_t *source = (uint8_t*)pop(&interpreter);
+                memcpy(destination, source, n);
+                break;
+            }
+
+            case JMP:
+                interpreter.ip = (uint8_t*)pop(&interpreter);
+                break;
+
+            case JMPT: {
+                uint64_t offset = pop(&interpreter);
+                uint8_t result = popByte(&interpreter);
+                if (result) {
+                    interpreter.ip = interpreter.code + offset;
+                }
+                break;
+            }
+
+            case JMPF: {
+                uint64_t offset = pop(&interpreter);
+                uint8_t result = popByte(&interpreter);
+                if (!result) {
+                    interpreter.ip = interpreter.code + offset;
+                }
+                break;
+            }
+
             case ADDIB:
                 pushByte(&interpreter, popByte(&interpreter) + popByte(&interpreter));
                 break;

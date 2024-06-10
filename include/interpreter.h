@@ -58,7 +58,7 @@ enum Opcode {
     STOREB,
     STOREN,
 
-    COPY8,
+    COPY,
     COPYB,
     COPYN,
 
