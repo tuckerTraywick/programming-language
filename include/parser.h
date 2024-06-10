@@ -7,7 +7,7 @@
 // Represents the type of a node.
 enum NodeType {
     INVALID_NODE,
-    PACKAGE_STATEMENT_EXPECTED_PACKAGE_NAME,
+    EXPECTED_PACKAGE_NAME,
     
     TOKEN,
     PROGRAM,

@@ -72,7 +72,7 @@ static bool consume(struct Parser *parser, enum TokenType type) {
 
 char *nodeTypeNames[] = {
     [INVALID_NODE] = "Invalid syntax.",
-    [PACKAGE_STATEMENT_EXPECTED_PACKAGE_NAME] = "Expected a package name.",
+    [EXPECTED_PACKAGE_NAME] = "Expected a package name.",
     [TOKEN] = "token",
     [PROGRAM] = "program",
     [PACKAGE_STATEMENT] = "package statement",
