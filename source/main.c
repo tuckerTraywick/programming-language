@@ -6,13 +6,14 @@
 #include "interpreter.h"
 
 static uint8_t code[] = {
+    PUSHB, 2,
     PUSH, 14,0,0,0, 0,0,0,0,
     CALL,
-    PUSHB, 2,
-    PRINTUB,
+    POPB,
     HALT,
 
-    PUSHB, 1,
+    PUSH, 0,0,0,0, 0,0,0,0,
+    PUSHAB,
     PRINTUB,
     RET,
 };

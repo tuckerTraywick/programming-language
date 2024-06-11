@@ -63,6 +63,7 @@ void runCode(uint8_t *code, uint8_t *data) {
     assert(stack && "`malloc()` failed.");
     struct Interpreter interpreter = {
         .code = code,
+        .data = data,
         .stack = stack,
         .ip = code,
         .fp = stack,
@@ -86,9 +87,35 @@ void runCode(uint8_t *code, uint8_t *data) {
                 push(&interpreter, read(&interpreter));
                 break;
 
+            case PUSHL:
+                push(&interpreter, *(uint64_t*)(interpreter.fp + pop(&interpreter)));
+                break;
+
+            case PUSHA:
+                push(&interpreter, *(uint64_t*)(interpreter.fp - pop(&interpreter) - 25));
+                break;
+
+            case PUSHD:
+                push(&interpreter, *(uint64_t*)(interpreter.data + pop(&interpreter)));
+                break;
+
             case PUSHB:
                 *interpreter.sp = readByte(&interpreter);
                 ++interpreter.sp;
+                break;
+
+            case PUSHLB:
+                pushByte(&interpreter, *(interpreter.fp + pop(&interpreter)));
+                break;
+
+            case PUSHAB:
+                // `- 25` to account for the 24 bytes of data pushed by `CALL` - 1 to get to the
+                // last byte of the last argument.
+                pushByte(&interpreter, *(interpreter.fp - pop(&interpreter) - 25));
+                break;
+
+            case PUSHDB:
+                pushByte(&interpreter, *(interpreter.data + pop(&interpreter)));
                 break;
 
             case POP:
@@ -229,6 +256,7 @@ void runCode(uint8_t *code, uint8_t *data) {
             }
 
             case RET:
+                interpreter.sp = interpreter.fp; // Just in case the function doesn't clean up a temporary value.
                 interpreter.ip = (uint8_t*)pop(&interpreter);
                 interpreter.fp = (uint8_t*)pop(&interpreter);
                 interpreter.sp = (uint8_t*)pop(&interpreter);

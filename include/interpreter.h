@@ -12,6 +12,7 @@
 // Represents the state of the virtual machine.
 struct Interpreter {
     uint8_t *code; // The entrypoint of the code to be executed.
+    uint8_t *data; // The data section of the program.
     uint8_t *stack; // The stack. Allocated and freed in `runCode()`.
     uint8_t *ip; // Instruction pointer.
     uint8_t *fp; // Frame pointer.
@@ -26,10 +27,10 @@ enum Opcode {
     HALT,
 
     PUSH,
-    PUSHB,
     PUSHL,
     PUSHA,
     PUSHD,
+    PUSHB,
     PUSHLB,
     PUSHAB,
     PUSHDB,
