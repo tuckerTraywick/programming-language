@@ -273,9 +273,6 @@ void runCode(uint8_t *code, uint8_t *data) {
                 interpreter.sp = (uint8_t*)pop(&interpreter);
                 break;
 
-
-
-
             case ADDI:
                 push(&interpreter, pop(&interpreter) + pop(&interpreter));
                 break;
