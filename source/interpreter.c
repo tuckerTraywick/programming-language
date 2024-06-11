@@ -266,8 +266,30 @@ void runCode(uint8_t *code, uint8_t *data) {
                 pushByte(&interpreter, popByte(&interpreter) + popByte(&interpreter));
                 break;
 
+            case PRINTI:
+                printf("%li\n", pop(&interpreter));
+                break;
+
+            case PRINTU:
+                printf("%lu\n", pop(&interpreter));
+                break;
+
+            case PRINTF: {
+                uint64_t value = pop(&interpreter);
+                printf("%f\n", *(double*)(&value)); // Reinterpret `value` as a double without promotion.
+                break;
+            }
+
+            case PRINTIB:
+                printf("%i\n", popByte(&interpreter));
+                break;
+
             case PRINTUB:
                 printf("%u\n", popByte(&interpreter));
+                break;
+
+            case PRINTC:
+                printf("%c\n", (char)popByte(&interpreter));
                 break;
 
             default:
