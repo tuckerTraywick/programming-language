@@ -9,7 +9,7 @@
 #include "object.h"
 
 // Redefining `abs` so it works for different types.
-#define abs(x) (((x) < 0) ? (-(x)) : (x))
+#define abs(x) (((x) < 0) ? -(x) : (x))
 
 // Pushes an 8 byte value to the stack.
 static void push(struct Interpreter *interpreter, uint64_t value) {
@@ -62,6 +62,7 @@ void runCode(uint8_t *code, uint8_t *data) {
     // TODO: Handle failed `malloc()`.
     assert(stack && "`malloc()` failed.");
     struct Interpreter interpreter = {
+        .code = code,
         .stack = stack,
         .ip = code,
         .fp = stack,
@@ -196,7 +197,7 @@ void runCode(uint8_t *code, uint8_t *data) {
             }
 
             case JMP:
-                interpreter.ip = (uint8_t*)pop(&interpreter);
+                interpreter.ip = interpreter.code + pop(&interpreter);
                 break;
 
             case JMPT: {
@@ -217,8 +218,28 @@ void runCode(uint8_t *code, uint8_t *data) {
                 break;
             }
 
+            case CALL: {
+                uint64_t offset = pop(&interpreter);
+                push(&interpreter, (uint64_t)interpreter.sp);
+                push(&interpreter, (uint64_t)interpreter.fp);
+                push(&interpreter, (uint64_t)interpreter.ip);
+                interpreter.fp = interpreter.sp;
+                interpreter.ip = interpreter.code + offset;
+                break;
+            }
+
+            case RET:
+                interpreter.ip = (uint8_t*)pop(&interpreter);
+                interpreter.fp = (uint8_t*)pop(&interpreter);
+                interpreter.sp = (uint8_t*)pop(&interpreter);
+                break;
+
             case ADDIB:
                 pushByte(&interpreter, popByte(&interpreter) + popByte(&interpreter));
+                break;
+
+            case PRINTUB:
+                printf("%u\n", popByte(&interpreter));
                 break;
 
             default:
@@ -228,7 +249,8 @@ void runCode(uint8_t *code, uint8_t *data) {
         }
     }
 
-    printf("\nstack:\n");
+    printf("\nsp: %lu\n", interpreter.sp - interpreter.stack);
+    printf("stack:\n");
     for (uint8_t *byte = interpreter.stack; byte < interpreter.sp; ++byte) {
         printf("%d ", *byte);
     }

@@ -70,10 +70,6 @@ int, uint, byte, ubyte, float, bool, char
     - noop
     - halt
 
-- Instructions:
-    - noop
-    - halt
-
     - push[b] immediate
     - pushl[b] local
     - pusha[b] argument
