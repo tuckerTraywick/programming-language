@@ -23,6 +23,11 @@ static void pushByte(struct Interpreter *interpreter, uint8_t value) {
     ++interpreter->sp;
 }
 
+// Pushes a double to the stack.
+static void pushDouble(struct Interpreter *Interpreter, double value) {
+    push(Interpreter, *(uint64_t*)(&value));
+}
+
 // Pops an 8 byte value from the stack.
 static uint64_t pop(struct Interpreter *interpreter) {
     interpreter->sp -= 8;
@@ -33,6 +38,12 @@ static uint64_t pop(struct Interpreter *interpreter) {
 static uint8_t popByte(struct Interpreter *interpreter) {
     --interpreter->sp;
     return *(uint8_t*)interpreter->sp;
+}
+
+// Pops a double from the stack.
+static double popDouble(struct Interpreter *Interpreter) {
+    uint64_t value = pop(Interpreter);
+    return *(double*)(&value);
 }
 
 // Reads an 8 byte operand from the code.
@@ -256,14 +267,133 @@ void runCode(uint8_t *code, uint8_t *data) {
             }
 
             case RET:
-                interpreter.sp = interpreter.fp; // Just in case the function doesn't clean up a temporary value.
+                interpreter.sp = interpreter.fp;
                 interpreter.ip = (uint8_t*)pop(&interpreter);
                 interpreter.fp = (uint8_t*)pop(&interpreter);
                 interpreter.sp = (uint8_t*)pop(&interpreter);
                 break;
 
+
+
+
+            case ADDI:
+                push(&interpreter, pop(&interpreter) + pop(&interpreter));
+                break;
+
+            case ADDF:
+                pushDouble(&interpreter, popDouble(&interpreter) + popDouble(&interpreter));
+                break;
+
             case ADDIB:
                 pushByte(&interpreter, popByte(&interpreter) + popByte(&interpreter));
+                break;
+
+            case SUBI:
+                push(&interpreter, pop(&interpreter) - pop(&interpreter));
+                break;
+
+            case SUBF:
+                pushDouble(&interpreter, popDouble(&interpreter) - popDouble(&interpreter));
+                break;
+
+            case SUBIB:
+                pushByte(&interpreter, popByte(&interpreter) - popByte(&interpreter));
+                break;
+
+            case MULI:
+                push(&interpreter, (int64_t)pop(&interpreter) * (int64_t)pop(&interpreter));
+                break;
+
+            case MULU:
+                push(&interpreter, pop(&interpreter) * pop(&interpreter));
+                break;
+
+            case MULF:
+                pushDouble(&interpreter, popDouble(&interpreter) * popDouble(&interpreter));
+                break;
+
+            case MULIB:
+                pushByte(&interpreter, popByte(&interpreter) * popByte(&interpreter));
+                break;
+
+            case MULUB:
+                pushByte(&interpreter, (int8_t)popByte(&interpreter) * (int8_t)popByte(&interpreter));
+                break;
+
+            case DIVI:
+                push(&interpreter, (int64_t)pop(&interpreter) / (int64_t)pop(&interpreter));
+                break;
+
+            case DIVU:
+                push(&interpreter, pop(&interpreter) / pop(&interpreter));
+                break;
+
+            case DIVF:
+                pushDouble(&interpreter, popDouble(&interpreter) / popDouble(&interpreter));
+                break;
+
+            case DIVIB:
+                pushByte(&interpreter, popByte(&interpreter) / popByte(&interpreter));
+                break;
+
+            case DIVUB:
+                pushByte(&interpreter, (int8_t)popByte(&interpreter) / (int8_t)popByte(&interpreter));
+                break;
+
+            case MODI:
+                push(&interpreter, (int64_t)pop(&interpreter) % (int64_t)pop(&interpreter));
+                break;
+
+            case MODU:
+                push(&interpreter, pop(&interpreter) % pop(&interpreter));
+                break;
+
+            case MODIB:
+                pushByte(&interpreter, popByte(&interpreter) % popByte(&interpreter));
+                break;
+
+            case MODUB:
+                pushByte(&interpreter, (int8_t)popByte(&interpreter) % (int8_t)popByte(&interpreter));
+                break;
+
+            case NEGI:
+                push(&interpreter, -(int64_t)pop(&interpreter));
+                break;
+
+            case NEGF:
+                pushDouble(&interpreter, -popDouble(&interpreter));
+                break;
+
+            case NEGB:
+                pushByte(&interpreter, -(int8_t)popByte(&interpreter));
+                break;
+
+            case ABSI:
+                push(&interpreter, abs((int64_t)pop(&interpreter)));
+                break;
+
+            case ABSF:
+                pushDouble(&interpreter, abs(popDouble(&interpreter)));
+                break;
+
+            case ABSB:
+                pushByte(&interpreter, abs((int8_t)popByte(&interpreter)));
+                break;
+
+            case FLOORF:
+                pushDouble(&interpreter, floor(popDouble(&interpreter)));
+                break;
+
+            case CEILF:
+                pushDouble(&interpreter, ceil(popDouble(&interpreter)));
+                break;
+
+            case ROUNDF:
+                pushDouble(&interpreter, round(popDouble(&interpreter)));
+                break;
+
+            case SQRTF:
+                pushDouble(&interpreter, sqrt(popDouble(&interpreter)));
                 break;
 
             case PRINTI:
@@ -274,11 +404,9 @@ void runCode(uint8_t *code, uint8_t *data) {
                 printf("%lu\n", pop(&interpreter));
                 break;
 
-            case PRINTF: {
-                uint64_t value = pop(&interpreter);
-                printf("%f\n", *(double*)(&value)); // Reinterpret `value` as a double without promotion.
+            case PRINTF:
+                printf("%f\n", popDouble(&interpreter));
                 break;
-            }
 
             case PRINTIB:
                 printf("%i\n", popByte(&interpreter));

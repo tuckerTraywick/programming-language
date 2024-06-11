@@ -97,12 +97,12 @@ enum Opcode {
     MODUB,
 
     NEGI,
-    NEGB,
     NEGF,
+    NEGB,
 
     ABSI,
-    ABSB,
     ABSF,
+    ABSB,
 
     FLOORF,
 
@@ -111,9 +111,6 @@ enum Opcode {
     ROUNDF,
 
     SQRTF,
-
-    BNOT,
-    BNOTB,
 
     BAND,
     BANDB,
@@ -133,8 +130,8 @@ enum Opcode {
     BXNOR,
     BXNORB,
 
-    LNOT,
-    LNOTB,
+    BNOT,
+    BNOTB,
 
     LAND,
     LANDB,
@@ -153,6 +150,9 @@ enum Opcode {
 
     LXNOR,
     LXNORB,
+
+    LNOT,
+    LNOTB,
 
     GTI,
     GTU,
