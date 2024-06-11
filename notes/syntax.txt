@@ -1,31 +1,31 @@
 pub package animals
 from std.io import printLine
 
-pub struct Animal {
+pub type Animal {
     pub name string
-    pub age uint
+    pub age uint32
     pub makeNoise(&this)
 }
 
-pub struct Dog {
-    impl Animal
+pub type Dog {
+    embed Animal
     pub tag string
 }
 
-pub struct Cat {
-    impl Animal
+pub type Cat {
+    embed Animal
     pub breed string
 }
 
-pub func makeNoise(dog &Dog) {
+pub fun makeNoise(dog &Dog) {
     printLine("woof")
 }
 
-pub func makeNoise(cat &Cat) {
+pub fun makeNoise(cat &Cat) {
     printLine("meow")
 }
 
-pub func main() {
+pub fun main() {
     var pet mut &Animal = &Dog()
     pet.makeNoise()
     pet = &Cat()
@@ -34,94 +34,45 @@ pub func main() {
 
 
 pub package moreAnimals
+from std.io import printLine
 from animals import *
 
-pub struct Pet {
-    impl in Dog, Cat
+pub type Pet {
+    embed in Dog, Cat
     pub walk(&this)
 }
 
-pub func walk(dog &Dog) {}
+pub type Hamster {
+    embed Pet, Animal
+}
 
-pub func walk(cat &Cat) {}
+pub fun walk(dog &Dog) {}
 
-pub func main() {
-    var pet mut &Pet = &Dog()
-    pet.walk()
-    pet = &Cat()
-    pet.walk()
+pub fun walk(cat &Cat) {}
+
+pub fun walk(hamster &Hamster) {}
+
+pub fun makeNoise(hamster &Hamster) {
+    printLine("squeak")
 }
 
 
 
 
-pub package physics
-import std.math
-import std.traits
-
-pub enum Entity {
-    pub pos, vel, acc Vector
-    pub collide(a, b &This)
-}
-
-pub struct Circle {
-    impl Entity
-    pub radius float
-}
-
-pub struct Mesh {
-    impl Entity
-    pub vertices owned[[]Vector]
-}
-
-pub struct Vector {
-    from std.traits impl default Arithmetic, Equality
-    pub x, y float
-}
-
-pub func collide(a, b &mut Entity) {
-    match a, b {
-        case Circle, Circle:
-        case Mesh, Mesh:
-        case Circle, Mesh:
-        case Mesh, Circle:
-    }
-}
-
-pub func .length(vector &Vector) float {
-    return std.math.sqrt(vector.x*vector.x + vector.y*vector.y)
+pub type Color {
+    pub r, g, b uint8
+} cases {
+    default type Rgb {}
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
 }
 
 
-
-
-import api
-
-pub struct Dog {
-    impl api.Animal
-    pub tag string
+pub type any[T..] cases {
+    embed T
 }
 
-from api export Animal->*
-
-
-
-
-struct Vector {
-    x, y, z int
-}
-var v = Vector(1, 2, 3)
-printLine(v.x, .z, .y) // Swizzling
-printLine((v.y, .z, .x)) // Swizzling as a tuple
-printLine(Vector(v.z, .y, .x)) // Swizzling then constructing another instance
-
-
-
-
-pub struct any[T..] {
-    embed in T
-}
-
-pub struct all[T..] {
+pub type all[T..] {
     embed T
 }
