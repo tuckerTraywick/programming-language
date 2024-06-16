@@ -18,6 +18,11 @@ uint64_t getHash(char *name) {
     return hash;
 }
 
+struct SymbolTable createSymbolTable(size_t capacity) {
+    struct SymbolTable table = {0};
+    return table;
+}
+
 void destroySymbolTable(struct SymbolTable *table) {
     free(table->buckets);
     *table = (struct SymbolTable){0};

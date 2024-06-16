@@ -32,9 +32,10 @@ void readObject(FILE *file, struct Object *object) {
 }
 
 void printObjectHeader(struct ObjectHeader *header) {
-    printf("executable: %s\n", (header->executable) ? "true" : "false");
-    printf("size:       %ld\n", header->size);
-    printf("code:       %zu\n", header->code);
-    printf("data:       %zu\n", header->data);
-    printf("entryPoint: %zu\n", header->entryPoint);
+    printf("size:         %ld\n", header->size);
+    printf("code:         %zu\n", header->code);
+    printf("data:         %zu\n", header->data);
+    printf("symbol table: %zu\n", header->symbolTable);
+    printf("entry point:  %zu\n", header->entryPoint);
+    printf("executable:   %s\n", (header->executable) ? "true" : "false");
 }

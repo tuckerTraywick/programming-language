@@ -11,9 +11,9 @@ struct ObjectHeader {
     uint64_t size; // Size of the object (excluding the header).
     uint64_t code; // The offset from the end of the header.
     uint64_t data; // The offset from the end of the header.
-    uint64_t symbols; // The offset of the symbol table from the end of the header.
+    uint64_t symbolTable; // The offset of the symbol table from the end of the header.
     uint64_t entryPoint; // The offset the end of the header. Where the interpreter starts executing.
-    bool executable; // Whether the object can be executed. This is the last field for alignment purposes.
+    bool executable; // Whether the object can be executed. This is the last field for padding purposes.
 };
 
 // Represents an object currently loaded into memory + some metadata. All offsets in the header are
@@ -21,9 +21,6 @@ struct ObjectHeader {
 struct Object {
     struct ObjectHeader header;
     uint8_t *bytes; // The bytes of the object. Contains the code and data.
-    uint8_t *code; // The beginning of the code segment.
-    uint8_t *data; // The beginning of the data segment.
-    struct SymbolTable symbolTable; // A mapping of symbols to offsets.
     bool isMemoryMapped; // If true, the object's bytes were mapped from a file. Else, they were `malloc()`ed.
 };
 

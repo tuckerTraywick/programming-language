@@ -23,7 +23,7 @@ struct SymbolBucket {
     uint64_t hash;
 };
 
-// A hash table that maps symbol names to things in the object. Uses open addressing with 
+// A hash table that maps symbol names to things in the object. Uses linear probing.
 struct SymbolTable {
     uint64_t capacity; // The number of buckets allocated.
     uint64_t size; // The number of buckets occupied.
@@ -46,6 +46,6 @@ struct Symbol *getSymbol(struct SymbolTable *table, char *name);
 
 // Sets the offset of a symbol. `name` must be at least 1 character long and `table` must be
 // initialized.
-void setSymbol(struct SymbolTable *table, char *name, struct Symbol *symbol);
+void addSymbol(struct SymbolTable *table, char *name, struct Symbol *symbol);
 
 #endif // SYMBOLTABLE_H

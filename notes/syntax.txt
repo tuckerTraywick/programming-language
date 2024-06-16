@@ -1,35 +1,36 @@
 pub package animals
 from std.io import printLine
 
-pub type Animal {
+pub struct Animal {
     pub name string
     pub age uint32
-    pub makeNoise(&this)
 }
 
-pub type Dog {
+pub method makeNoise(animal &Animal)
+
+pub struct Dog {
     embed Animal
     pub tag string
 }
 
-pub type Cat {
+pub struct Cat {
     embed Animal
     pub breed string
 }
 
-pub fun makeNoise(dog &Dog) {
+pub func makeNoise(dog &Dog) {
     printLine("woof")
 }
 
-pub fun makeNoise(cat &Cat) {
+pub func makeNoise(cat &Cat) {
     printLine("meow")
 }
 
-pub fun main() {
+pub func main() {
     var pet mut &Animal = &Dog()
-    pet.makeNoise()
+    makeNoise(pet)
     pet = &Cat()
-    pet.makeNoise()
+    pet->makeNoise()
 }
 
 
@@ -37,42 +38,94 @@ pub package moreAnimals
 from std.io import printLine
 from animals import *
 
-pub type Pet {
+pub struct Pet {
+    export Animal
     embed in Dog, Cat
-    pub walk(&this)
 }
 
-pub type Hamster {
+pub method walk(pet &Pet)
+
+pub struct Hamster {
     embed Pet, Animal
 }
 
-pub fun walk(dog &Dog) {}
+pub func walk(dog &Dog) {}
 
-pub fun walk(cat &Cat) {}
+pub func walk(cat &Cat) {}
 
-pub fun walk(hamster &Hamster) {}
+pub func walk(hamster &Hamster) {}
 
-pub fun makeNoise(hamster &Hamster) {
+pub func makeNoise(hamster &Hamster) {
     printLine("squeak")
 }
 
 
 
 
-pub type Color {
-    pub r, g, b uint8
-} cases {
-    default type Rgb {}
+pub package physics
+import std.math
+import std.operations
+
+pub enum Entity {
+    pub pos, vel, acc Vector
+}
+
+pub struct Circle {
+    embed Entity
+    pub radius float64
+}
+
+pub struct Mesh {
+    embed Entity
+    pub vertices owned[[]Vector]
+}
+
+pub struct Vector {
+    from std.operations export default Arithmetic, Equality
+    pub x, y, z float64
+}
+
+pub func collide(a, b &mut Entity) {
+    match a, b {
+        case Circle, Circle:
+        case Mesh, Mesh:
+        case Circle, Mesh:
+        case Mesh, Circle:
+    }
+}
+
+pub func .length(v &Vector) {
+    return std.math.sqrt(v.x*v.x + v.y*v.y)
+}
+
+
+
+
+enum Direction {
+    n, s, e, w
+}
+
+
+enum Color {
+    r, g, b uint8
+}
+
+struct Rgb {
+    embed Color
+}
+
+enum ColorCase {
+    embed Color
     red = (255, 0, 0)
     green = (0, 255, 0)
     blue = (0, 0, 255)
 }
 
 
-pub type any[T..] cases {
+struct all[T..] {
     embed T
 }
 
-pub type all[T..] {
+enum any[T..] {
     embed T
 }
