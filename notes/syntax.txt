@@ -39,7 +39,7 @@ from std.io import printLine
 from animals import *
 
 pub struct Pet {
-    export Animal
+    embed Animal
     embed in Dog, Cat
 }
 
@@ -101,6 +101,56 @@ pub func .length(v &Vector) {
 
 
 
+pub package lexer
+from std.io import File->*, FileError
+
+pub struct Token {
+    pub type TokenType
+    pub text string
+}
+
+pub enum TokenType {
+    pub value uint32 = case
+
+    identifier, number, string, ...
+}
+
+pub struct LexingError {
+    export error
+    pub message string
+}
+
+pub func lex(file File) any[owned[[]mut Token], LexingError, FileError]
+
+pub func lex(text string) any[owned[[]mut Token], LexingError]
+
+
+
+
+package chess
+
+type Board = [8][8]Piece
+
+struct Piece {
+    type PieceType
+    color Color
+}
+
+enum PieceType {
+    king, queen, rook, knight, bishop, pawn
+}
+
+enum Color {
+    white, black
+}
+
+func main() {
+    move(&board, turn, (2, 0), (3, 0))
+}
+
+
+
+
 enum Direction {
     n, s, e, w
 }
@@ -122,10 +172,10 @@ enum ColorCase {
 }
 
 
-struct all[T..] {
+struct all[T type..] {
     embed T
 }
 
-enum any[T..] {
-    embed T
+enum any[T type..] {
+    embed in T
 }
