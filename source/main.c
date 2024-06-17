@@ -38,8 +38,16 @@ int main(void) {
     // ObjectDestroy(&object);
     // fclose(file);
 
-    struct HotObject object = HotObjectCreate(1024, 100);
-    HotObjectDestroy(&object);
+    struct List list = ListCreate(5, sizeof (int));
+    for (int i = 0; i < 5; ++i) {
+        ListInsert(&list, list.count, &i);
+    }
+
+    for (size_t i = 0; i < list.count; ++i) {
+        printf("list[%zu] = %i\n", i, *(int*)ListGet(&list, i));
+    }
+
+    ListDestroy(&list);
 
     return 0;
 }

@@ -9,53 +9,55 @@
 	#define LIST_GROWTH_FACTOR 2
 #endif
 
-// Returns a pointer the elements of a new list. Cast this to a pointer to whatever type of element
-// you're storing in the list. Use `[]` and `[]=` to get and set elements of the list. The list
-// structure is internal and not exposed to the programmer. Must be destroyed by `ListDestroy()`.
-void *ListCreate(size_t capacity, size_t elementSize);
+// Represents a list.
+struct List {
+	size_t capacity;
+	size_t count;
+	size_t elementSize;
+	void *elements;
+};
+
+// Returns a new list. Must be destroyed by `ListDestroy()`.
+struct List ListCreate(size_t capacity, size_t elementSize);
 
 // Deallocates a list.
-void ListDestroy(void *list);
+void ListDestroy(struct List *list);
 
-// Returns the maximum number of elements in a list.
-size_t ListGetCapacity(void *list);
+// Gets a pointer to the element at an index in a list.
+void *ListGet(struct List *list, size_t index);
 
-// Suggests a new capacity for a list. If the new capacity differs from the old capacity by more
-// than the growth factor, the list is reallocated to fit the new capacity. Will not shrink the
-// capacity beyond the count of the list. Returns a pointer to the list or a new list if the
-// capacity changed.
-void *ListSetCapacity(void *list, size_t capacity);
+// Gets a pointer to the element at an index in a list.
+void ListSet(struct List *list, size_t index, void *element);
 
-// Returns the current number of elements in a list.
-size_t ListGetCount(void *list);
+// Makes sure a list has a large enough capacity to fit `capacity` elements. Will reallocate if the
+// capacity is larger than the current capacity.
+void ListReserve(struct List *list, size_t capacity);
 
-// Grows or shrinks the count of a list. Returns a pointer to the list or a new list if the
-// capacity changes.
-void *ListSetCount(void *list, size_t count);
-
-// Returns the size in bytes of one element of a list.
-size_t ListGetElementSize(void *list);
+// Changes the count of a list. Will reallocate if the count is less than the current count times
+// the growth factor.
+void ListResize(struct List *list, size_t count);
 
 // Returns true if a list has 0 elements.
-bool ListIsEmpty(void *list);
+bool ListIsEmpty(struct List *list);
 
 // Inserts an element at an index in a list.
-void *ListInsert(void *list, size_t index, void *element);
+void ListInsert(struct List *list, size_t index, void *element);
 
 // Removes the element at an index in a list.
-void *ListRemove(void *list, size_t index);
+void ListRemove(struct List *list, size_t index);
 
 // Prepends an element to a list.
-void *ListPushFront(void *list, void *element);
+void ListPushFront(struct List *list, void *element);
 
 // Appends an element to a list.
-void *ListPushBack(void *list, void *element);
+void ListPushBack(struct List *list, void *element);
 
-// Pops a number of elements from the front of a list and stores the last element popped in
-// `result`.
-void *ListPopFront(void *list, size_t amount, void *result);
+// Pops a number of elements from the front of a list and returns a pointer to the last element
+// popped.
+void *ListPopFront(struct List *list, size_t amount);
 
-// Pops a number of elements from the back of a list and stores the last element popped in `result`.
-void *ListPopBack(void *list, size_t amount, void *result);
+// Pops a number of elements from the back of a list and returns a pointer to the last element
+// popped.
+void *ListPopBack(struct List *list, size_t amount);
 
 #endif // LIST_H

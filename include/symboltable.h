@@ -4,11 +4,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-// An expandable list of buckets for a hashmap of names to symbols.
-typedef struct Symbol *SymbolTable;
+typedef struct List SymbolTable;
 
-// Represents an expandable string pool.
-typedef char *ListChar;
+typedef struct List ListChar;
 
 // Describes what a symbol points to.
 enum SymbolCategory {
@@ -30,8 +28,5 @@ struct Symbol {
 
 // Returns the hash code for a symbol name.
 uint64_t getHash(char *name);
-
-// Adds a symbol to a symbol table.
-void SymbolTableAdd(SymbolTable table, ListChar strings, char *name, struct Symbol *symbol);
 
 #endif // SYMBOLTABLE_H

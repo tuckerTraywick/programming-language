@@ -71,12 +71,12 @@ static uint8_t readByte(struct Interpreter *interpreter) {
     return value;
 }
 
-void run(struct Object *object) {
-    uint8_t *code = object->data + object->header.entryPoint;
-    uint8_t *immutableData = getSegmentPointer(object, object->header.immutableData);
-    uint8_t *mutableData = getSegmentPointer(object, object->header.mutableData);
-    runCode(code, immutableData, mutableData);
-}
+// void run(struct Object *object) {
+//     uint8_t *code = object->data + object->header.entryPoint;
+//     uint8_t *immutableData = getSegmentPointer(object, object->header.immutableData);
+//     uint8_t *mutableData = getSegmentPointer(object, object->header.mutableData);
+//     runCode(code, immutableData, mutableData);
+// }
 
 void runCode(uint8_t *code, uint8_t *immutableData, uint8_t *mutableData) {
     uint8_t *stack = malloc(STACK_SIZE);
