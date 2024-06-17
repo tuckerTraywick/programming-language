@@ -39,13 +39,18 @@ int main(void) {
     // fclose(file);
 
     struct List list = ListCreate(5, sizeof (int));
-    for (int i = 0; i < 5; ++i) {
-        ListInsert(&list, list.count, &i);
+    printf("list count = %zu\nlist capacity = %zu\n\n", list.count, list.capacity);
+
+    for (int i = 0; i < 6; ++i) {
+        ListPushBack(&list, &i);
     }
+    ListResize(&list, 3);
 
     for (size_t i = 0; i < list.count; ++i) {
         printf("list[%zu] = %i\n", i, *(int*)ListGet(&list, i));
     }
+    printf("\nlist count = %zu\nlist capacity = %zu\n", list.count, list.capacity);
+
 
     ListDestroy(&list);
 

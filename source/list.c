@@ -11,7 +11,7 @@ struct List ListCreate(size_t capacity, size_t elementSize) {
         .capacity = capacity,
         .count = 0,
         .elementSize = elementSize,
-        .elements = malloc(capacity*elementSize),
+        .elements = calloc(capacity*elementSize, 1),
     };
 }
 
@@ -30,17 +30,21 @@ void ListSet(struct List *list, size_t index, void *element) {
 }
 
 void ListReserve(struct List *list, size_t capacity) {
+    // TODO: Zero new memory.
     if (capacity > list->capacity) {
         list->capacity = capacity;
         list->elements = realloc(list->elements, list->capacity*list->elementSize);
     }
 }
 
-void ListSetCount(struct List *list, size_t count) {
+void ListResize(struct List *list, size_t count) {
     if (count > list->capacity) {
         while (list->capacity < count) {
             list->capacity *= LIST_GROWTH_FACTOR;
         }
+        list->elements = realloc(list->elements, list->capacity*list->elementSize);
+    } else if (count < list->count/LIST_GROWTH_FACTOR) {
+        list->capacity = count*LIST_GROWTH_FACTOR;
         list->elements = realloc(list->elements, list->capacity*list->elementSize);
     }
     list->count = count;
@@ -52,7 +56,7 @@ bool ListIsEmpty(struct List *list) {
 
 void ListInsert(struct List *list, size_t index, void *element) {
     assert(index <= list->count && "Invalid index.");
-    ListSetCount(list, list->count + 1);
+    ListResize(list, list->count + 1);
     if (index < list->count - 1) {
         memmove(
             ListGet(list, index + 1),
@@ -63,25 +67,25 @@ void ListInsert(struct List *list, size_t index, void *element) {
     ListSet(list, index, element);
 }
 
-// void ListRemove(struct List *list, size_t index) {
-//     struct List *l = getList(list);
-//     assert(index < l->count);
-//     memmove(
-//         l->elements + index*l->elementSize,
-//         l->elements + (index + 1)*l->elementSize,
-//         (l->count - index - 1)*l->elementSize
-//     );
-//     --l->count;
-//     return l + 1;
-// }
+void ListRemove(struct List *list, size_t index) {
+    assert(index <= list->count && "Invalid index.");
+    ListResize(list, list->count - 1);
+    if (index < list->count - 1) {
+        memmove(
+            ListGet(list, index),
+            ListGet(list, index + 1),
+            (list->count - index)*list->elementSize
+        );
+    }
+}
 
-// void ListPushFront(struct List *list, void *element) {
-//     return ListInsert(list, 0, element);
-// }
+void ListPushFront(struct List *list, void *element) {
+    ListInsert(list, 0, element);
+}
 
-// void ListPushBack(struct List *list, void *element) {
-//     return ListInsert(list, ListGetCount(list), element);
-// }
+void ListPushBack(struct List *list, void *element) {
+     ListInsert(list, list->count, element);
+}
 
 // void *ListPopFront(struct List *list, size_t amount, void *result) {
 //     assert(ListGetCount(list) >= amount && "Popped too many elements.");
