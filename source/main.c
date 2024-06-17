@@ -3,18 +3,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "object.h"
+#include "interpreter.h"
 
 int main(void) {
-    static uint8_t data[10] = {0};
+    static uint8_t data[] = {
+        PUSHB, 1,
+        PRINTUB,
+        HALT,
+    };
+
     struct Object object = {
         .isMapped = false,
         .header = {
-            .size = 40,
+            .size = sizeof data,
             .entryPoint = 0,
-            .code = {10, 0},
-            .immutableData = {10, 20},
-            .mutableData = {10, 30},
-            .symbolTable = {10, 40},
+            .code = {sizeof data, 0},
+            .immutableData = {0, 0},
+            .mutableData = {0, 0},
+            .symbolTable = {0, 0},
         },
         .data = data,
     };
@@ -23,7 +29,11 @@ int main(void) {
     ObjectWriteToFile(&object, file);
     object = (struct Object){0};
     object = ObjectReadFromFile(file);
+    printf("object details\n");
     ObjectPrint(&object);
+
+    printf("\nrunning code\n");
+    run(&object);
 
     ObjectDestroy(&object);
     fclose(file);

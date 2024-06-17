@@ -42,6 +42,10 @@ void ObjectWriteToFile(struct Object *object, FILE *file) {
     fwrite(object->data, 1, object->header.size, file);
 }
 
+uint8_t *getSegmentPointer(struct Object *object, struct SegmentHeader segment) {
+    return object->data + segment.offset;
+}
+
 void ObjectPrint(struct Object *object) {
     struct ObjectHeader header = object->header;
     printf("size:                  %zu\n", header.size);

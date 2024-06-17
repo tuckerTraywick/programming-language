@@ -9,17 +9,6 @@
 
 #define STACK_SIZE 1024*1024 // 1 MB
 
-// Represents the state of the virtual machine.
-struct Interpreter {
-    uint8_t *code; // The entrypoint of the code to be executed.
-    uint8_t *data; // The data section of the program.
-    uint8_t *stack; // The stack. Allocated and freed in `runCode()`.
-    uint8_t *ip; // Instruction pointer.
-    uint8_t *fp; // Frame pointer.
-    uint8_t *sp; // Stack pointer. The NEXT available byte of the stack.
-    bool keepRunning; // Set to false by `HALT` instruction.
-};
-
 // Represents the operation being performed by an instruction.
 enum Opcode {
     NOOP,
@@ -196,6 +185,6 @@ enum Opcode {
 void run(struct Object *object);
 
 // Runs the code.
-void runCode(uint8_t *code, uint8_t *data);
+void runCode(uint8_t *code, uint8_t *immutableData, uint8_t *mutableData);
 
 #endif // INTERPRETER_H

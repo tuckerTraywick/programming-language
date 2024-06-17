@@ -38,6 +38,9 @@ struct Object ObjectReadFromFile(FILE *file);
 // Serializes an object to a file. The object and file still need to be destroyed after use.
 void ObjectWriteToFile(struct Object *object, FILE *file);
 
+// Returns a pointer to a section in an object.
+uint8_t *getSegmentPointer(struct Object *object, struct SegmentHeader segment);
+
 // Prints an object's metadata.
 void ObjectPrint(struct Object *object);
 

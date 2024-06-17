@@ -11,6 +11,17 @@
 // Redefining `abs` so it works for different types.
 #define abs(x) (((x) < 0) ? -(x) : (x))
 
+// Represents the state of the virtual machine.
+struct Interpreter {
+    uint8_t *code; // The entrypoint of the code to be executed.
+    uint8_t *mutableData; // The data section of the program.
+    uint8_t *stack; // The stack. Allocated and freed in `runCode()`.
+    uint8_t *ip; // Instruction pointer.
+    uint8_t *fp; // Frame pointer.
+    uint8_t *sp; // Stack pointer. The NEXT available byte of the stack.
+    bool keepRunning; // Set to false by `HALT` instruction.
+};
+
 // Pushes an 8 byte value to the stack.
 static void push(struct Interpreter *interpreter, uint64_t value) {
     *(uint64_t*)interpreter->sp = value;
@@ -60,13 +71,20 @@ static uint8_t readByte(struct Interpreter *interpreter) {
     return value;
 }
 
-void runCode(uint8_t *code, uint8_t *data) {
+void run(struct Object *object) {
+    uint8_t *code = object->data + object->header.entryPoint;
+    uint8_t *immutableData = getSegmentPointer(object, object->header.immutableData);
+    uint8_t *mutableData = getSegmentPointer(object, object->header.mutableData);
+    runCode(code, immutableData, mutableData);
+}
+
+void runCode(uint8_t *code, uint8_t *immutableData, uint8_t *mutableData) {
     uint8_t *stack = malloc(STACK_SIZE);
     // TODO: Handle failed `malloc()`.
     assert(stack && "`malloc()` failed.");
     struct Interpreter interpreter = {
         .code = code,
-        .data = data,
+        .mutableData = mutableData,
         .stack = stack,
         .ip = code,
         .fp = stack,
@@ -99,7 +117,7 @@ void runCode(uint8_t *code, uint8_t *data) {
                 break;
 
             case PUSHD:
-                push(&interpreter, *(uint64_t*)(interpreter.data + pop(&interpreter)));
+                push(&interpreter, *(uint64_t*)(interpreter.mutableData + pop(&interpreter)));
                 break;
 
             case PUSHB:
@@ -118,7 +136,7 @@ void runCode(uint8_t *code, uint8_t *data) {
                 break;
 
             case PUSHDB:
-                pushByte(&interpreter, *(interpreter.data + pop(&interpreter)));
+                pushByte(&interpreter, *(interpreter.mutableData + pop(&interpreter)));
                 break;
 
             case POP:
