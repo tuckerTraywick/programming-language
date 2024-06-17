@@ -7,17 +7,6 @@
 
 #define DEFAULT_SEGMENT_SIZE 16*1024 // 16 kilobytes
 
-// Represents the beginning of an object file. Contains offsets of sections.
-struct ObjectFileHeader {
-    size_t size;
-    size_t codeOffset;
-    size_t entryPointOffset;
-    size_t immutableDataOffset;
-    size_t mutableDataOffset;
-    size_t symbolTableOffset;
-    bool executable;
-};
-
 // Finds the length of the file, then maps it into memory using `mmap()`.
 static uint8_t *mapFile(FILE *file) {
     rewind(file);
@@ -29,37 +18,40 @@ static uint8_t *mapFile(FILE *file) {
     return bytes;
 }
 
-bool ObjectIsMapped(struct Object *object) {
-    return object->bytes != NULL;
-}
-
 void ObjectDestroy(struct Object *object) {
-    if (ObjectIsMapped(object)) {
-        // TODO: unmap the object's bytes.
+    if (object->isMapped) {
+        munmap(object->data, object->header.size);
     } else {
-        free(object->code);
-        free(object->immutableData);
-        free(object->mutableData);
-        SymbolTableDestroy(&object->symbolTable);
+        free(object->data);
     }
     *object = (struct Object){0};
 }
 
 struct Object ObjectReadFromFile(FILE *file) {
-    // Map the file and read the header
     uint8_t *bytes = mapFile(file);
-    struct ObjectFileHeader header = *(struct ObjectFileHeader*)bytes;
-    // Increment `bytes` to the beginning of the actual data.
-    bytes += sizeof (struct ObjectFileHeader);
     struct Object object = {
-        .bytes = bytes,
-        .code = bytes + header.codeOffset,
-        .entryPoint = bytes + header.entryPointOffset,
-        .immutableData = bytes + header.immutableDataOffset,
-        .mutableData = bytes + header.mutableDataOffset,
-        .symbolTable = {0},
+        .isMapped = true,
+        .header = *(struct ObjectHeader*)bytes,
+        .data = bytes + sizeof (struct ObjectHeader),
     };
     return object;
+}
+
+void ObjectWriteToFile(struct Object *object, FILE *file) {
+    fwrite(&object->header, 1, sizeof (struct ObjectHeader), file);
+    fwrite(object->data, 1, object->header.size, file);
+}
+
+void ObjectPrint(struct Object *object) {
+    struct ObjectHeader header = object->header;
+    printf("size:                  %zu\n", header.size);
+    printf("entry point:           %zu\n", header.entryPoint);
+    printf("code size:             %zu\n", header.code.size);
+    printf("code offset:           %zu\n", header.code.offset);
+    printf("mutable data size:     %zu\n", header.immutableData.size);
+    printf("immutable data offset: %zu\n", header.immutableData.offset);
+    printf("symbol table size:     %zu\n", header.symbolTable.size);
+    printf("symbol table offset:   %zu\n", header.symbolTable.offset);
 }
 
 #undef DEFAULT_SEGMENT_SIZE

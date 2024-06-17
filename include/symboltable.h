@@ -15,17 +15,9 @@ struct Symbol {
     enum SymbolCategory category;
     size_t name;
     size_t type;
-    size_t index;
-};
-
-struct SymbolTable {
-    size_t capacity;
-    size_t count;
-    struct Symbol *symbols;
+    size_t offset;
 };
 
 uint64_t getHash(char *name);
-
-void SymbolTableDestroy(struct SymbolTable *SymbolTable);
 
 #endif // SYMBOLTABLE_H

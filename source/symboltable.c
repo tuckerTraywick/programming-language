@@ -15,8 +15,3 @@ uint64_t getHash(char *name) {
     }
     return hash;
 }
-
-void SymbolTableDestroy(struct SymbolTable *table) {
-    free(table->symbols);
-    *table = (struct SymbolTable){0};
-}
