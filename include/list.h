@@ -9,7 +9,7 @@
 	#define LIST_GROWTH_FACTOR 2
 #endif
 
-// Represents a list.
+// Represents a dynamic array that can shrink or grow at runtime.
 struct List {
 	size_t capacity;
 	size_t count;
