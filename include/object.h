@@ -7,7 +7,7 @@
 #include "symboltable.h"
 #include "list.h"
 
-// Represents a possibly expandable segment in an object file.
+// Represents a possibly expandable segment in an object.
 typedef struct List ListUint8_t;
 
 // Represents an object currently loaded into memory + some metadata.

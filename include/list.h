@@ -52,12 +52,11 @@ void ListPushFront(struct List *list, void *element);
 // Appends an element to a list.
 void ListPushBack(struct List *list, void *element);
 
-// Pops a number of elements from the front of a list and returns a pointer to the last element
-// popped.
-void *ListPopFront(struct List *list, size_t amount);
+// Pops a number of elements from the front of a list and copies the last element popped to
+// `result`.
+void ListPopFront(struct List *list, size_t amount, void *result);
 
-// Pops a number of elements from the back of a list and returns a pointer to the last element
-// popped.
-void *ListPopBack(struct List *list, size_t amount);
+// Pops a number of elements from the back of a list and copies the last element popped to `result`.
+void ListPopBack(struct List *list, size_t amount, void *result);
 
 #endif // LIST_H

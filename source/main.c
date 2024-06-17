@@ -44,13 +44,14 @@ int main(void) {
     for (int i = 0; i < 6; ++i) {
         ListPushBack(&list, &i);
     }
-    ListResize(&list, 3);
+    int value = 0;
+    ListPopBack(&list, 2, &value);
+    printf("popped %i\n", value);
 
     for (size_t i = 0; i < list.count; ++i) {
         printf("list[%zu] = %i\n", i, *(int*)ListGet(&list, i));
     }
     printf("\nlist count = %zu\nlist capacity = %zu\n", list.count, list.capacity);
-
 
     ListDestroy(&list);
 

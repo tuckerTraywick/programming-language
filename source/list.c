@@ -87,41 +87,41 @@ void ListPushBack(struct List *list, void *element) {
      ListInsert(list, list->count, element);
 }
 
-// void *ListPopFront(struct List *list, size_t amount, void *result) {
-//     assert(ListGetCount(list) >= amount && "Popped too many elements.");
-//     if (amount == 0) {
-//         return list;
-//     }
+void ListPopFront(struct List *list, size_t amount, void *result) {
+    assert(list->count >= amount && "Popped too many elements.");
+    if (amount == 0) {
+        return;
+    }
 
-//     if (result) {
-//         memcpy(
-//             result,
-//             (char*)list + (amount - 1)*ListGetElementSize(list),
-//             ListGetElementSize(list)
-//         );    
-//     }
-//     memmove(
-//         list,
-//         (char*)list + amount*ListGetElementSize(list),
-//         (ListGetCount(list) - amount)*ListGetElementSize(list)
-//     );
-//     return ListSetCount(list, ListGetCount(list) - amount);
-// }
+    if (result) {
+        memcpy(
+            result,
+            ListGet(list, amount - 1),
+            list->elementSize
+        );
+    }
+    memmove(
+        list->elements,
+        ListGet(list, amount),
+        (list->count - amount)*list->elementSize
+    );
+    ListResize(list, list->count - amount);
+}
 
-// void *ListPopBack(struct List *list, size_t amount, void *result) {
-//     assert(ListGetCount(list) >= amount && "Popped too many elements.");
-//     if (amount == 0) {
-//         return list;
-//     }
+void ListPopBack(struct List *list, size_t amount, void *result) {
+    assert(list->count >= amount && "Popped too many elements.");
+    if (amount == 0) {
+        return;
+    }
 
-//     if (result) {
-//         memcpy(
-//             result,
-//             (char*)list + (ListGetCount(list) - amount)*ListGetElementSize(list),
-//             ListGetElementSize(list)
-//         );    
-//     }
-//     return ListSetCount(list, ListGetCount(list) - amount);
-// }
+    if (result) {
+        memcpy(
+            result,
+            ListGet(list, list->count - amount),
+            list->elementSize
+        );    
+    }
+    ListResize(list, list->count - amount);
+}
 
-// #undef min
+#undef max
