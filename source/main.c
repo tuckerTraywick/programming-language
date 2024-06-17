@@ -6,54 +6,7 @@
 #include "interpreter.h"
 
 int main(void) {
-    // static uint8_t data[] = {
-    //     PUSHB, 1,
-    //     PRINTUB,
-    //     HALT,
-    // };
-
-    // struct Object object = {
-    //     .isMapped = false,
-    //     .header = {
-    //         .size = sizeof data,
-    //         .entryPoint = 0,
-    //         .code = {sizeof data, 0},
-    //         .immutableData = {0, 0},
-    //         .mutableData = {0, 0},
-    //         .symbolTable = {0, 0},
-    //     },
-    //     .data = data,
-    // };
-
-    // FILE *file = fopen("example.bin", "wb+");
-    // ObjectWriteToFile(&object, file);
-    // object = (struct Object){0};
-    // object = ObjectReadFromFile(file);
-    // printf("object details\n");
-    // ObjectPrint(&object);
-
-    // printf("\nrunning code\n");
-    // run(&object);
-
-    // ObjectDestroy(&object);
-    // fclose(file);
-
-    struct List list = ListCreate(5, sizeof (int));
-    printf("list count = %zu\nlist capacity = %zu\n\n", list.count, list.capacity);
-
-    for (int i = 0; i < 6; ++i) {
-        ListPushBack(&list, &i);
-    }
-    int value = 0;
-    ListPopBack(&list, 2, &value);
-    printf("popped %i\n", value);
-
-    for (size_t i = 0; i < list.count; ++i) {
-        printf("list[%zu] = %i\n", i, *(int*)ListGet(&list, i));
-    }
-    printf("\nlist count = %zu\nlist capacity = %zu\n", list.count, list.capacity);
-
-    ListDestroy(&list);
-
+    struct Object object = ObjectCreate(8*1024, 100);    
+    ObjectDestroy(&object);
     return 0;
 }

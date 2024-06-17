@@ -36,12 +36,13 @@ static uint8_t *mapFile(FILE *file) {
 
 struct Object ObjectCreate(size_t segmentCapacity, size_t symbolTableCapacity) {
     return (struct Object){
-        .size = 4*segmentCapacity + symbolTableCapacity,
+        .size = 4*segmentCapacity + symbolTableCapacity*(sizeof (struct Symbol)),
         .data = NULL,
         .entryPoint = 0,
         .code = ListCreate(segmentCapacity, 1),
         .immutableData = ListCreate(segmentCapacity, 1),
         .mutableData = ListCreate(segmentCapacity, 1),
+        .symbolTable = ListCreate(symbolTableCapacity, sizeof (struct Symbol)),
         .strings = ListCreate(segmentCapacity, 1),
     };
 }
@@ -59,30 +60,22 @@ bool ObjectIsMapped(struct Object *object) {
     return object->data == NULL;
 }
 
-// struct Object ObjectReadFromFile(FILE *file) {
-//     uint8_t *bytes = mapFile(file);
-//     struct ObjectFileHeader header = *(struct ObjectFileHeader*)bytes;
-//     bytes += sizeof (struct ObjectFileHeader);
-//     struct Object object = {
-//         .size = header.size,
-//         .data = bytes,
-//         .entryPoint = header.entryPoint,
-//         .code = bytes + header.code.offset,
-//         .immutableData = bytes + header.immutableData.offset,
-//         .mutableData = bytes + header.mutableData.offset,
-//         .symbolTable = (SymbolTable)(bytes + header.symbolTable.offset),
-//         .strings = (ListChar)(bytes + header.strings.offset),
-//     };
-//     return object;
-// }
-
-// void ObjectWriteToFile(struct Object *object, FILE *file) {
-//     if (ObjectIsMapped(object)) {
-//         fwrite(file, sizeof (struct ObjectFileHeader))
-//     } else {
-
-//     }
-// }
+struct Object ObjectReadFromFile(FILE *file) {
+    uint8_t *bytes = mapFile(file);
+    struct ObjectFileHeader header = *(struct ObjectFileHeader*)bytes;
+    bytes += sizeof (struct ObjectFileHeader);
+    struct Object object = {
+        .size = header.size,
+        .data = bytes,
+        .entryPoint = bytes + header.entryPoint,
+        .code = (struct List){.elements = bytes + header.code.offset, .count=header.code.size},
+        .immutableData = (struct List){.elements = bytes + header.immutableData.offset, .count=header.immutableData.size},
+        .mutableData = (struct List){.elements = bytes + header.mutableData.offset, .count=header.mutableData.size},
+        .symbolTable = (struct List){.elements = bytes + header.symbolTable.offset, .count=header.symbolTable.size/(sizeof (struct Symbol)), .elementSize = sizeof (struct Symbol)},
+        .strings = (struct List){.elements = bytes + header.strings.offset, .count=header.strings.size},
+    };
+    return object;
+}
 
 // void ObjectPrint(struct Object *object) {
 //     printf("size:                  %zu\n", header.size);
