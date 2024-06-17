@@ -44,10 +44,10 @@ size_t ListGetCapacity(void *list) {
 
 void *ListSetCapacity(void *list, size_t capacity) {
     struct List *l = getList(list);
-    if (capacity >= l->capacity*LIST_GROWTH_FACTOR) {
+    if (capacity > l->count || capacity >= l->capacity*LIST_GROWTH_FACTOR) {
         l->capacity = capacity;
         l = realloc(l, sizeof *l + l->capacity*l->elementSize);
-    } else if (l->capacity > l->count && capacity <= l->capacity/LIST_GROWTH_FACTOR) {
+    } else if (l->capacity < l->count || capacity <= l->capacity/LIST_GROWTH_FACTOR) {
         l->capacity = max(l->count, capacity);
         l = realloc(l, sizeof *l + l->capacity*l->elementSize);
     }
@@ -62,6 +62,7 @@ void *ListSetCount(void *list, size_t count) {
     struct List *l = getList(list);
     l->count = count;
     list = ListSetCapacity(list, count);
+    memset(list, 0, l->elementSize);
     return list;
 }
 

@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include "symboltable.h"
+#include "list.h"
 
 uint64_t getHash(char *name) {
     // Uses the MurmurOAT algorithm: https://stackoverflow.com/questions/7666509/hash-function-for-string.

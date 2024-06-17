@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include "symboltable.h"
 
+// Represents an expandable segment in an object file.
+typedef uint8_t *ListUint8_t;
+
 // Represents the metadata for a segment of an object.
 struct SegmentHeader {
     size_t size;
@@ -20,6 +23,7 @@ struct ObjectHeader {
     struct SegmentHeader immutableData;
     struct SegmentHeader mutableData;
     struct SegmentHeader symbolTable;
+    struct SegmentHeader strings;
 };
 
 // Represents an object currently loaded into memory + some metadata.
@@ -29,10 +33,21 @@ struct Object {
     uint8_t *data;
 };
 
+// Represents an object being built by the compiler. Segments of hot objects are dynamic arrays and
+// can be extended at runtime.
+struct HotObject {
+    size_t entryPoint;
+    ListUint8_t code;
+    ListUint8_t immutableData;
+    ListUint8_t mutableData;
+    SymbolTable symbolTable;
+    ListChar strings;
+};
+
 // Destroys an object and frees or unmaps its memory.
 void ObjectDestroy(struct Object *object);
 
-// Deserializes object from a file. The returned object must be destroyed with `destroyObject()`.
+// Deserializes object from a file. The returned object must be destroyed with `ObjectDestroy()`.
 struct Object ObjectReadFromFile(FILE *file);
 
 // Serializes an object to a file. The object and file still need to be destroyed after use.
@@ -43,5 +58,11 @@ uint8_t *getSegmentPointer(struct Object *object, struct SegmentHeader segment);
 
 // Prints an object's metadata.
 void ObjectPrint(struct Object *object);
+
+// Creates a new hot object in ram. Must be destroyed with `HotObjectDestroy()`.
+struct HotObject HotObjectCreate(size_t segmentCapacity, size_t symbolTableCapacity);
+
+// Deallocates a hot object's segments and zeroes its memory.
+void HotObjectDestroy(struct HotObject *object);
 
 #endif // OBJECT_H

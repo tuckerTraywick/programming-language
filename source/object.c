@@ -4,8 +4,7 @@
 #include <sys/mman.h>
 #include "object.h"
 #include "symboltable.h"
-
-#define DEFAULT_SEGMENT_SIZE 16*1024 // 16 kilobytes
+#include "list.h"
 
 // Finds the length of the file, then maps it into memory using `mmap()`.
 static uint8_t *mapFile(FILE *file) {
@@ -58,6 +57,29 @@ void ObjectPrint(struct Object *object) {
     printf("mutable data offset:   %zu\n", header.mutableData.offset);
     printf("symbol table size:     %zu\n", header.symbolTable.size);
     printf("symbol table offset:   %zu\n", header.symbolTable.offset);
+    printf("string pool size:      %zu\n", header.symbolTable.size);
+    printf("string pool offset:    %zu\n", header.symbolTable.size);
+}
+
+struct HotObject HotObjectCreate(size_t segmentCapacity, size_t symbolTableCapacity) {
+    struct HotObject object = {
+        .entryPoint = 0,
+        .code = ListCreate(segmentCapacity, 1),
+        .immutableData = ListCreate(segmentCapacity, 1),
+        .mutableData = ListCreate(segmentCapacity, 1),
+        .symbolTable = ListCreate(symbolTableCapacity, sizeof (struct Symbol)),
+        .strings = ListCreate(segmentCapacity, 1),
+    };
+    return object;
+}
+
+void HotObjectDestroy(struct HotObject *object) {
+    ListDestroy(object->code);
+    ListDestroy(object->immutableData);
+    ListDestroy(object->mutableData);
+    ListDestroy(object->symbolTable);
+    ListDestroy(object->strings);
+    *object = (struct HotObject){0};
 }
 
 #undef DEFAULT_SEGMENT_SIZE
