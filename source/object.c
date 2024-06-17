@@ -48,8 +48,10 @@ void ObjectPrint(struct Object *object) {
     printf("entry point:           %zu\n", header.entryPoint);
     printf("code size:             %zu\n", header.code.size);
     printf("code offset:           %zu\n", header.code.offset);
-    printf("mutable data size:     %zu\n", header.immutableData.size);
+    printf("immutable data size:   %zu\n", header.immutableData.size);
     printf("immutable data offset: %zu\n", header.immutableData.offset);
+    printf("mutable data size:     %zu\n", header.mutableData.size);
+    printf("mutable data offset:   %zu\n", header.mutableData.offset);
     printf("symbol table size:     %zu\n", header.symbolTable.size);
     printf("symbol table offset:   %zu\n", header.symbolTable.offset);
 }

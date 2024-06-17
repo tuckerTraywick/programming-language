@@ -1,6 +1,7 @@
 #ifndef SYMBOLTABLE_H
 #define SYMBOLTABLE_H
 
+#include <stdint.h>
 #include <stddef.h>
 
 enum SymbolCategory {
@@ -13,8 +14,9 @@ enum SymbolCategory {
 
 struct Symbol {
     enum SymbolCategory category;
+    uint64_t hash;
     size_t name;
-    size_t type;
+    size_t size;
     size_t offset;
 };
 
