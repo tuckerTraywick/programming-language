@@ -2,7 +2,9 @@
     "makefile.makefilePath": "compiler-c/Makefile",
     "files.associations": {
         "stdint.h": "c",
-        "interpreter.h": "c"
+        "interpreter.h": "c",
+        "stddef.h": "c",
+        "symboltable.h": "c"
     },
     "editor.find.autoFindInSelection": "multiline"
 }

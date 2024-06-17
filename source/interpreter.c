@@ -60,14 +60,6 @@ static uint8_t readByte(struct Interpreter *interpreter) {
     return value;
 }
 
-void run(struct Object *object) {
-    // TODO: Handle passing a non-executable object.
-    assert(object->header.executable && "Must pass an executable object.");
-    uint8_t *code = object->bytes + object->header.entryPoint;
-    uint8_t *data = object->bytes + object->header.data;
-    runCode(code, data);
-}
-
 void runCode(uint8_t *code, uint8_t *data) {
     uint8_t *stack = malloc(STACK_SIZE);
     // TODO: Handle failed `malloc()`.

@@ -6,34 +6,32 @@
 #include <stdio.h>
 #include "symboltable.h"
 
-// The first section of an object file. Gives general info about the object and its size.
-struct ObjectHeader {
-    uint64_t size; // Size of the object (excluding the header).
-    uint64_t code; // The offset from the end of the header.
-    uint64_t data; // The offset from the end of the header.
-    uint64_t symbolTable; // The offset of the symbol table from the end of the header.
-    uint64_t entryPoint; // The offset the end of the header. Where the interpreter starts executing.
-    bool executable; // Whether the object can be executed. This is the last field for padding purposes.
+// Represents an object currently loaded into memory + some metadata.
+struct Object {
+    size_t size; // The size of `bytes`.
+    uint8_t *bytes; // Points to the beginning of the data of the object. NULL unless the object was mapped from a file.
+    uint8_t *code;
+    uint8_t *entryPoint;
+    uint8_t *immutableData;
+    uint8_t *mutableData;
+    struct SymbolTable symbolTable;
+    bool executable;
 };
 
-// Represents an object currently loaded into memory + some metadata. All offsets in the header are
-// relative to the beginning of `bytes`.
-struct Object {
-    struct ObjectHeader header;
-    uint8_t *bytes; // The bytes of the object. Contains the code and data.
-    bool isMemoryMapped; // If true, the object's bytes were mapped from a file. Else, they were `malloc()`ed.
-};
+// Returns true if an object was mapped from a file and false if it's sections were allocated using
+// `malloc()`.
+bool ObjectIsMapped(struct Object *object);
 
 // Destroys an object and frees or unmaps its memory.
-void destroyObject(struct Object *object);
-
-// Writes an object to a file. The object and file still need to be destroyed after use.
-void writeObject(FILE *file, struct Object *object);
+void ObjectDestroy(struct Object *object);
 
 // Loads an object from a file. The returned object must be destroyed with `destroyObject()`.
-void readObject(FILE *file, struct Object *object);
+struct Object ObjectReadFromFile(FILE *file);
 
-// Prints an object header nicely.
-void printObjectHeader(struct ObjectHeader *header);
+// Writes an object to a file. The object and file still need to be destroyed after use.
+void ObjectWriteToFile(FILE *file, struct Object *object);
+
+// Prints information about an object.
+void ObjectPrintInfo(struct Object *object);
 
 #endif // OBJECT_H

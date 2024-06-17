@@ -1,6 +1,4 @@
-#include <assert.h>
 #include <stdint.h>
-#include <stddef.h>
 #include <stdlib.h>
 #include "symboltable.h"
 
@@ -18,12 +16,7 @@ uint64_t getHash(char *name) {
     return hash;
 }
 
-struct SymbolTable createSymbolTable(size_t capacity) {
-    struct SymbolTable table = {0};
-    return table;
-}
-
-void destroySymbolTable(struct SymbolTable *table) {
-    free(table->buckets);
+void SymbolTableDestroy(struct SymbolTable *table) {
+    free(table->symbols);
     *table = (struct SymbolTable){0};
 }
