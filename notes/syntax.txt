@@ -81,7 +81,7 @@ pub struct Mesh {
 }
 
 pub struct Vector {
-    from std.operations export default Arithmetic, Equality
+    from std.operations embed default Arithmetic, Equality
     pub x, y, z float64
 }
 
@@ -116,7 +116,7 @@ pub enum TokenType {
 }
 
 pub struct LexingError {
-    export error
+    embed error
     pub message string
 }
 
