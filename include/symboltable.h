@@ -12,7 +12,8 @@ typedef struct List ListChar;
 
 // Describes what kind of thing a symbol points to.
 enum SymbolCategory {
-    IMMUTABLE_DATA = 1,
+    EMPTY, // Indicates an unfilled symbol bucket.
+    IMMUTABLE_DATA,
     MUTABLE_DATA,
     FUNCTION,
     STRUCT,

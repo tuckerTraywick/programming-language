@@ -31,7 +31,8 @@ void ObjectDestroy(struct Object *object);
 // Returns true if an object was memory mapped from a file.
 bool ObjectIsMapped(struct Object *object);
 
-// Deserializes an object from a file. The returned object must be destroyed with `ObjectDestroy()`.
+// Deserializes an object from a file. The file may be closed after calling this function. The
+// returned object must be destroyed with `ObjectDestroy()`.
 struct Object ObjectReadFromFile(FILE *file);
 
 // Serializes an object to a file.

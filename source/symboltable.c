@@ -1,5 +1,5 @@
-#include <assert.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <string.h>
 #include "symboltable.h"
 #include "list.h"
@@ -19,7 +19,6 @@ uint64_t getHash(char *name) {
 }
 
 struct Symbol *getSymbol(SymbolTable *table, ListChar *strings, char *name) {
-    // TODO: Neaten this code.
     // TODO: Use a 32 bit hash for 32 bit pointers and a 64 bit hash for 64 bit pointers.
     uint64_t hash = getHash(name);
     size_t startIndex = hash%table->capacity;
@@ -29,7 +28,7 @@ struct Symbol *getSymbol(SymbolTable *table, ListChar *strings, char *name) {
     while (true) {
         struct Symbol *symbol = (struct Symbol*)ListGet(table, index);
         // If the bucket is empty, the name is not in the table.
-        if (symbol->category == 0) {
+        if (symbol->category == EMPTY) {
             return NULL;
         }
 
