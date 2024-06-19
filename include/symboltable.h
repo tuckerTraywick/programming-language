@@ -4,11 +4,13 @@
 #include <stdint.h>
 #include <stddef.h>
 
+// A mapping of names to symbols.
 typedef struct List SymbolTable;
 
+// A pool of strings.
 typedef struct List ListChar;
 
-// Describes what a symbol points to.
+// Describes what kind of thing a symbol points to.
 enum SymbolCategory {
     IMMUTABLE_DATA = 1,
     MUTABLE_DATA,

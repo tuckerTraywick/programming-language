@@ -6,7 +6,8 @@
 #include "interpreter.h"
 
 int main(void) {
-    struct Object object = ObjectCreate(8*1024, 100);    
+    struct Object object = ObjectCreate(8*1024, 100);
+    ObjectPrint(&object);
     ObjectDestroy(&object);
     return 0;
 }

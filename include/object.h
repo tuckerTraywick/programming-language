@@ -7,10 +7,10 @@
 #include "symboltable.h"
 #include "list.h"
 
-// Represents a possibly expandable segment in an object.
+// A possibly expandable segment in an object.
 typedef struct List ListUint8_t;
 
-// Represents an object currently loaded into memory + some metadata.
+// An object currently loaded into memory + some metadata.
 struct Object {
     size_t size; // The size of the object's data (excluding this header).
     uint8_t *data; // NULL if the object was not mapped from a file.
@@ -18,8 +18,8 @@ struct Object {
     ListUint8_t code;
     ListUint8_t immutableData;
     ListUint8_t mutableData;
-    SymbolTable symbolTable;
     ListChar strings;
+    SymbolTable symbolTable;
 };
 
 // Creates a new object in RAM. Must be destroyed with `ObjectDestroy()`.
