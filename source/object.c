@@ -53,6 +53,7 @@ struct Object ObjectCreate(size_t segmentCapacity, size_t symbolTableCapacity) {
 void ObjectDestroy(struct Object *object) {
     if (object->data) {
         munmap(object->data, object->size);
+        // We don't need to destroy the object's segments because they weren't actually allocated.
     } else {
         ListDestroy(&object->code);
         ListDestroy(&object->immutableData);
@@ -76,7 +77,8 @@ struct Object ObjectReadFromFile(FILE *file) {
         .size = header.size,
         .data = bytes,
         .entryPoint = bytes + header.code.offset + header.entryPoint,
-        // Setup each segment.
+        // Setup each segment. These won't need to be destroyed with `ListDestroy()` because they
+        // weren't actually created with `ListCreate()`.
         .code = (struct List){.elements = bytes + header.code.offset, .count=header.code.size},
         .immutableData = (struct List){.elements = bytes + header.immutableData.offset, .count=header.immutableData.size},
         .mutableData = (struct List){.elements = bytes + header.mutableData.offset, .count=header.mutableData.size},

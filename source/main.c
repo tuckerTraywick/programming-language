@@ -14,7 +14,7 @@ int main(void) {
     
     object = ObjectReadFromFile(file);
     ObjectPrint(&object);
-
+    
     ObjectDestroy(&object);
     fclose(file);
     return 0;
