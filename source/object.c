@@ -54,7 +54,11 @@ void ObjectDestroy(struct Object *object) {
     if (object->data) {
         munmap(object->data, object->size);
     } else {
-        free(object->data);
+        ListDestroy(&object->code);
+        ListDestroy(&object->immutableData);
+        ListDestroy(&object->mutableData);
+        ListDestroy(&object->strings);
+        ListDestroy(&object->symbolTable);
     }
     *object = (struct Object){0};
 }
@@ -77,7 +81,7 @@ struct Object ObjectReadFromFile(FILE *file) {
         .immutableData = (struct List){.elements = bytes + header.immutableData.offset, .count=header.immutableData.size},
         .mutableData = (struct List){.elements = bytes + header.mutableData.offset, .count=header.mutableData.size},
         .strings = (struct List){.elements = bytes + header.strings.offset, .count=header.strings.size},
-        .symbolTable = (struct List){.elements = bytes + header.symbolTable.offset, .count=header.symbolTable.size/(sizeof (struct Symbol)), .elementSize = sizeof (struct Symbol)},
+        .symbolTable = (struct List){.elements = bytes + header.symbolTable.offset, .count=header.symbolTable.size, .elementSize = sizeof (struct Symbol)},
     };
     return object;
 }
@@ -96,7 +100,7 @@ void ObjectWriteToFile(struct Object *object, FILE *file) {
             .immutableData = {.size = object->immutableData.count, .offset = object->code.count},
             .mutableData = {.size = object->mutableData.count, .offset = object->code.count + object->immutableData.count},
             .strings = {.size = object->strings.count, .offset = object->code.count + object->immutableData.count + object->mutableData.count},
-            .symbolTable = {.size = object->symbolTable.count*object->symbolTable.elementSize, .offset = object->code.count + object->immutableData.count + object->mutableData.count + object->strings.count},
+            .symbolTable = {.size = object->symbolTable.count, .offset = object->code.count + object->immutableData.count + object->mutableData.count + object->strings.count},
         };
         fwrite(&header, sizeof (struct ObjectFileHeader), 1, file);
         // Write the segments.
