@@ -30,10 +30,12 @@ void ListSet(struct List *list, size_t index, void *element) {
 }
 
 void ListReserve(struct List *list, size_t capacity) {
-    // TODO: Zero new memory.
-    if (capacity > list->capacity) {
-        list->capacity = capacity;
+    if (list->capacity < capacity) {
+        while (list->capacity < capacity) {
+            list->capacity *= LIST_GROWTH_FACTOR;
+        }
         list->elements = realloc(list->elements, list->capacity*list->elementSize);
+        // TODO: Zero new memory.
     }
 }
 

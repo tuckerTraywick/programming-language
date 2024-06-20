@@ -33,8 +33,7 @@ void ListSet(struct List *list, size_t index, void *element);
 // capacity is larger than the current capacity.
 void ListReserve(struct List *list, size_t capacity);
 
-// Changes the count of a list. Will reallocate if the count is less than the current count times
-// the growth factor.
+// Changes the count of a list. Will reallocate if the count is greater than the capacity.
 void ListResize(struct List *list, size_t count);
 
 // Returns true if a list has 0 elements.

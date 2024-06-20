@@ -34,9 +34,9 @@ uint64_t getHash(char *name);
 
 // Returns a pointer to the symbol with the given name. Returns NULL if there is no symbol with the
 // same name.
-struct Symbol *getSymbol(SymbolTable *table, ListChar *strings, char *name);
+struct Symbol *SymbolTableGetSymbol(SymbolTable *table, ListChar *strings, char *name);
 
 // Associates a symbol with a name.
-void setSymbol(SymbolTable *table, ListChar *strings, char *name, struct Symbol *symbol);
+void SymbolTableSetSymbol(SymbolTable *table, ListChar *strings, char *name, struct Symbol *symbol);
 
 #endif // SYMBOLTABLE_H
