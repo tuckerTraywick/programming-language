@@ -1,4 +1,4 @@
-#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200809L // for `fileno()`
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -79,11 +79,11 @@ struct Object ObjectReadFromFile(FILE *file) {
         .entryPoint = bytes + header.code.offset + header.entryPoint,
         // Setup each segment. These won't need to be destroyed with `ListDestroy()` because they
         // weren't actually created with `ListCreate()`.
-        .code = (struct List){.elements = bytes + header.code.offset, .count=header.code.size},
-        .immutableData = (struct List){.elements = bytes + header.immutableData.offset, .count=header.immutableData.size},
-        .mutableData = (struct List){.elements = bytes + header.mutableData.offset, .count=header.mutableData.size},
-        .strings = (struct List){.elements = bytes + header.strings.offset, .count=header.strings.size},
-        .symbolTable = (struct List){.elements = bytes + header.symbolTable.offset, .count=header.symbolTable.size, .elementSize = sizeof (struct Symbol)},
+        .code = (struct List){.elements = bytes + header.code.offset, .count = header.code.size},
+        .immutableData = (struct List){.elements = bytes + header.immutableData.offset, .count = header.immutableData.size},
+        .mutableData = (struct List){.elements = bytes + header.mutableData.offset, .count = header.mutableData.size},
+        .strings = (struct List){.elements = bytes + header.strings.offset, .count = header.strings.size},
+        .symbolTable = (struct List){.elements = bytes + header.symbolTable.offset, .capacity = header.symbolTable.size, .count = header.symbolTable.size, .elementSize = sizeof (struct Symbol)},
     };
     return object;
 }
