@@ -1,32 +1,111 @@
+pt
+    .x,
+    .y,
+    .z,
+from std.io import
+    printLine,
+    inputLine,
+generic[T] where
+    T extends ToString,
+    T is not int,
+extend
+    A,
+    B,
+
+
+// Generic stuff above the definition leads to better readability.
+generic[Element]
+pub type List {
+    length usize
+    elements owned[[]Element]
+}
+
+generic[list]
+pub fun .capacity(list &List) => auto
+
+
+// This function is generic over `list`'s type parameters.
+generic[list]
+pub fun append(list &mut List, element &list.Element)
+
+
+// You can add constraints to types.
+generic[T] where T extends Add
+fun add(a, b T) T {
+    return a + b
+}
+
+
+// The constraints can span multiple lines
+generic[T] where
+    T extends ToString,
+    T is not int,
+pub fun printAnythingButInts(x T) {
+    std.io.printLine(x->toString())
+}
+
+
+
+
+type Direction = uint32 cases {
+    n, s, e, w
+}
+
+
+type Color {
+    var r, g, b uint8
+} cases {
+    default type Rgb
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
+}
+
+
+pub type Animal {
+    pub name string
+    pub age uint32
+} cases {
+    type Dog {
+        pub tag string
+    }
+
+    type Cat {
+        pub breed string
+    }
+}
+
+
+
+
 pub package animals
 from std.io import printLine
 
-pub struct Animal {
+pub type Animal {
     pub name string
     pub age uint32
+    pub makeNoise(&this)
 }
 
-pub method makeNoise(animal &Animal)
-
-pub struct Dog {
-    embed Animal
+pub type Dog {
+    extend Animal
     pub tag string
 }
 
-pub struct Cat {
-    embed Animal
+pub type Cat {
+    extend Animal
     pub breed string
 }
 
-pub func makeNoise(dog &Dog) {
+pub fun makeNoise(dog &Dog) {
     printLine("woof")
 }
 
-pub func makeNoise(cat &Cat) {
+pub fun makeNoise(cat &Cat) {
     printLine("meow")
 }
 
-pub func main() {
+pub fun main() {
     var pet mut &Animal = &Dog()
     makeNoise(pet)
     pet = &Cat()
@@ -38,24 +117,23 @@ pub package moreAnimals
 from std.io import printLine
 from animals import *
 
-pub struct Pet {
-    embed Animal
-    embed in Dog, Cat
+pub type Pet {
+    extend Animal
+    abstract Dog, Cat
+    pub walk(&this)
 }
 
-pub method walk(pet &Pet)
-
-pub struct Hamster {
-    embed Pet, Animal
+pub type Hamster {
+    extend Pet, Animal
 }
 
-pub func walk(dog &Dog) {}
+pub fun walk(dog &Dog) {}
 
-pub func walk(cat &Cat) {}
+pub fun walk(cat &Cat) {}
 
-pub func walk(hamster &Hamster) {}
+pub fun walk(hamster &Hamster) {}
 
-pub func makeNoise(hamster &Hamster) {
+pub fun makeNoise(hamster &Hamster) {
     printLine("squeak")
 }
 
@@ -63,39 +141,37 @@ pub func makeNoise(hamster &Hamster) {
 
 
 pub package physics
-import std.math
-import std.operations
+from std.math import sqrt
+from std.operations import *
 
-pub enum Entity {
+pub type Entity {
     pub pos, vel, acc Vector
-}
+} cases {
+    type Circle {
+        pub radius float64
+    }
 
-pub struct Circle {
-    embed Entity
-    pub radius float64
-}
-
-pub struct Mesh {
-    embed Entity
-    pub vertices owned[[]Vector]
-}
-
-pub struct Vector {
-    from std.operations embed default Arithmetic, Equality
-    pub x, y, z float64
-}
-
-pub func collide(a, b &mut Entity) {
-    match a, b {
-        case Circle, Circle:
-        case Mesh, Mesh:
-        case Circle, Mesh:
-        case Mesh, Circle:
+    type Mesh {
+        pub vertices []Vector
     }
 }
 
-pub func .length(v &Vector) {
-    return std.math.sqrt(v.x*v.x + v.y*v.y)
+pub type Vector {
+    extend default Arithmetic, Equality
+    pub x, y, z float64
+}
+
+pub fun collide(a, b &mut Entity) {
+    match a, b {
+        Circle, Circle:
+        Mesh, Mesh:
+        Circle, Mesh:
+        Mesh, Circle:
+    }
+}
+
+pub fun .length(v &Vector) {
+    return sqrt(v.x*v.x + v.y*v.y)
 }
 
 
@@ -104,25 +180,19 @@ pub func .length(v &Vector) {
 pub package lexer
 from std.io import File->*, FileError
 
-pub struct Token {
+pub type Token {
     pub type TokenType
     pub text string
 }
 
-pub enum TokenType {
-    pub value uint32 = case
-
+pub type TokenType cases {
+    default invalid
     identifier, number, string, ...
 }
 
-pub struct LexingError {
-    embed error
-    pub message string
-}
+pub fun lex(file File) any[owned[[]mut Token], FileError]
 
-pub func lex(file File) any[owned[[]mut Token], LexingError, FileError]
-
-pub func lex(text string) any[owned[[]mut Token], LexingError]
+pub fun lex(text string) owned[[]mut Token]
 
 
 
@@ -131,51 +201,19 @@ package chess
 
 type Board = [8][8]Piece
 
-struct Piece {
-    type PieceType
+type Piece {
+    type_ PieceType
     color Color
 }
 
-enum PieceType {
+type PieceType cases {
     king, queen, rook, knight, bishop, pawn
 }
 
-enum Color {
+type Color cases {
     white, black
 }
 
-func main() {
+fun main() {
     move(&board, turn, (2, 0), (3, 0))
-}
-
-
-
-
-enum Direction {
-    n, s, e, w
-}
-
-
-enum Color {
-    r, g, b uint8
-}
-
-struct Rgb {
-    embed Color
-}
-
-enum ColorCase {
-    embed Color
-    red = (255, 0, 0)
-    green = (0, 255, 0)
-    blue = (0, 0, 255)
-}
-
-
-struct all[T type..] {
-    embed T
-}
-
-enum any[T type..] {
-    embed in T
 }
