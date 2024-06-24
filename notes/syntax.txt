@@ -1,219 +1,53 @@
-pt
-    .x,
-    .y,
-    .z,
-from std.io import
-    printLine,
-    inputLine,
-generic[T] where
-    T extends ToString,
-    T is not int,
-extend
-    A,
-    B,
+&int32, []int32
+owned &int32, owned []int32
+mut owned optional
 
 
-// Generic stuff above the definition leads to better readability.
-generic[Element]
-pub type List {
-    length usize
-    elements owned[[]Element]
+struct Animal {
+    name string
+    age uint32
 }
 
-generic[list]
-pub fun .capacity(list &List) => auto
-
-
-// This function is generic over `list`'s type parameters.
-generic[list]
-pub fun append(list &mut List, element &list.Element)
-
-
-// You can add constraints to types.
-generic[T] where T extends Add
-fun add(a, b T) T {
-    return a + b
-}
-
-
-// The constraints can span multiple lines
-generic[T] where
-    T extends ToString,
-    T is not int,
-pub fun printAnythingButInts(x T) {
-    std.io.printLine(x->toString())
-}
-
-
-
-
-type Direction = uint32 cases {
+union Direction of uint32 {
     n, s, e, w
 }
 
-
-type Color {
-    var r, g, b uint8
-} cases {
-    default type Rgb
-    red = (255, 0, 0)
-    green = (0, 255, 0)
-    blue = (0, 0, 255)
-}
-
-
-pub type Animal {
-    pub name string
-    pub age uint32
-} cases {
-    type Dog {
-        pub tag string
-    }
-
-    type Cat {
-        pub breed string
+union List {
+    struct End
+    struct Node {
+        next owned &List
+        data int32
     }
 }
 
+pub func lex(file File) union{owned []Token, FileError}
 
 
-
-pub package animals
-from std.io import printLine
-
-pub type Animal {
-    pub name string
-    pub age uint32
-    pub makeNoise(&this)
+struct List {
+    first owned &Node
+    last &Node
 }
 
-pub type Dog {
-    extend Animal
+struct Node {
+    next owned &Node
+    data int32
+}
+
+
+pub struct Noisy
+
+pub makeNoise(noisy &Noisy)
+
+pub struct Dog {
+    Noisy
     pub tag string
 }
 
-pub type Cat {
-    extend Animal
+pub struct Cat {
+    Noisy
     pub breed string
 }
 
-pub fun makeNoise(dog &Dog) {
-    printLine("woof")
-}
+pub func makeNoise(dog &Dog) {}
 
-pub fun makeNoise(cat &Cat) {
-    printLine("meow")
-}
-
-pub fun main() {
-    var pet mut &Animal = &Dog()
-    makeNoise(pet)
-    pet = &Cat()
-    pet->makeNoise()
-}
-
-
-pub package moreAnimals
-from std.io import printLine
-from animals import *
-
-pub type Pet {
-    extend Animal
-    abstract Dog, Cat
-    pub walk(&this)
-}
-
-pub type Hamster {
-    extend Pet, Animal
-}
-
-pub fun walk(dog &Dog) {}
-
-pub fun walk(cat &Cat) {}
-
-pub fun walk(hamster &Hamster) {}
-
-pub fun makeNoise(hamster &Hamster) {
-    printLine("squeak")
-}
-
-
-
-
-pub package physics
-from std.math import sqrt
-from std.operations import *
-
-pub type Entity {
-    pub pos, vel, acc Vector
-} cases {
-    type Circle {
-        pub radius float64
-    }
-
-    type Mesh {
-        pub vertices []Vector
-    }
-}
-
-pub type Vector {
-    extend default Arithmetic, Equality
-    pub x, y, z float64
-}
-
-pub fun collide(a, b &mut Entity) {
-    match a, b {
-        Circle, Circle:
-        Mesh, Mesh:
-        Circle, Mesh:
-        Mesh, Circle:
-    }
-}
-
-pub fun .length(v &Vector) {
-    return sqrt(v.x*v.x + v.y*v.y)
-}
-
-
-
-
-pub package lexer
-from std.io import File->*, FileError
-
-pub type Token {
-    pub type TokenType
-    pub text string
-}
-
-pub type TokenType cases {
-    default invalid
-    identifier, number, string, ...
-}
-
-pub fun lex(file File) any[owned[[]mut Token], FileError]
-
-pub fun lex(text string) owned[[]mut Token]
-
-
-
-
-package chess
-
-type Board = [8][8]Piece
-
-type Piece {
-    type_ PieceType
-    color Color
-}
-
-type PieceType cases {
-    king, queen, rook, knight, bishop, pawn
-}
-
-type Color cases {
-    white, black
-}
-
-fun main() {
-    move(&board, turn, (2, 0), (3, 0))
-}
+pub func makeNoise(cat &Cat) {}

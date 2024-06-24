@@ -1,0 +1,53 @@
+pub namespace animals;
+import std.io;
+
+pub struct Animal {
+    string name;
+    uint32 age;
+}
+
+pub void AnimalMakeNoise(virtual *Animal animal);
+
+pub struct Dog {
+    Animal;
+    string tag;
+}
+
+pub struct Cat {
+    Animal;
+    string breed;
+}
+
+extend AnimalMakeNoise;
+pub void DogMakeNoise(*Dog dog) {}
+
+extend AnimalMakeNoise;
+pub void CatMakeNoise(*Cat cat) {}
+
+
+pub namespace moreAnimals;
+from animals import *;
+
+pub struct Pet {
+    Animal;
+}
+
+alias PetMakeNoise AnimalMakeNoise;
+pub void PetWalk(virutal *Pet pet);
+
+
+pub struct Hamster {
+    Animal;
+}
+
+extend PetMakeNoise;
+pub void HamsterMakeNoise(*Hamster hamster) {}
+
+extend PetWalk;
+pub void HamsterWalk(*Hamster hamster) {}
+
+extend PetWalk;
+pub void DogWalk(*Dog dog) {}
+
+extend PetWalk;
+pub void CatWalk(*Cat cat) {}
