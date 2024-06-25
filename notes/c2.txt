@@ -1,53 +1,85 @@
-pub namespace animals;
+Additions to C:
+- better syntax
+- better type names
+- better error handling
+- namespaces
+- hygenic macros
+- slices
+- utf strings
+- arrow function call syntax
+- type embedding
+- scoped enum constants
+- underlying types for enums
+- type inference for variables
+- containers in standard library
+
+Removed from C:
+- headers
+- preprocessor
+
+
+
+pub namesepace example;
 import std.io;
 
-pub struct Animal {
-    string name;
-    uint32 age;
+struct AnimalMethods {
+    usize offset;
+    void(void*) makeNoise;
+    void(void*) walk;
 }
 
-pub void AnimalMakeNoise(virtual *Animal animal);
+var DogMethods = AnimalMethods{
+    offsetof(Dog.Animal), DogMakeNoise, DogWalk
+};
+
+var CatMethods = AnimalMethods{
+    offsetof(Cat.Animal), CatMakeNoise, CatWalk
+};
+
+pub struct Animal {
+    AnimalMethods* methods;
+    pub string name;
+    pub uint32 age;
+}
 
 pub struct Dog {
     Animal;
-    string tag;
+    pub string tag;
 }
 
 pub struct Cat {
     Animal;
-    string breed;
+    pub string breed;
 }
 
-extend AnimalMakeNoise;
-pub void DogMakeNoise(*Dog dog) {}
-
-extend AnimalMakeNoise;
-pub void CatMakeNoise(*Cat cat) {}
-
-
-pub namespace moreAnimals;
-from animals import *;
-
-pub struct Pet {
-    Animal;
+pub void AnimalMakeNoise(Animal* animal) {
+    animal.methods.makeNoise(animal as(byte*) - animal.methods.offset);
 }
 
-alias PetMakeNoise AnimalMakeNoise;
-pub void PetWalk(virutal *Pet pet);
-
-
-pub struct Hamster {
-    Animal;
+pub void AnimalWalk(Animal* animal) {
+    animal.methods.walk(animal as(byte*) - animal.methods.offset);
 }
 
-extend PetMakeNoise;
-pub void HamsterMakeNoise(*Hamster hamster) {}
+pub void DogCreate() {
+    return Dog{methods=DogMethods};
+}
 
-extend PetWalk;
-pub void HamsterWalk(*Hamster hamster) {}
+pub void DogMakeNoise(Dog* dog) {
+    std.io.printLine("woof");
+}
 
-extend PetWalk;
-pub void DogWalk(*Dog dog) {}
+pub void CatCreate() {
+    return Cat{methods=CatMethods};
+}
 
-extend PetWalk;
-pub void CatWalk(*Cat cat) {}
+pub void CatMakeNoise(Cat* cat) {
+    std.io.printLine("meow");
+}
+
+pub void main() {
+    Animal* pet = &DogCreate();
+    AnimalMakeNoise(pet);
+    pet = &CatCreate();
+    pet->AnimalMakeNoise();
+}
+

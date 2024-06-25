@@ -1,53 +1,177 @@
-&int32, []int32
-owned &int32, owned []int32
-mut owned optional
+const, mut
+strong, weak, static, raw
+none, error, optional[T], any[T..], all[T..]
+
+- strong: owned, increases strong count
+- weak: unowned, increases weak count, checks strong count on promotion to strong
+- static: unowned, lives the entire lifetime of the program
+- raw: unowned, does no runtime checking except on debug builds to provide statistics/optional crashes
+- &: unowned, crashes if it dangles. stores a frame pointer if on debug mode to track dangling stack pointers.
+
+- Memory bug detection is done through reference counting and enabling runtime checks.
+- To detect dangling stack pointers, use the top bit of the pointer to distinguish whether it's on the stack,
+  and keep a count of pointers to the stack at the beginning of the stack frame. On copying a stack pointer,
+  scan downwards to find the frame pointer, and increase the count. On frame exit, crash if the count is not 0.
+
+- crash on dangling unowned heap pointer
+- crash on null pointer dereference
+- optional crash on dangling pointer creation
+- optinoal crash on dangling pointer dereference
 
 
-struct Animal {
-    name string
-    age uint32
-}
-
-union Direction of uint32 {
-    n, s, e, w
-}
-
-union List {
-    struct End
-    struct Node {
-        next owned &List
-        data int32
-    }
-}
-
-pub func lex(file File) union{owned []Token, FileError}
 
 
-struct List {
-    first owned &Node
-    last &Node
-}
+type UserId uint32
 
-struct Node {
-    next owned &Node
-    data int32
-}
+type Vector
+    var x, y float64
+end
+
+type Direction uint32 cases
+    case n, s, e, w
+end
+
+type Color
+    var r, g, b uint8
+cases
+    case red = (255, 0, 0)
+    case blue = (0, 255, 0)
+    case green = (0, 0, 255)
+end
+
+type Animal
+    var name string
+    var age uint32
+cases
+    type Dog
+        var tag string
+    end
+
+    type Cat
+        var breed string
+    end
+end
 
 
-pub struct Noisy
 
-pub makeNoise(noisy &Noisy)
 
-pub struct Dog {
-    Noisy
-    pub tag string
-}
+pub package animals
 
-pub struct Cat {
-    Noisy
-    pub breed string
-}
+pub type Animal
+    pub var name string
+    pub var age uint32
+    pub fun makeNoise(&this)
+end
 
-pub func makeNoise(dog &Dog) {}
+pub type Dog
+    extend Animal
+    pub var tag string
+end
 
-pub func makeNoise(cat &Cat) {}
+pub type Cat
+    extend Animal
+    pub var breed string
+end
+
+pub fun makeNoise(dog &Dog) pass
+
+pub fun makeNoise(cat &Cat) pass
+
+pub fun main()
+    var pet &Animal = &Dog()
+    pet.makeNoise()
+    pet = &Cat()
+    pet.makeNoise()
+end
+
+
+pub package moreAnimals
+from animals import *
+
+pub type Pet
+    extend Animal
+    abstract Dog, Cat
+    pub fun walk(&this)
+end
+
+pub type Hamster
+    extend Pet
+end
+
+pub fun makeNoise(hamster &Hamster)
+
+pub fun walk(hamster &Hamster)
+
+pub fun walk(dog &Dog)
+
+pub fun walk(cat &Cat)
+
+
+
+
+pub package physics
+import std.math
+import std.operations
+
+pub type Entity
+    pub var pos, vel, acc Vector
+cases
+    type Circle
+        pub var radius float64
+    end
+
+    type Mesh
+        pub var vertices strong []Vector
+    end
+end
+
+pub type Vector
+    from std.operations extend Equality, Arithmetic
+    pub var x, y, z float64
+end
+
+pub fun collide(a, b &mut Entity)
+
+pub fun .length(v &Vector) float64
+
+
+
+
+pub package lexer
+from std.io import File->*, FileError
+
+pub type TokenType uint32 cases
+    default invalid
+    case identifier, number, string, ...
+end
+
+pub type Token
+    pub var type TokenType
+    pub var text string
+end
+
+pub fun lex(file File) any[strong []mut Token, FileError]
+
+pub fun lex(text string) strong []mut Token
+
+
+
+
+pub package myList
+import std.operations
+
+pub type List[T]
+where T extends Sized
+    from std.operations extend
+        Equality, TryComparison, TryArithmetic, TryBitwise, TryLogical
+        To[bool], To[string], From[[]T]
+    end
+    var capacity usize
+    var elements strong []T
+end
+
+pub fun [][T](list &List[T], index usize)
+
+pub fun .capacity[list](list &List) = auto
+
+pub fun append[T](list &List[T], element &T)
