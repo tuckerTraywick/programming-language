@@ -12,6 +12,7 @@ int main(void) {
     struct Symbol symbol = {.category = MUTABLE_DATA};
     SymbolTableSetSymbol(&object.symbolTable, &object.strings, "foo", &symbol);
     SymbolTableSetSymbol(&object.symbolTable, &object.strings, "bar", &symbol);
+    object.symbolTable = SymbolTableRehash(&object.symbolTable, &object.strings, 2);
 
     FILE *file = fopen("example.bin", "wb+");
     ObjectWriteToFile(&object, file);

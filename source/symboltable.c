@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -88,4 +89,17 @@ void SymbolTableSetSymbol(SymbolTable *table, ListChar *strings, char *name, str
             // TODO: Reserve more buckets.
         }
     }
+}
+
+SymbolTable SymbolTableRehash(SymbolTable *table, ListChar *strings, size_t capacity) {
+    assert(capacity >= table->count && "Capacity must be larger.");
+    SymbolTable newTable = ListCreate(capacity, table->elementSize);
+    for (size_t i = 0; i < table->capacity; ++i) {
+        struct Symbol *oldSymbol = (struct Symbol*)table->elements + i;
+        if (oldSymbol->category != EMPTY) {
+            SymbolTableSetSymbol(&newTable, strings, (char*)ListGet(strings, oldSymbol->name), oldSymbol);
+        }
+    }
+    ListDestroy(table);
+    return newTable;
 }
