@@ -89,6 +89,10 @@ struct Object ObjectReadFromFile(FILE *file) {
 }
 
 void ObjectWriteToFile(struct Object *object, FILE *file) {
+    // The object file header does not store a capacity, just a length. This means that if you wrote
+    // an object with extra buckets in the symbol table to a file, there would be no way of knowing
+    // the right number of buckets to allocate for it once you deserialize it.
+    assert(object->symbolTable.capacity == object->symbolTable.count && "Symbol table must not have empty buckets.");
     if (ObjectIsMapped(object)) {
         // Just copy the object byte for byte.
         uint8_t *bytes = object->data - sizeof (struct ObjectFileHeader);
