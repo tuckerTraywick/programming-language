@@ -91,15 +91,17 @@ void SymbolTableSetSymbol(SymbolTable *table, ListChar *strings, char *name, str
     }
 }
 
-SymbolTable SymbolTableRehash(SymbolTable *table, ListChar *strings, size_t capacity) {
+void SymbolTableRehash(SymbolTable *table, ListChar *strings, size_t capacity) {
     assert(capacity >= table->count && "Capacity must be larger.");
     SymbolTable newTable = ListCreate(capacity, table->elementSize);
+    memset(newTable.elements, 0, newTable.capacity*newTable.elementSize);
     for (size_t i = 0; i < table->capacity; ++i) {
         struct Symbol *oldSymbol = (struct Symbol*)table->elements + i;
         if (oldSymbol->category != EMPTY) {
             SymbolTableSetSymbol(&newTable, strings, (char*)ListGet(strings, oldSymbol->name), oldSymbol);
         }
     }
+    
     ListDestroy(table);
-    return newTable;
+    *table = newTable;
 }

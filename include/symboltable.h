@@ -40,6 +40,6 @@ struct Symbol *SymbolTableGetSymbol(SymbolTable *table, ListChar *strings, char 
 void SymbolTableSetSymbol(SymbolTable *table, ListChar *strings, char *name, struct Symbol *symbol);
 
 // Reallocates a symbol table's buckets and rehsashes them. Destroys the old table.
-SymbolTable SymbolTableRehash(SymbolTable *table, ListChar *strings, size_t capacity);
+void SymbolTableRehash(SymbolTable *table, ListChar *strings, size_t capacity);
 
 #endif // SYMBOLTABLE_H
