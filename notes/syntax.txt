@@ -166,13 +166,17 @@ cases
 end
 
 pub type Vector
-    from std.operations implement default Equality, Arithmetic
+    from std.operations import *
+    implement default Equality, Arithmetic
     pub var x, y, z float64
 end
 
 pub fun collide(a, b &mut Entity)
 
-pub fun .length(v &Vector) float64
+pub fun length(v &Vector) float64
+    from std.math import *
+    return sqrt(v.x*v.x + v.y*v.y)
+end
 
 
 
@@ -200,27 +204,34 @@ pub fun lex(text string) strong []mut Token
 pub package myList
 import std.operations
 
-pub type List[T]
+pub type List[T type]
 where T implements Sized
-    from std.operations implement default
-        Equality, TryComparison, TryArithmetic, TryBitwise, TryLogical
-        To[bool], To[string], To[strong []T], From[[]T]
-    end
+    from std.operations import *
+    implement default Equality, TryComparison, TryArithmetic, TryBitwise, TryLogical
+    implement default To[bool], To[string], To[strong []T], From[[]T]
     var length usize
     var elements strong []T
 end
 
-pub fun [][T](list &List[T], index usize) T
+pub fun make(list &mut List[T], capacity usize)
+    list.capacity = capacity
+    list.elements = new(capacity)
+end
+
+pub fun [][T type](list &List[T], index usize) T
     return list.elements[index]
 end
 
-pub fun .capacity[list](list &List) usize
+pub fun .capacity(list &List) usize
     return list.elements.length
 end
 
-pub fun .length[list](list &List) usize
+pub fun .length(list &List) usize
     return list.length
 end
 
-pub fun append[T](list &List[T], element &T)
+pub fun append[T type](list &mut List[T], element &T)
+
+
+
 
