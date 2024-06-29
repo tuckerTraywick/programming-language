@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 200809L // for `fileno()`
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
