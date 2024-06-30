@@ -119,6 +119,11 @@ void ObjectWriteToFile(struct Object *object, FILE *file) {
     }
 }
 
+struct Object ObjectCombine(struct Object *a, struct Object *b) {
+    struct Object result = *a;
+    
+}
+
 void ObjectPrint(struct Object *object) {
     if (ObjectIsMapped(object)) {
         printf("memory mapped:         true\n");

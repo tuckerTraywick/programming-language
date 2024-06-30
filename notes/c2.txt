@@ -1,85 +1,133 @@
 Additions to C:
-- better syntax
-- better type names
-- better error handling
 - namespaces
-- hygenic macros
-- slices
-- utf strings
-- arrow function call syntax
-- type embedding
-- scoped enum constants
-- underlying types for enums
-- type inference for variables
-- containers in standard library
-
-Removed from C:
-- headers
-- preprocessor
+- overloading
+- immutable by default
+- open and closed structs and enums
+- generics
+- better syntax
+- traits
 
 
 
-pub namesepace example;
-import std.io;
 
-struct AnimalMethods {
-    usize offset;
-    void(void*) makeNoise;
-    void(void*) walk;
+type UserID uint64
+
+struct Point {
+    x, y float64
 }
 
-var DogMethods = AnimalMethods{
-    offsetof(Dog.Animal), DogMakeNoise, DogWalk
-};
+enum Direction of uint32 {
+    n, s, e, w
+}
 
-var CatMethods = AnimalMethods{
-    offsetof(Cat.Animal), CatMakeNoise, CatWalk
-};
+closed struct Key {
+    abstract int32, string
+}
+
+
+
+
+pub package animals
+from std.io import printLine
+
+pub trait Noisy {
+    pub makeNoise(this &Animal)
+}
 
 pub struct Animal {
-    AnimalMethods* methods;
-    pub string name;
-    pub uint32 age;
+    pub name string
+    pub age uint32
 }
 
 pub struct Dog {
-    Animal;
-    pub string tag;
+    extend Animal
+    implement Noisy
+    pub tag string
 }
 
 pub struct Cat {
-    Animal;
-    pub string breed;
+    extend Animal
+    implement Noisy
+    pub breed string
 }
 
-pub void AnimalMakeNoise(Animal* animal) {
-    animal.methods.makeNoise(animal as(byte*) - animal.methods.offset);
+pub func makeNoise(dog &Dog) {
+    printLine("woof")
 }
 
-pub void AnimalWalk(Animal* animal) {
-    animal.methods.walk(animal as(byte*) - animal.methods.offset);
+pub func makeNoise(dog &Dog) {
+    printLine("woof")
 }
 
-pub void DogCreate() {
-    return Dog{methods=DogMethods};
+pub func makeNoise(cat &Cat) {
+    printLine("meow")
 }
 
-pub void DogMakeNoise(Dog* dog) {
-    std.io.printLine("woof");
+
+pub package moreAnimals
+from animals import *
+
+pub trait Walkable {
+    abstract Dog, Cat
+    pub walk(this &Pet)
 }
 
-pub void CatCreate() {
-    return Cat{methods=CatMethods};
+pub struct Pet {
+    extend Animal
+    abstract Dog, Cat
 }
 
-pub void CatMakeNoise(Cat* cat) {
-    std.io.printLine("meow");
+pub struct Hamster {
+    extend Pet
+    implement Walkable
 }
 
-pub void main() {
-    Animal* pet = &DogCreate();
-    AnimalMakeNoise(pet);
-    pet = &CatCreate();
-    pet->AnimalMakeNoise();
+
+
+
+pub package std.collections
+import std.operations
+
+pub struct List[T implements Sized] {
+    from std.operations import *
+    implement default Equality, TryComparison, TryArithmetic, TryBitwise, TryLogical
+    implement default To[bool], To[string], To[strong []T], From[[]T]
+    length usize
+    elements strong []mut T
 }
+
+pub func append[T](list &mut List[T], value &T)
+
+
+
+
+pub package physics
+import std.math
+
+pub closed struct Entity {
+    pub pos, vel, acc Vector
+}
+
+pub struct Circle {
+    extend Entity
+    pub radius float64
+}
+
+pub struct Mesh {
+    extend Entity
+    pub vertices []Vector
+}
+
+pub struct Vector {
+    from std.operations import *
+    extend Equality, Arithemtic, To[string]
+    pub x, y, z float64
+}
+
+pub func length(v &Vector) float64
+
+pub func collide(a, b &mut Entity)
+
+
+
 

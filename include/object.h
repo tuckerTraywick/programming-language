@@ -38,6 +38,9 @@ struct Object ObjectReadFromFile(FILE *file);
 // Serializes an object to a file.
 void ObjectWriteToFile(struct Object *object, FILE *file);
 
+// Combines two objects into one. Allocates the new object's data on the heap.
+struct Object ObjectCombine(struct Object *a, struct Object *b);
+
 // Prints an object's metadata.
 void ObjectPrint(struct Object *object);
 
