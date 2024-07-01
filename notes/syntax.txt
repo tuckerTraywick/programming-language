@@ -1,237 +1,133 @@
-source  --> compiler --> library - metadata and code
-library -'            '-> shared object - code and maybe metadata
-
-program.txt -> compiler -> library.lib
-program.txt -> compiler -> sharedlibrary.lib, sharedlibrary.so
-
-- you can generate a shared object from a library
-
-- maybe the compiler doesnt even need to output so's. maybe the package manager can just install them for you if you ask
-- there's no reason for the package manager not to install the so, it exists for development, not running code
-
-pkgmger install library.lib // installs .lib and .so
-
-mylib/
-    mylib.lib
-    source/
-    documentation/
-
-compiler source/** -o foo.lib
-build package/
-
-project/
-    package.txt
-    source/
-    documentation/
-    tests/
-    builds/
-
-
-
-
-const, mut
-strong, weak, static, raw
-none, error, optional[T], any[T..], all[T..]
-
-- strong: owned, increases strong count
-- weak: unowned, increases weak count, checks strong count on promotion to strong
-- &: unowned, crashes if it dangles
-- raw: unowned, allowed to dangle, crashes if it gets used while it dangles
-- static: unowned, lives the entire lifetime of the program
-
-- Memory bug detection is done through reference counting and enabling runtime checks.
-- To detect dangling stack pointers, use the top bit of the pointer to distinguish whether it's on the stack,
-  and keep a count of pointers to the stack at the beginning of the stack frame. On copying a stack pointer,
-  scan downwards to find the frame pointer, and increase the count. On frame exit, crash if the count is not 0.
-- This could also be implemented by widening all raw and unowned pointers to point to the appropriate counter
-  and then just updating that counter.
-- Libraries would release a debug version and a release version. The debug version has all of the tooling inserted and pointers widened.
-  The relase version doesn't.
-
-optional tooling:
-- widen unowned pointers
-- widen raw pointers
-- crash on dangling unowned heap pointer
-- crash on dangling pointer creation
-- crash on dangling pointer dereference
-
-- &: update count on copy, crash on creation dangling pointer
-- raw: update count on copy, crash on dereference of dangling pointer
-
-
-
-
 type UserId uint32
 
-type Vector
-    var x, y float64
-end
 
-type Direction uint32 cases
-    case n, s, e, w
-end
+type Vector {
+    x, y float64
+}
 
-type Color
-    var r, g, b uint8
-cases
-    case red = (255, 0, 0)
-    case blue = (0, 255, 0)
-    case green = (0, 0, 255)
-end
 
-type Animal
-    var name string
-    var age uint32
-cases
-    type Dog
-        var tag string
-    end
+type Direction uint32 cases {
+    n, s, e, w
+}
 
-    type Cat
-        var breed string
-    end
-end
+
+type Color {
+    r, g, b uint8
+} cases {
+    default type Rgb
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
+}
+
+
+type Animal {
+    name string
+} cases {
+    type Dog {
+        tag string
+    }
+
+    type Cat {
+        breed string
+    }
+}
+
+
+pub type AbstractsDog cases {
+    Dog, ...
+}
+pub func Generic[T AbstractsDog](x T)
 
 
 
 
 pub package animals
 
-pub type Animal
-    pub var name string
-    pub var age uint32
-    pub fun makeNoise(&this)
-end
+pub type Animal {
+    pub name string
+    pub age uint32
+    pub walk(&this)
+}
 
-pub type Dog
-    implement Animal
-    pub var tag string
-end
+pub type Dog {
+    Animal
+    pub tag string
+}
 
-pub type Cat
-    implement Animal
-    pub var breed string
-end
+pub type Cat {
+    Animal
+    pub breed string
+}
 
-pub fun makeNoise(dog &Dog) pass
+pub func walk(dog &Dog)
 
-pub fun makeNoise(cat &Cat) pass
+pub func walk(cat &Cat)
 
-pub fun main()
-    var pet &Animal = &Dog()
-    pet.makeNoise()
-    pet = &Cat()
-    pet.makeNoise()
-end
+pub func main() {
+    var animal mut &Animal = &Dog()
+    animal.makeNoise()
+    animal = &Cat()
+    animal.makeNoise()
+}
 
 
 pub package moreAnimals
 from animals import *
 
-pub type Pet
-    extend Animal
-    implement in Dog, Cat
-    pub fun walk(&this)
-end
+pub type Pet {
+    Animal
+    pub walk(&this)
+} cases {
+    Dog, Cat, ..
+}
 
-pub type Hamster
-    implement Pet
-end
+pub type Hamster {
+    Pet
+}
 
-pub fun makeNoise(hamster &Hamster)
+pub func makeNoise(hamster &Hamster)
 
-pub fun walk(hamster &Hamster)
+pub func walk(hamster &Hamster)
 
-pub fun walk(dog &Dog)
+pub func walk(dog &Dog)
 
-pub fun walk(cat &Cat)
-
-
-
-
-pub package physics
-import std.math
-import std.operations
-
-pub type Entity
-    pub var pos, vel, acc Vector
-cases
-    type Circle
-        pub var radius float64
-    end
-
-    type Mesh
-        pub var vertices strong []Vector
-    end
-end
-
-pub type Vector
-    from std.operations import *
-    implement default Equality, Arithmetic
-    pub var x, y, z float64
-end
-
-pub fun collide(a, b &mut Entity)
-
-pub fun length(v &Vector) float64
-    from std.math import *
-    return sqrt(v.x*v.x + v.y*v.y)
-end
+pub func walk(cat &Cat)
 
 
 
 
 pub package lexer
-from std.io import File->*, FileError
+from std.io import File->*, FileError->*
 
-pub type TokenType uint32 cases
+pub type TokenType cases {
     default invalid
-    case identifier, number, string, ...
-end
+    keyword, identifier, number, string
+}
 
-pub type Token
-    pub var type TokenType
-    pub var text string
-end
+pub type Token {
+    pub type TokenType
+    pub text string
+}
 
-pub fun lex(file File) any[strong []mut Token, FileError]
+pub func lex(file File) any[owned []mut Token, FileError]
 
-pub fun lex(text string) strong []mut Token
-
-
+pub func lex(text string) []mut Token
 
 
-pub package myList
+
+
+pub package std.collections
 import std.operations
 
-pub type List[T type]
-where T implements Sized
+pub struct List[T Sized] {
     from std.operations import *
-    implement default Equality, TryComparison, TryArithmetic, TryBitwise, TryLogical
-    implement default To[bool], To[string], To[strong []T], From[[]T]
-    var length usize
-    var elements strong []T
-end
+    Equality, TryComparison, TryArithmetic, TryBitwise, TryLogical
+    To[bool], To[string], To[owned []T], From[[]T]
 
-pub fun make(list &mut List[T], capacity usize)
-    list.capacity = capacity
-    list.elements = new(capacity)
-end
+    length usize
+    elements owned []mut T
+}
 
-pub fun [][T type](list &List[T], index usize) T
-    return list.elements[index]
-end
-
-pub fun .capacity(list &List) usize
-    return list.elements.length
-end
-
-pub fun .length(list &List) usize
-    return list.length
-end
-
-pub fun append[T type](list &mut List[T], element &T)
-
-
-
+pub func append[T](list &mut List[T], value &T)
 
