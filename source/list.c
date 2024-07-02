@@ -35,7 +35,6 @@ void ListReserve(struct List *list, size_t capacity) {
             list->capacity *= LIST_GROWTH_FACTOR;
         }
         list->elements = realloc(list->elements, list->capacity*list->elementSize);
-        // TODO: Zero new memory.
     }
 }
 
@@ -124,6 +123,10 @@ void ListPopBack(struct List *list, size_t amount, void *result) {
         );    
     }
     ListResize(list, list->count - amount);
+}
+
+void ListCombine(struct List *first, struct List *second) {
+
 }
 
 #undef max

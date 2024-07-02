@@ -20,7 +20,7 @@ struct List {
 // Returns a new list. Must be destroyed by `ListDestroy()`.
 struct List ListCreate(size_t capacity, size_t elementSize);
 
-// Deallocates a list.
+// Deallocates a list and zeroes it.
 void ListDestroy(struct List *list);
 
 // Gets a pointer to the element at an index in a list.
@@ -57,5 +57,8 @@ void ListPopFront(struct List *list, size_t amount, void *result);
 
 // Pops a number of elements from the back of a list and copies the last element popped to `result`.
 void ListPopBack(struct List *list, size_t amount, void *result);
+
+// Combines two lists in place. Places the result in `first`.
+void ListCombine(struct List *first, struct List *second);
 
 #endif // LIST_H
