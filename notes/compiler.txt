@@ -51,3 +51,20 @@ optional tooling:
 
 - &: update count on copy, crash on creation dangling pointer
 - raw: update count on copy, crash on dereference of dangling pointer
+
+
+
+
+// a1.txt
+pub package a
+pub var foo int32 = 1
+
+// a2.txt
+pub package a
+pub var foo int32 = 2
+
+> load("a1.txt")
+> load("a2.txt")
+./a2.txt:2: Error: Redefinition of variable `a.foo`.
+    2 | pub var foo int32 = 1
+      | ^^^^^^^^^^^^^^^^^

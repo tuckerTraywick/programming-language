@@ -1,40 +1,40 @@
-type UserId uint32
+struct UserId uint32
 
 
-type Vector {
+struct Vector {
     x, y float64
 }
 
 
-type Direction uint32 cases {
+struct Direction uint32 cases {
     n, s, e, w
 }
 
 
-type Color {
+struct Color {
     r, g, b uint8
 } cases {
-    default type Rgb
+    default struct Rgb
     red = (255, 0, 0)
     green = (0, 255, 0)
     blue = (0, 0, 255)
 }
 
 
-type Animal {
+struct Animal {
     name string
 } cases {
-    type Dog {
+    struct Dog {
         tag string
     }
 
-    type Cat {
+    struct Cat {
         breed string
     }
 }
 
 
-pub type AbstractsDog cases {
+pub struct AbstractsDog cases {
     Dog, ...
 }
 pub func Generic[T AbstractsDog](x T)
@@ -44,18 +44,18 @@ pub func Generic[T AbstractsDog](x T)
 
 pub package animals
 
-pub type Animal {
+pub struct Animal {
     pub name string
     pub age uint32
     pub walk(&this)
 }
 
-pub type Dog {
+pub struct Dog {
     Animal
     pub tag string
 }
 
-pub type Cat {
+pub struct Cat {
     Animal
     pub breed string
 }
@@ -75,14 +75,14 @@ pub func main() {
 pub package moreAnimals
 from animals import *
 
-pub type Pet {
+pub struct Pet {
     Animal
     pub walk(&this)
 } cases {
     Dog, Cat, ..
 }
 
-pub type Hamster {
+pub struct Hamster {
     Pet
 }
 
@@ -100,17 +100,17 @@ pub func walk(cat &Cat)
 pub package lexer
 from std.io import File->*, FileError->*
 
-pub type TokenType cases {
+pub struct TokenType uint32 cases {
     default invalid
     keyword, identifier, number, string
 }
 
-pub type Token {
+pub struct Token {
     pub type TokenType
     pub text string
 }
 
-pub func lex(file File) any[owned []mut Token, FileError]
+pub func lex(file File) cases{owned []mut Token, FileError}
 
 pub func lex(text string) []mut Token
 
