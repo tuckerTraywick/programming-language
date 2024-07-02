@@ -10,7 +10,7 @@
 // Metadata about a segment of an object.
 struct SegmentHeader {
     size_t size;
-    size_t offset;
+    size_t index;
 };
 
 // Metadata about an object file. Occurs at the beginning of the file.
@@ -24,7 +24,7 @@ struct ObjectFileHeader {
     struct SegmentHeader symbolTable;
 };
 
-// Finds the length of the file, then maps it into memory using `mmap()`.
+// Maps a file into memory.
 static uint8_t *mapFile(FILE *file) {
     // Find the length of the file.
     rewind(file);
@@ -77,14 +77,14 @@ struct Object ObjectReadFromFile(FILE *file) {
     struct Object object = {
         .size = header.size,
         .data = bytes,
-        .entryPoint = bytes + header.code.offset + header.entryPoint,
+        .entryPoint = bytes + header.code.index + header.entryPoint,
         // Setup each segment. These won't need to be destroyed with `ListDestroy()` because they
         // weren't actually created with `ListCreate()`.
-        .code = (struct List){.elements = bytes + header.code.offset, .count = header.code.size},
-        .immutableData = (struct List){.elements = bytes + header.immutableData.offset, .count = header.immutableData.size},
-        .mutableData = (struct List){.elements = bytes + header.mutableData.offset, .count = header.mutableData.size},
-        .strings = (struct List){.elements = bytes + header.strings.offset, .count = header.strings.size},
-        .symbolTable = (struct List){.elements = bytes + header.symbolTable.offset, .capacity = header.symbolTable.size, .count = header.symbolTable.size, .elementSize = sizeof (struct Symbol)},
+        .code = (struct List){.elements = bytes + header.code.index, .count = header.code.size},
+        .immutableData = (struct List){.elements = bytes + header.immutableData.index, .count = header.immutableData.size},
+        .mutableData = (struct List){.elements = bytes + header.mutableData.index, .count = header.mutableData.size},
+        .strings = (struct List){.elements = bytes + header.strings.index, .count = header.strings.size},
+        .symbolTable = (struct List){.elements = bytes + header.symbolTable.index, .capacity = header.symbolTable.size, .count = header.symbolTable.size, .elementSize = sizeof (struct Symbol)},
     };
     return object;
 }
@@ -103,11 +103,11 @@ void ObjectWriteToFile(struct Object *object, FILE *file) {
         struct ObjectFileHeader header = {
             .size = object->size,
             .entryPoint = object->entryPoint - (uint8_t*)object->code.elements,
-            .code = {.size = object->code.count, .offset = 0},
-            .immutableData = {.size = object->immutableData.count, .offset = object->code.count},
-            .mutableData = {.size = object->mutableData.count, .offset = object->code.count + object->immutableData.count},
-            .strings = {.size = object->strings.count, .offset = object->code.count + object->immutableData.count + object->mutableData.count},
-            .symbolTable = {.size = object->symbolTable.count, .offset = object->code.count + object->immutableData.count + object->mutableData.count + object->strings.count},
+            .code = {.size = object->code.count, .index = 0},
+            .immutableData = {.size = object->immutableData.count, .index = object->code.count},
+            .mutableData = {.size = object->mutableData.count, .index = object->code.count + object->immutableData.count},
+            .strings = {.size = object->strings.count, .index = object->code.count + object->immutableData.count + object->mutableData.count},
+            .symbolTable = {.size = object->symbolTable.count, .index = object->code.count + object->immutableData.count + object->mutableData.count + object->strings.count},
         };
         fwrite(&header, sizeof (struct ObjectFileHeader), 1, file);
         // Write the segments.
@@ -119,26 +119,34 @@ void ObjectWriteToFile(struct Object *object, FILE *file) {
     }
 }
 
-struct Object ObjectCombine(struct Object *a, struct Object *b) {
-    struct Object result = *a;
-    
+void ObjectCombine(struct Object *first, struct Object *second) {
+    assert(ObjectIsMapped(first) && "Can't extend a mapped object.");
+    assert(!(first->entryPoint && second->entryPoint) && "Both objects can't have an entry point.");
+    if (second->entryPoint) {
+        first->entryPoint = second->entryPoint + first->code.capacity;
+    }
+    ListCombine(&first->code, &second->code);
+    ListCombine(&first->immutableData, &second->immutableData);
+    ListCombine(&first->mutableData, &second->mutableData);
+    ListCombine(&first->strings, &second->strings);
+    SymbolTableCombine(&first->symbolTable, &second->symbolTable, first->size);
 }
 
 void ObjectPrint(struct Object *object) {
     if (ObjectIsMapped(object)) {
-        printf("memory mapped:         true\n");
-        printf("size:                  %zu\n", object->size);
-        printf("entry point:           %zu\n", object->entryPoint - (uint8_t*)object->code.elements);
-        printf("code size:             %zu\n", object->code.count);
-        printf("code offset:           %zu\n", (uint8_t*)object->code.elements - object->data);
-        printf("immutable data size:   %zu\n", object->immutableData.count);
-        printf("immutable data offset: %zu\n", (uint8_t*)object->immutableData.elements - object->data);
-        printf("mutable data size:     %zu\n", object->mutableData.count);
-        printf("mutable data offset:   %zu\n", (uint8_t*)object->mutableData.elements - object->data);
-        printf("string pool size:      %zu\n", object->strings.count);
-        printf("string pool offset:    %zu\n", (uint8_t*)object->strings.elements - object->data);
-        printf("symbol table size:     %zu\n", object->symbolTable.count*object->symbolTable.elementSize);
-        printf("symbol table offset:   %zu\n", (uint8_t*)object->symbolTable.elements - object->data);
+        printf("memory mapped:        true\n");
+        printf("size:                 %zu\n", object->size);
+        printf("entry point:          %zu\n", object->entryPoint - (uint8_t*)object->code.elements);
+        printf("code size:            %zu\n", object->code.count);
+        printf("code index:           %zu\n", (uint8_t*)object->code.elements - object->data);
+        printf("immutable data size:  %zu\n", object->immutableData.count);
+        printf("immutable data index: %zu\n", (uint8_t*)object->immutableData.elements - object->data);
+        printf("mutable data size:    %zu\n", object->mutableData.count);
+        printf("mutable data index:   %zu\n", (uint8_t*)object->mutableData.elements - object->data);
+        printf("string pool size:     %zu\n", object->strings.count);
+        printf("string pool index:    %zu\n", (uint8_t*)object->strings.elements - object->data);
+        printf("symbol table size:    %zu\n", object->symbolTable.count*object->symbolTable.elementSize);
+        printf("symbol table index:   %zu\n", (uint8_t*)object->symbolTable.elements - object->data);
     } else {
         printf("memory mapped:           false\n");
         printf("size:                    %zu\n", object->size);
