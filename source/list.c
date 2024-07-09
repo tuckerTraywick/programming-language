@@ -126,7 +126,18 @@ void ListPopBack(struct List *list, size_t amount, void *result) {
 }
 
 void ListCombine(struct List *first, struct List *second) {
-
+    assert(first->elementSize == second->elementSize && "Can't combine two lists containing different data types.");
+    if (second->count > first->capacity - first->count) {
+        // Reserve enough for the second list's elements.
+        ListReserve(first, first->count + second->count);
+    }
+    // Copy the second list's elements to the end of the first list.
+    memcpy(
+        (char*)first->elements + first->count*first->elementSize,
+        second->elements,
+        second->count*second->elementSize
+    );
+    first->count += second->count;
 }
 
 #undef max

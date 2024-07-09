@@ -58,7 +58,7 @@ void ListPopFront(struct List *list, size_t amount, void *result);
 // Pops a number of elements from the back of a list and copies the last element popped to `result`.
 void ListPopBack(struct List *list, size_t amount, void *result);
 
-// Combines two lists in place. Places the result in `first`.
+// Combines two lists in place. Puts the result in `first`.
 void ListCombine(struct List *first, struct List *second);
 
 #endif // LIST_H
