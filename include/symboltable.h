@@ -42,9 +42,8 @@ void SymbolTableSetSymbol(SymbolTable *table, ListChar *strings, char *name, str
 // Reallocates a symbol table's buckets and rehsashes them. Destroys the old table.
 void SymbolTableRehash(SymbolTable *table, ListChar *strings, size_t capacity);
 
-// Combines two symbol tables in place. Places the entries from `second` into `first`. Ignores
-// duplicates from the second table. Offsets the index of each symbol copied from `second` by
-// `offset` bytes.
+// Combines two symbol tables in place. Puts the result in `first`. Shifts indexes of the symbols
+// copied from `second` by `offset`.
 void SymbolTableCombine(SymbolTable *first, SymbolTable *second, size_t offset);
 
 #endif // SYMBOLTABLE_H

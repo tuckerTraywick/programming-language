@@ -105,7 +105,3 @@ void SymbolTableRehash(SymbolTable *table, ListChar *strings, size_t capacity) {
     ListDestroy(table);
     *table = newTable;
 }
-
-void SymbolTableCombine(SymbolTable *first, SymbolTable *second, size_t offset) {
-
-}

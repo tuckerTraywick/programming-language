@@ -91,6 +91,7 @@ void ListPushBack(struct List *list, void *element) {
 void ListPopFront(struct List *list, size_t amount, void *result) {
     assert(list->count >= amount && "Popped too many elements.");
     if (amount == 0) {
+        // Nothing to pop.
         return;
     }
 
@@ -112,6 +113,7 @@ void ListPopFront(struct List *list, size_t amount, void *result) {
 void ListPopBack(struct List *list, size_t amount, void *result) {
     assert(list->count >= amount && "Popped too many elements.");
     if (amount == 0) {
+        // Nothing to pop.
         return;
     }
 
