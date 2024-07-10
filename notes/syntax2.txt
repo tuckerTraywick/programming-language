@@ -1,0 +1,199 @@
+# No `implement` keyword because you can overload methods in subtypes, which makes it a moot point
+# whether one type extends or implements another. The only difference is whether you can construct
+# an instance of it.
+
+# Types can be abstract or closed. Abstract types can have abstract functions, closed types cannot
+# be extended and can have abstract functions. Closed types are also abstract.
+
+type UserId = uint32
+
+
+type Direction
+    extends uint32
+    case n, s, e, w
+end
+
+
+closed type Color
+    var r, g, b uint8
+end
+
+type Rgb
+    extends default Color
+end
+
+type ColorCases
+    extends Color
+    case red = (255,0,0), green = (0,255,0), blue = (0,0,255)
+end
+
+
+
+
+pub package animals
+
+pub abstract type Animal
+	pub var name string
+	pub var age uint32
+end
+pub abstract fun makeNoise(animal &Animal)
+
+pub type Dog
+	extends Animal
+	pub var tag string
+end
+
+pub type Cat
+	extends Animal
+	pub var breed string
+end
+
+pub fun makeNoise(dog &Dog) = pass
+
+pub fun makeNoise(cat &Cat) = pass
+
+pub fun main()
+	var animal mut &Animal = &Dog()
+	makeNoise(animal)
+	animal = &Cat()
+	animal->makeNoise()
+end
+
+
+pub package moreAnimals
+from animals import *
+
+pub abstract type Pet
+	extends Animal
+	abstracts Dog, Cat
+end
+pub abstract fun walk(pet &Pet)
+
+pub type Hamster
+	extends Pet
+end
+
+pub fun makeNoise(hamster &Hamster) = pass
+
+pub fun walk(pet &Pet) = pass
+
+pub fun walk(dog &Dog) = pass
+
+pub fun walk(cat &Cat) = pass
+
+pub fun main()
+	var pet mut &Pet = &Dog()
+	walk(pet)
+	pet = &Cat()
+	walk(pet)
+	pet = &Hamster()
+	walk(pet)
+end
+
+
+
+
+pub package physics
+import std.operations
+import std.math
+
+pub closed type Entity
+	pub var pos, vel, acc Vector
+end
+
+pub type Circle
+	extends Entity
+	pub var radius float64
+end
+
+pub type Mesh
+	extends Entity
+	pub var vertices owned []Vector
+end
+
+pub type Vector
+	from std.operations import *
+	extends Equality, Arithmetic
+	pub var x, y, z float64
+end
+
+pub fun collide(a, b &mut Entity)
+	match *a, *b
+		case Circle, Circle
+			pass
+		case Mesh, Mesh
+			pass
+		case Circle, Mesh
+			pass
+		case Mesh, Circle
+			pass
+	end
+end
+
+pub fun .length(v &Vector) float64
+	return math.sqrt(v.x*v.x + v.y*v.y)
+end
+
+
+
+
+pub package lexer
+from std.io import File->*, FileError->*
+
+pub type TokenType
+	extends uint32
+	default case invalid
+	case identifier, number, string, ...
+end
+
+pub type Token
+	pub var type TokenType
+	pub var text string
+	pub var index usize
+end
+
+pub fun lex(file File) any[owned []mut Token, FileError]
+
+pub fun lex(text string) owned []mut Token
+
+
+
+
+pub package std.collections
+import std.operations
+
+pub type List[T extends Sized]
+	from std.operations import *
+    extends Equality, TryComparison, TryArithmetic, TryBitwise, TryLogical
+    extends To[bool], To[string], TryTo[owned []T]
+	extends From[[]T]
+
+	var length usize
+	var elements mut owned []mut T
+end
+
+pub fun .length(list &List) float64 = default
+
+
+
+
+package chess
+
+type Board = [8][8]Space
+
+closed type Space = pass
+
+type Empty
+	extends default Space
+end
+
+type Piece
+	var color bool # true = white, false = black
+	var type PieceType
+end
+
+type PieceType
+	case pawn, bishop, knight, rook, queen, king
+end
+
+

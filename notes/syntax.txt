@@ -1,6 +1,7 @@
 struct UserId uint32
 
 
+
 struct Vector {
     x, y float64
 }
@@ -110,7 +111,7 @@ pub struct Token {
     pub text string
 }
 
-pub func lex(file File) cases{owned []mut Token, FileError}
+pub func lex(file File) any[owned []mut Token, FileError]
 
 pub func lex(text string) []mut Token
 
@@ -130,4 +131,3 @@ pub struct List[T Sized] {
 }
 
 pub func append[T](list &mut List[T], value &T)
-
