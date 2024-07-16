@@ -1,55 +1,10 @@
-struct UserId uint32
-
-
-
-struct Vector {
-    x, y float64
-}
-
-
-struct Direction uint32 cases {
-    n, s, e, w
-}
-
-
-struct Color {
-    r, g, b uint8
-} cases {
-    default struct Rgb
-    red = (255, 0, 0)
-    green = (0, 255, 0)
-    blue = (0, 0, 255)
-}
-
-
-struct Animal {
-    name string
-} cases {
-    struct Dog {
-        tag string
-    }
-
-    struct Cat {
-        breed string
-    }
-}
-
-
-pub struct AbstractsDog cases {
-    Dog, ...
-}
-pub func Generic[T AbstractsDog](x T)
-
-
-
-
 pub package animals
 
 pub struct Animal {
     pub name string
     pub age uint32
-    pub walk(&this)
 }
+pub func makeNoise(animal &Animal)
 
 pub struct Dog {
     Animal
@@ -61,15 +16,15 @@ pub struct Cat {
     pub breed string
 }
 
-pub func walk(dog &Dog)
+pub func makeNoise(dog &Dog) {}
 
-pub func walk(cat &Cat)
+pub func makeNoise(cat &Cat) {}
 
 pub func main() {
     var animal mut &Animal = &Dog()
-    animal.makeNoise()
+    makeNoise(animal)
     animal = &Cat()
-    animal.makeNoise()
+    animal->makeNoise()
 }
 
 
@@ -78,56 +33,128 @@ from animals import *
 
 pub struct Pet {
     Animal
-    pub walk(&this)
 } cases {
     Dog, Cat, ..
 }
+pub func walk(pet &Pet)
 
 pub struct Hamster {
     Pet
 }
 
-pub func makeNoise(hamster &Hamster)
+pub func makeNoise(hamster &Hamster) {}
 
-pub func walk(hamster &Hamster)
+pub func walk(hamster &Hamster) {}
 
-pub func walk(dog &Dog)
+pub func walk(dog &Dog) {}
 
-pub func walk(cat &Cat)
-
-
+pub func walk(cat &Cat) {}
 
 
-pub package lexer
-from std.io import File->*, FileError->*
 
-pub struct TokenType uint32 cases {
-    default invalid
-    keyword, identifier, number, string
+
+pub package shapes
+from std.math import pi
+
+pub struct Shape cases {
+    struct Circle {
+        pub radius float64
+    }
+
+    struct Rectangle {
+        pub width, height float64
+    }
+
+    struct Triangle {
+        pub width, height float64
+    }
+}
+pub func area(shape &Shape) float64
+
+pub func area(circle &Circle) float64 {
+    return pi*circle.radius*circle.radius
 }
 
-pub struct Token {
-    pub type TokenType
-    pub text string
+pub func area(rectangle &Rectangle) float64 {
+    return rectangle.width*rectangle.height
 }
 
-pub func lex(file File) any[owned []mut Token, FileError]
+pub func area(triangle &Triangle) float64 {
+    return 0.5*triangle.width*triangle.height
+}
 
-pub func lex(text string) []mut Token
+pub func main() {
+    var shape mut Shape = Circle(1)
+    printLine(shape->area())
+    shape = Rectangle(1, 2)
+    printLine(area(shape))
+    shape = Triangle(1, 2)
+    printLine(shape->area())
+}
+
+
+
+
+pub package physics
+from std.operations import Equality, Arithmetic, To
+
+pub struct Entity {
+    pub pos, vel, acc Vector
+} cases {
+    struct Circle {
+        pub radius float64
+    }
+
+    struct Mesh {
+        pub vertices owned []Vector
+    }
+}
+pub func update(entity &mut Entity)
+
+pub struct Vector {
+    Equality, Arithmetic, To[string]
+    x, y, z float64
+}
+
+pub func collide(a, b &mut Entity) {
+    match a, b {
+        case &Circle, &Circle:
+        case &Mesh, &Mesh:
+        case &Circle, &Mesh:
+        case &Mesh, &Circle:
+    }
+}
+
+pub func update(circle &mut Circle) {}
+
+pub func update(mesh &mut Mesh) {}
+
+pub func to[string](vector &Vector) {}
 
 
 
 
 pub package std.collections
-import std.operations
+from std.traits import *
+from std.operations import *
 
 pub struct List[T Sized] {
-    from std.operations import *
-    Equality, TryComparison, TryArithmetic, TryBitwise, TryLogical
-    To[bool], To[string], To[owned []T], From[[]T]
-
+    Equality, Comparison, TryAirthmetic, To[string], TryFrom[string]
     length usize
-    elements owned []mut T
+    elements []T
 }
 
-pub func append[T](list &mut List[T], value &T)
+pub func .length(list &List) usize => list.length
+
+pub func .capacity(list &List) usize => list.elements.length
+
+
+
+
+pub struct any[T..] cases {
+    T, ..
+}
+
+pub struct all[T..] {
+    T
+}
