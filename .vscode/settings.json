@@ -1,10 +1,17 @@
 {
-    "makefile.makefilePath": "compiler-c/Makefile",
+    "makefile.makefilePath": "Makefile",
     "files.associations": {
         "stdint.h": "c",
         "interpreter.h": "c",
         "stddef.h": "c",
         "symboltable.h": "c"
     },
-    "editor.find.autoFindInSelection": "multiline"
+    "editor.find.autoFindInSelection": "multiline",
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/Users/tuckertraywick/Code/programming-language/binary",
+            "binaryPath": "/Users/tuckertraywick/Code/programming-language/binary/run",
+            "binaryArgs": []
+        }
+    ]
 }

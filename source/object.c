@@ -128,7 +128,7 @@ void ObjectCombine(struct Object *first, struct Object *second) {
     ListCombine(&first->code, &second->code);
     ListCombine(&first->immutableData, &second->immutableData);
     ListCombine(&first->mutableData, &second->mutableData);
-    ListCombine(&first->strings, &second->strings);
+    // ListCombine(&first->strings, &second->strings);
     // SymbolTableCombine(&first->symbolTable, &second->symbolTable, first->size);
 }
 

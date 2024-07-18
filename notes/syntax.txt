@@ -151,6 +151,93 @@ pub func .capacity(list &List) usize => list.elements.length
 
 
 
+package chess
+from std.io import printLine, inputLine
+from std.operations import tryTo, tryFrom
+
+struct Board [8][8]Space
+
+struct Space cases {
+    default empty
+    struct Piece {
+        type PieceType
+        color Color
+    }
+}
+
+struct Color cases {
+    black, white
+}
+
+struct PieceType cases {
+    pawn, bishop, knight, rook, queen, king
+}
+
+func new(board &mut Board) {
+    board[0] = [0...8 = (.pawn, .black)]
+    board[1] = [
+        (.rook, .black), (.knight, .black), (.bishop, .black),
+        (.queen, .black), (.king, .black),
+        (.bishop, .black), (.knight, .black), (.rook, .black),
+    ]
+    board[6] = [0...8 = (.pawn, .white)]
+    board[5] = [
+        (.rook, .white), (.knight, .white), (.bishop, .white),
+        (.queen, .white), (.king, .white),
+        (.bishop, .white), (.knight, .white), (.rook, .white),
+    ]
+}
+
+func getCoordinate(coordinate string) optional[(usize, usize)] {
+    if coordinate.length == 2 and 'a' <= coordinate[0] <= 'h' and '1' <= coordinate[1] <= '8' {
+        var column = 8 - ('h' - coordinate[0])
+        var row = tryTo[usize](cooridnate[1])->unwrap() - 1
+        return (row, column)
+    }
+    return none
+}
+
+func getCoordinates(move string) optional[((usize, usize), (usize, usize))] {
+    
+}
+
+func getMove(turn uint32) {
+    print(f"{turn}. ")
+    var move = 
+}
+
+func main() {
+    // print welcome message
+    // whites turn
+    // get move
+    // check move
+    // move piece
+    // capture?
+    // castle?
+    // check?
+    // win?
+    // blacks turn
+
+    var board mut Board
+    var turn mut uint32
+
+    printLine("**** CHESS ****\n")
+
+    while true {
+        print(f"TURN {turn/2 + 1}, ")
+        if turn % 2 == 0 {
+            printLine("BLACK'S MOVE")
+        } else {
+            printLine("WHITE'S MOVE")
+        }
+
+        var move string = getMove()
+    }
+}
+
+
+
+
 pub struct any[T..] cases {
     T, ..
 }

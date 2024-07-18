@@ -37,13 +37,13 @@ uint64_t getHash(char *name);
 struct Symbol *SymbolTableGetSymbol(SymbolTable *table, ListChar *strings, char *name);
 
 // Associates a symbol with a name.
-void SymbolTableSetSymbol(SymbolTable *table, ListChar *strings, char *name, struct Symbol *symbol);
+void SymbolTableSetSymbol(SymbolTable *table, ListChar *strings, enum SymbolCategory category, char *name, size_t size, size_t index);
 
 // Reallocates a symbol table's buckets and rehsashes them. Destroys the old table.
-void SymbolTableRehash(SymbolTable *table, ListChar *strings, size_t capacity);
+void SymbolTableReserve(SymbolTable *table, ListChar *strings, size_t capacity);
 
 // Combines two symbol tables in place. Puts the result in `first`. Shifts indexes of the symbols
-// copied from `second` by `offset`.
-void SymbolTableCombine(SymbolTable *first, SymbolTable *second, size_t offset);
+// copied from `second` by `offset.
+void SymbolTableCombine(SymbolTable *first, SymbolTable *second, ListChar *strings, size_t indexOffset, size_t nameOffset);
 
 #endif // SYMBOLTABLE_H
