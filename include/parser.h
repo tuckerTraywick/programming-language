@@ -20,9 +20,9 @@ typedef struct SyntaxNode {
 } SyntaxNode;
 
 typedef struct SyntaxTree {
-	size_t capacity;
-	size_t count;
 	SyntaxNode *nodes;
+	size_t nodesCapacity;
+	size_t nodesCount;
 } SyntaxTree;
 
 SyntaxTree SyntaxTreeCreate(size_t capacity);

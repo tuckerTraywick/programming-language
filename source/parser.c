@@ -60,7 +60,7 @@ static bool parseProgram(Parser *parser) {
 SyntaxTree SyntaxTreeCreate(size_t capacity) {
 	SyntaxNode *nodes = malloc(capacity*sizeof (SyntaxNode));
 	return (SyntaxTree){
-		.capacity = capacity,
+		.nodesCapacity = capacity,
 		.nodes = nodes,
 	};
 }
