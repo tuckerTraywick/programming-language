@@ -10,56 +10,56 @@
 #endif
 
 // Represents a dynamic array that can shrink or grow at runtime.
-struct List {
+typedef struct List {
 	size_t capacity;
 	size_t count;
 	size_t elementSize;
 	void *elements;
-};
+} List;
 
 // Returns a new list. Must be destroyed by `ListDestroy()`.
-struct List ListCreate(size_t capacity, size_t elementSize);
+List ListCreate(size_t capacity, size_t elementSize);
 
 // Deallocates a list and zeroes it.
-void ListDestroy(struct List *list);
+void ListDestroy(List *list);
 
 // Gets a pointer to the element at an index in a list.
-void *ListGet(struct List *list, size_t index);
+void *ListGet(List *list, size_t index);
 
 // Gets a pointer to the element at an index in a list.
-void ListSet(struct List *list, size_t index, void *element);
+void ListSet(List *list, size_t index, void *element);
 
 // Makes sure a list has a large enough capacity to fit `capacity` elements. Will reallocate if the
 // capacity is larger than the current capacity.
-void ListReserve(struct List *list, size_t capacity);
+void ListReserve(List *list, size_t capacity);
 
 // Changes the count of a list. Will reallocate if the count is greater than the capacity.
-void ListResize(struct List *list, size_t count);
+void ListResize(List *list, size_t count);
 
 // Returns true if a list has 0 elements.
-bool ListIsEmpty(struct List *list);
+bool ListIsEmpty(List *list);
 
 // Inserts an element at an index in a list.
-void ListInsert(struct List *list, size_t index, void *element);
+void ListInsert(List *list, size_t index, void *element);
 
 // Removes the element at an index in a list.
-void ListRemove(struct List *list, size_t index);
+void ListRemove(List *list, size_t index);
 
 // Prepends an element to a list.
-void ListPushFront(struct List *list, void *element);
+void ListPushFront(List *list, void *element);
 
 // Appends an element to a list.
-void ListPushBack(struct List *list, void *element);
+void ListPushBack(List *list, void *element);
 
 // Pops a number of elements from the front of a list and copies the last element popped to `result`
 // if `result` is not NULL.
-void ListPopFront(struct List *list, size_t amount, void *result);
+void ListPopFront(List *list, size_t amount, void *result);
 
 // Pops a number of elements from the back of a list and copies the last element popped to `result`
 // if result is not NULL.
-void ListPopBack(struct List *list, size_t amount, void *result);
+void ListPopBack(List *list, size_t amount, void *result);
 
 // Combines two lists in place. Puts the result in `first`.
-void ListCombine(struct List *first, struct List *second);
+void ListCombine(List *first, List *second);
 
 #endif // LIST_H

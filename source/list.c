@@ -6,8 +6,8 @@
 
 #define max(a, b) ((a) >= (b)) ? (a) : (b)
 
-struct List ListCreate(size_t capacity, size_t elementSize) {
-    return (struct List){
+List ListCreate(size_t capacity, size_t elementSize) {
+    return (List){
         .capacity = capacity,
         .count = 0,
         .elementSize = elementSize,
@@ -15,21 +15,21 @@ struct List ListCreate(size_t capacity, size_t elementSize) {
     };
 }
 
-void ListDestroy(struct List *list) {
+void ListDestroy(List *list) {
     free(list->elements);
-    *list = (struct List){0};
+    *list = (List){0};
 }
 
-void *ListGet(struct List *list, size_t index) {
+void *ListGet(List *list, size_t index) {
     assert(index < list->count && "Index out of bounds.");
     return (char*)list->elements + index*list->elementSize;
 }
 
-void ListSet(struct List *list, size_t index, void *element) {
+void ListSet(List *list, size_t index, void *element) {
     memcpy(ListGet(list, index), element, list->elementSize);
 }
 
-void ListReserve(struct List *list, size_t capacity) {
+void ListReserve(List *list, size_t capacity) {
     if (list->capacity < capacity) {
         while (list->capacity < capacity) {
             list->capacity *= LIST_GROWTH_FACTOR;
@@ -38,7 +38,7 @@ void ListReserve(struct List *list, size_t capacity) {
     }
 }
 
-void ListResize(struct List *list, size_t count) {
+void ListResize(List *list, size_t count) {
     if (count > list->capacity) {
         while (list->capacity < count) {
             list->capacity *= LIST_GROWTH_FACTOR;
@@ -51,11 +51,11 @@ void ListResize(struct List *list, size_t count) {
     list->count = count;
 }
 
-bool ListIsEmpty(struct List *list) {
+bool ListIsEmpty(List *list) {
     return list->count == 0;
 }
 
-void ListInsert(struct List *list, size_t index, void *element) {
+void ListInsert(List *list, size_t index, void *element) {
     assert(index <= list->count && "Invalid index.");
     ListResize(list, list->count + 1);
     if (index < list->count - 1) {
@@ -68,7 +68,7 @@ void ListInsert(struct List *list, size_t index, void *element) {
     ListSet(list, index, element);
 }
 
-void ListRemove(struct List *list, size_t index) {
+void ListRemove(List *list, size_t index) {
     assert(index <= list->count && "Invalid index.");
     ListResize(list, list->count - 1);
     if (index < list->count - 1) {
@@ -80,15 +80,15 @@ void ListRemove(struct List *list, size_t index) {
     }
 }
 
-void ListPushFront(struct List *list, void *element) {
+void ListPushFront(List *list, void *element) {
     ListInsert(list, 0, element);
 }
 
-void ListPushBack(struct List *list, void *element) {
+void ListPushBack(List *list, void *element) {
      ListInsert(list, list->count, element);
 }
 
-void ListPopFront(struct List *list, size_t amount, void *result) {
+void ListPopFront(List *list, size_t amount, void *result) {
     assert(list->count >= amount && "Popped too many elements.");
     if (amount == 0) {
         // Nothing to pop.
@@ -110,7 +110,7 @@ void ListPopFront(struct List *list, size_t amount, void *result) {
     ListResize(list, list->count - amount);
 }
 
-void ListPopBack(struct List *list, size_t amount, void *result) {
+void ListPopBack(List *list, size_t amount, void *result) {
     assert(list->count >= amount && "Popped too many elements.");
     if (amount == 0) {
         // Nothing to pop.
@@ -127,7 +127,7 @@ void ListPopBack(struct List *list, size_t amount, void *result) {
     ListResize(list, list->count - amount);
 }
 
-void ListCombine(struct List *first, struct List *second) {
+void ListCombine(List *first, List *second) {
     assert(first->elementSize == second->elementSize && "Can't combine two lists containing different data types.");
     if (second->count > first->capacity - first->count) {
         // Reserve enough for the second list's elements.
