@@ -55,7 +55,8 @@ structMember
 structCase
     = identifierList ?("=" expressionList)
     | structDefinition
-    | "embed" typeList
+    | typeList
+    | "..."
 
 block
     = "{" *blockStatement "}"

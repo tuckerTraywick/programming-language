@@ -1,8 +1,12 @@
 In a bottom-up parser, you have to decide what the parent node is going to be based on the current
 token.
 
-In a top-down parser, you have to decide what the parent node is ahead of time and fit check if the
+In a top-down parser, you have to decide what the parent node is ahead of time and check if the
 current token can be a child.
+
+
+
+
 
 
 
