@@ -3,9 +3,14 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include "list.h"
+
+typedef List TokenList;
+
+typedef List LexingErrorList;
 
 typedef enum TokenType {
-	INVALID,
+	LEXING_ERROR,
 	IDENTIFIER,
 	NUMBER,
 	CHARACTER,
@@ -17,13 +22,20 @@ typedef enum TokenType {
 typedef struct Token {
 	TokenType type;
 	char *text;
+	size_t length;
 } Token;
 
-typedef struct TokenList {
-	size_t count;
-	Token *tokens;
-} TokenList;
+typedef struct LexingError {
+	char *message;
+	char *text;
+	size_t textLength;
+} LexingError;
 
-TokenList lex(char *text, size_t length);
+typedef struct LexingResult {
+	TokenList tokens;
+	LexingErrorList errors;
+} LexingResult;
+
+LexingResult lex(char *text, size_t length);
 
 #endif // LEXER_H
