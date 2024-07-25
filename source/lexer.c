@@ -6,11 +6,11 @@ typedef struct ReservedToken {
 } ReservedToken;
 
 static ReservedToken keywords[] = {
-	"package",
+	
 };
 
 static ReservedToken operators[] = {
-	"++",
+	
 };
 
 LexingResult lex(char *text, size_t length) {
