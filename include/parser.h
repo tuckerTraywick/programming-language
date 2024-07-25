@@ -33,7 +33,8 @@ typedef struct ParsingResult {
 	ParsingErrorList errors;
 } ParsingResult;
 
-// A sentinal value representing a pointer to be filled by the next node parsed.
+// The parser sets the current node's child or sibling to the address of this variable depending on
+// whether the node is a parent or a child.
 extern SyntaxNode nullNode = {.type = PARSING_ERROR, .child = NULL, .sibling = NULL};
 
 ParsingResult parse(TokenList tokens);
