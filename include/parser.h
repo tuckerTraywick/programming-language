@@ -3,9 +3,14 @@
 
 #include <stddef.h>
 #include "lexer.h"
+#include "list.h"
+
+typedef List SyntaxNodeList;
+
+typedef List ParsingErrorList;
 
 typedef enum SyntaxNodeType {
-	SYNTAX_ERROR,
+	PARSING_ERROR = OPERATOR + 1,
 	PROGRAM,
 	STATEMENT,
 	EXPRESSION,
@@ -13,22 +18,24 @@ typedef enum SyntaxNodeType {
 
 typedef struct SyntaxNode {
 	SyntaxNodeType type;
-	struct SyntaxNode *children;
-	size_t childrenCount;
-	Token *tokens;
-	size_t tokensCount;
+	struct SyntaxNode *sibling;
+	struct SyntaxNode *child;
 } SyntaxNode;
 
-typedef struct SyntaxTree {
-	SyntaxNode *nodes;
-	size_t nodesCapacity;
-	size_t nodesCount;
-} SyntaxTree;
+typedef struct ParsingError {
+	char *message;
+	Token *tokens;
+	size_t tokensCount;
+} ParsingError;
 
-SyntaxTree SyntaxTreeCreate(size_t capacity);
+typedef struct ParsingResult {
+	SyntaxNodeList nodes;
+	ParsingErrorList errors;
+} ParsingResult;
 
-void SyntaxTreeDestroy(SyntaxTree *tree);
+// A sentinal value representing a pointer to be filled by the next node parsed.
+extern SyntaxNode nullNode = {.type = PARSING_ERROR, .child = NULL, .sibling = NULL};
 
-SyntaxTree parse(TokenList tokens);
+ParsingResult parse(TokenList tokens);
 
 #endif // PARSER_H

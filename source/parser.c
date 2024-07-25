@@ -1,80 +1,71 @@
 #include <stdbool.h>
-#include <stdlib.h>
 #include "parser.h"
 #include "lexer.h"
 
-#define DEFAULT_NODE_CAPACITY 1000
-#define INDEX_STACK_SIZE 2000
+#define INITIAL_NODE_CAPACITY 500
 
 typedef struct Parser {
 	TokenList tokens;
-	SyntaxTree tree;
-	size_t *tokenIndexStack;
-	size_t *tokenIndex;
-	size_t *nodeIndexStack;
-	size_t *nodeIndex;
+	size_t tokenIndex;
+	SyntaxNodeList nodes;
+	ParsingErrorList errors;
 } Parser;
 
-static Parser ParserCreate(TokenList tokens) {
-	return (Parser){
-		.tokens = tokens,
-		.tree = SyntaxTreeCreate(DEFAULT_NODE_CAPACITY),
-		.tokenIndexStack = malloc(INDEX_STACK_SIZE*sizeof (size_t)),
-		.nodeIndexStack = malloc(INDEX_STACK_SIZE*sizeof (size_t)),
-	};
-}
-
-static void ParserDestroy(Parser *parser) {
-	free(parser->tokenIndexStack);
-	free(parser->nodeIndexStack);
-	*parser = (Parser){0};
+static SyntaxNode *currentNode(Parser *parser) {
+	assert(parser->nodes.count > 1 && "Can't get current node if the tree is empty.");
+	return ListGet(&parser->nodes.elements, parser->nodes.count - 1);
 }
 
 static void beginNode(Parser *parser, SyntaxNodeType type) {
-	// TODO: Make sure the index stacks don't overflow.
-	parser->tree.nodes[*parser->nodeIndex] = (SyntaxNode){
-		.type = type,
-		.children = parser->nodeIndex + 1,
-		.childrenCount = 0,
-	};
-	++parser->nodeIndex;
+	SyntaxNode node = {.type = type, .child = &nullNode};
+	ListPushBack(&parser->nodes, &node);
 }
 
-static bool endNode(Parser *parser) {
-	--parser->nodeIndex;
+static bool consume(Parser *parser, TokenType type) {
+	SyntaxNode *current = currentNode(parser);
+	// Return early if the next token doesn't match.
+	if (parser->tokenIndex >= parser->tokens.count || ((Token*)ListGet(&parser->tokens, parser->tokenIndex))->type != type) {
+		return false;
+	}
+
+	SyntaxNode next = {.type = type, .sibling = &nullNode};
+	ListPushBack(&parser->nodes, &next);
+	// If the current node is a parent, add the next node as a child.
+	if (current->child == &nullNode) {
+		current->child = ListGet(&parser->nodes, parser->nodes.count - 1);
+	} else if (current->sibling == &nullNode) {
+		current->sibling = ListGet(&parser->nodes, parser->nodes.count - 1);
+	} else {
+		assert(false && "The previous node must have either `child` or `sibling` set to the null node.");
+	}
+
 	return true;
 }
 
-static bool backtrack(Parser *parser) {
-	return false;
-}
+// static bool parseProgram(Parser *parser) {
+// 	beginNode(parser, PROGRAM);
+// 		if (!consume(parser, NUMBER)) return backtrack(parser);
+// 		if (!parseExpression(parser)) return backtrack(parser);
+// 	return endNode(parser);
+// }
 
-static bool parseProgram(Parser *parser) {
-	beginNode(parser, PROGRAM);
-	if (!consume(parser, NUMBER)) return backtrack(parser);
-	if (!consume(parser, OPERATOR)) return backtrack(parser);
-	if (!consume(parser, NUMBER)) return backtrack(parser);
-	return endNode(parser);
-}
+// static bool parseExpression(Parser *parser) {
+// 	beginNode(parser, EXPRESSION);
+// 		if (!consume(parser, NUMBER)) return backtrack(parser);
+// 		beginSequence(parser);
+// 			if (!consume(parser, OPERATOR) && !consume(parser, NUMBER)) backtrack(parser);
+// 		endSequence(parser);
+// 	return endNode(parser);
+// }
 
-SyntaxTree SyntaxTreeCreate(size_t capacity) {
-	SyntaxNode *nodes = malloc(capacity*sizeof (SyntaxNode));
-	return (SyntaxTree){
-		.nodesCapacity = capacity,
+ParsingResult parse(TokenList tokens) {
+	SyntaxNodeList nodes = ListCreate(INITIAL_NODE_CAPACITY, sizeof (SyntaxNode));
+	ParsingErrorList errors = ListCreate(INITIAL_NODE_CAPACITY, sizeof (ParsingError));
+	Parser parser = {
+		.tokens = tokens,
 		.nodes = nodes,
+		.errors = errors,
 	};
 }
 
-void SyntaxTreeDestroy(SyntaxTree *tree) {
-	free(tree->nodes);
-	*tree = (SyntaxTree){0};
-}
-
-SyntaxTree parse(TokenList tokens) {
-	Parser parser = ParserCreate(tokens);
-	parseProgram(&parser);
-	ParserDestroy(&parser);
-}
-
-#undef DEFAULT_NODE_CAPACITY
-#undef INDEX_STACK_SIZE
+#undef INITIAL_NODE_CAPACITY
