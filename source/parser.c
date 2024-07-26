@@ -1,8 +1,11 @@
+#include <assert.h>
 #include <stdbool.h>
 #include "parser.h"
 #include "lexer.h"
 
 #define INITIAL_NODE_CAPACITY 500
+
+SyntaxNode nullNode = {.type = PARSING_ERROR, .child = NULL, .sibling = NULL};
 
 typedef struct Parser {
 	TokenList tokens;
@@ -13,7 +16,7 @@ typedef struct Parser {
 
 static SyntaxNode *currentNode(Parser *parser) {
 	assert(parser->nodes.count > 1 && "Can't get current node if the tree is empty.");
-	return ListGet(&parser->nodes.elements, parser->nodes.count - 1);
+	return ListGet(&parser->nodes, parser->nodes.count - 1);
 }
 
 static void beginNode(Parser *parser, SyntaxNodeType type) {
@@ -28,7 +31,7 @@ static bool consume(Parser *parser, TokenType type) {
 		return false;
 	}
 
-	SyntaxNode next = {.type = type, .sibling = &nullNode};
+	SyntaxNode next = {.type = (SyntaxNodeType)type, .sibling = &nullNode};
 	ListPushBack(&parser->nodes, &next);
 	// If the current node is a parent, add the next node as a child.
 	if (current->child == &nullNode) {
@@ -41,22 +44,6 @@ static bool consume(Parser *parser, TokenType type) {
 
 	return true;
 }
-
-// static bool parseProgram(Parser *parser) {
-// 	beginNode(parser, PROGRAM);
-// 		if (!consume(parser, NUMBER)) return backtrack(parser);
-// 		if (!parseExpression(parser)) return backtrack(parser);
-// 	return endNode(parser);
-// }
-
-// static bool parseExpression(Parser *parser) {
-// 	beginNode(parser, EXPRESSION);
-// 		if (!consume(parser, NUMBER)) return backtrack(parser);
-// 		beginSequence(parser);
-// 			if (!consume(parser, OPERATOR) && !consume(parser, NUMBER)) backtrack(parser);
-// 		endSequence(parser);
-// 	return endNode(parser);
-// }
 
 ParsingResult parse(TokenList tokens) {
 	SyntaxNodeList nodes = ListCreate(INITIAL_NODE_CAPACITY, sizeof (SyntaxNode));

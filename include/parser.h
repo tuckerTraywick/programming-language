@@ -10,7 +10,7 @@ typedef List SyntaxNodeList;
 typedef List ParsingErrorList;
 
 typedef enum SyntaxNodeType {
-	PARSING_ERROR = OPERATOR + 1,
+	PARSING_ERROR = TOKENTYPE_COUNT + 1,
 	PROGRAM,
 	STATEMENT,
 	EXPRESSION,
@@ -35,7 +35,7 @@ typedef struct ParsingResult {
 
 // The parser sets the current node's child or sibling to the address of this variable depending on
 // whether the node is a parent or a child.
-extern SyntaxNode nullNode = {.type = PARSING_ERROR, .child = NULL, .sibling = NULL};
+extern SyntaxNode nullNode;
 
 ParsingResult parse(TokenList tokens);
 

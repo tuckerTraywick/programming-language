@@ -404,11 +404,11 @@ void runCode(uint8_t *code, uint8_t *immutableData, uint8_t *mutableData) {
                 break;
 
             case PRINTI:
-                printf("%li\n", pop(&interpreter));
+                printf("%lli\n", (int64_t)pop(&interpreter));
                 break;
 
             case PRINTU:
-                printf("%lu\n", pop(&interpreter));
+                printf("%llu\n", pop(&interpreter));
                 break;
 
             case PRINTF:
