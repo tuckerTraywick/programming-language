@@ -10,7 +10,6 @@ typedef List SyntaxNodeList;
 typedef List ParsingErrorList;
 
 typedef enum SyntaxNodeType {
-	PARSING_ERROR = TOKENTYPE_COUNT + 1,
 	PROGRAM,
 	STATEMENT,
 	EXPRESSION,
