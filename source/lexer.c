@@ -25,13 +25,28 @@ static ReservedWord keywords[] = {
 
 // All of the operators in the language.
 static ReservedWord operators[] = {
+	{"++", INCREMENT},
 	{"+", PLUS},
+	{";", SEMICOLON},
 };
 
 // The message for each error type.
-char *errorMessages[] = {
+// TODO: Add formatting specifiers to these that take the token as an argument.
+char *lexingErrorMessages[] = {
 	[INVALID_TOKEN] = "Invalid token.",
 };
+
+// Returns true if `string` starts with `prefix`.
+static bool startsWith(char *string, char *prefix) {
+	while (*prefix != '\0') {
+		if (*string != *prefix) {
+			return false;
+		}
+		++prefix;
+		++string;
+	}
+	return true;
+}
 
 void LexingResultDestroy(LexingResult *result) {
 	ListDestroy(&result->tokens);
@@ -48,12 +63,22 @@ void LexingResultPrint(LexingResult *result) {
 		[STRING] = "string",
 
 		[PACKAGE] = "package",
+
+		[INCREMENT] = "increment",
+		[PLUS] = "plus",
+		[SEMICOLON] = "semicolon",
 	};
 
 	printf("%lu TOKENS:\n", result->tokens.count);
 	for (size_t i = 0; i < result->tokens.count; ++i) {
 		Token *token = (Token*)ListGet(&result->tokens, i);
-		printf("\"%.*s\" %s\n", (int)token->length, token->text, tokenTypeNames[token->type]);
+		printf("%3zu \"%.*s\" %s\n", token->index, (int)token->length, token->text, tokenTypeNames[token->type]);
+	}
+
+	printf("\n%lu ERRORS:\n", result->errors.count);
+	for (size_t i = 0; i < result->errors.count; ++i) {
+		LexingError *error = (LexingError*)ListGet(&result->errors, i);
+		printf("%3zu \"%.*s\": %s\n", error->token.index, (int)error->token.length, error->token.text, lexingErrorMessages[error->type]);
 	}
 }
 
@@ -86,13 +111,53 @@ LexingResult lex(char *text, size_t length) {
 				++currentChar;
 			} while (isalnum(*currentChar) || *currentChar == '_');
 			
-			// TODO: Check if the identifier is a keyword.
+			// Check if the identifier matches any of the keywords.
+			for (size_t i = 0; i < lengthOf(keywords); ++i) {
+				size_t keywordLength = strlen(keywords[i].text);
+				if (keywordLength == (size_t)(currentChar - currentToken.text)
+				    && startsWith(currentToken.text, keywords[i].text)) {
+					currentToken.type = keywords[i].type;
+					currentChar += keywordLength;
+					break;
+				}
+			}
 		} else if (ispunct(*currentChar)) {
-			// Lex an operator.
+			// Check if the text matches any of the operators.
+			for (size_t i = 0; i < lengthOf(operators); ++i) {
+				if (startsWith(currentToken.text, operators[i].text)) {
+					currentToken.type = operators[i].type;
+					currentChar += strlen(operators[i].text);
+					break;
+				}
+			}
+
+			// If no operator was found, emit an error and recover to the next token.
+			if (currentToken.type == INVALID) {
+				while (*currentChar != '\0' && *currentChar != ';' && !isblank(*currentChar)) {
+					++currentChar;
+				}
+
+				LexingError error = {
+					.type = INVALID_TOKEN,
+					.message = lexingErrorMessages[INVALID_TOKEN],
+					.token = {
+						.type = INVALID,
+						.length = currentChar - currentToken.text,
+						.text = currentToken.text,
+						.index = currentToken.text - text,
+					},
+				};
+				ListPushBack(&errors, &error);
+				ListPushBack(&tokens, &error.token);
+				currentToken = (Token){.text=currentChar};
+				continue;
+			}
 		}
 
+		// Append the token just lexed to the list of tokens.
 		if (currentToken.type != INVALID) {
 			currentToken.length = currentChar - currentToken.text;
+			currentToken.index = currentToken.text - text;
 			ListPushBack(&tokens, &currentToken);
 			currentToken = (Token){.text=currentChar};
 		}

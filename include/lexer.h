@@ -19,7 +19,9 @@ typedef enum TokenType {
 
 	PACKAGE,
 
+	INCREMENT,
 	PLUS,
+	SEMICOLON,
 
 	TOKENTYPE_COUNT,
 } TokenType;
@@ -34,6 +36,7 @@ typedef struct Token {
 	TokenType type;
 	size_t length;
 	char *text; // Points to the input string. Does not need to be freed.
+	size_t index; // Index in the input string of the first character of `text`.
 } Token;
 
 // An error encountered during lexing. The message describes the reason the token it points to is
@@ -41,7 +44,7 @@ typedef struct Token {
 typedef struct LexingError {
 	LexingErrorType type;
 	char *message; // Points to one of the strings in `errorMessages`. Does not need to be freed.
-	Token *token; // Points to the list of tokens outputted by the lexer. Does not need to be freed.
+	Token token;
 } LexingError;
 
 // The output of the lexer. Must be destroyed by `LexingResultDestroy()` after use.
@@ -51,7 +54,7 @@ typedef struct LexingResult {
 } LexingResult;
 
 // The error messages that can be generated during lexing.
-extern char *errorMessages[];
+extern char *lexingErrorMessages[];
 
 // Deallocates a `LexingResult`'s lists and zeros its memory.
 void LexingResultDestroy(LexingResult *result);
