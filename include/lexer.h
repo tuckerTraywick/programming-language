@@ -12,23 +12,56 @@ typedef List LexingErrorList;
 // The type of thing a token represents.
 typedef enum TokenType {
 	INVALID,
-	IDENTIFIER,
 	NUMBER,
 	CHARACTER,
 	STRING,
+	IDENTIFIER,
 
 	PACKAGE,
+	FROM,
+	IMPORT,
+	EXPORT,
+	VAR,
+	FUNC,
+	METHOD,
+	STRUCT,
+	CASES,
+	PUB,
+	STATIC,
+	CONST,
+	MUT,
+	OWNED,
+	WEAK,
+	NEW,
+	MAKE,
+	DROP,
+	MOVE,
+	DEFER,
+	ASSERT,
+	WHERE,
+	WHILE,
+	FOR,
+	IF,
+	SWITCH,
+	MATCH,
+	DEFAULT,
+	RETURN,
+	BREAK,
+	CONTINUE,
+	AS,
+	IS,
+
 
 	INCREMENT,
 	PLUS,
 	SEMICOLON,
-
-	TOKENTYPE_COUNT,
 } TokenType;
 
 // The type of error the lexer encountered.
 typedef enum LexingErrorType {
 	INVALID_TOKEN,
+	UNCLOSED_SINGLE_QUOTE,
+	UNCLOSED_DOUBLE_QUOTE,
 } LexingErrorType;
 
 // A token from the input string. Can be a keyword, operator, literal, or identifier.
@@ -62,8 +95,8 @@ void LexingResultDestroy(LexingResult *result);
 // Pretty prints a `LexingResult` to the terminal.
 void LexingResultPrint(LexingResult *result);
 
-// Splits `text` into tokens, stops lexing at index `length`. If `length` is 0, stops lexing at the
-// first '\0' character it encounters..
-LexingResult lex(char *text, size_t length);
+// Splits `text` into tokens.
+// TODO: Add a length argument.
+LexingResult lex(char *text);
 
 #endif // LEXER_H
