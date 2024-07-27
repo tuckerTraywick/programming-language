@@ -5,7 +5,7 @@
 
 #define INITIAL_NODE_CAPACITY 500
 
-SyntaxNode nullNode = {.type = PARSING_ERROR, .child = NULL, .sibling = NULL};
+SyntaxNode nullNode = {0};
 
 typedef struct Parser {
 	TokenList tokens;
