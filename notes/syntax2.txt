@@ -1,57 +1,82 @@
-pub namespace animals;
-
-pub struct Animal {
-	pub string name;
-	pub uint32 age;
-}
-
-pub struct Dog {
-	Aimal;
-	pub string tag;
-}
-
-pub struct Cat {
-	Animal;
-	pub string breed;
-}
-
-pub void makeNoise(*Animal animal);
-
-pub void makeNoise(*Dog dog) {}
-
-pub void makeNoise(*Cat cat) {}
-
-pub void main() {
-	mut *Animal animal = &Dog();
-	makeNoise(animal);
-	animal = &Cat();
-	animal->makeNoise();
-}
-
-
-pub namespace moreAnimals;
-import animals.*;
-
-pub struct Pet {
-	Animal;
-} cases {
-	Dog, Cat, ...;
-}
-pub void walk(*Pet pet);
-
-pub struct Hamster {
-	Pet;
-}
-
-pub void makeNoise(*Hamster hamster) {}
-
-pub void walk(*Hamster hamster) {}
-
-pub void walk(*Dog dog) {}
-
-pub void walk(*Cat cat) {}
+struct Color
+	r, g, b uint8
+cases
+	default struct Rgb
+	red = (255, 0, 0)
+	green = (0, 255, 0)
+	blue = (0, 0, 255)
+end
 
 
 
 
-animals.walk(animals.Dog, )
+pub package animals
+from std.io import printLine
+
+pub struct Animal
+	pub name string
+	pub age uint32
+end
+
+pub method makeNoise(animal &Animal)
+
+pub struct Dog
+	Animal
+	pub tag string
+end
+
+pub struct Cat
+	Animal
+	pub breed string
+end
+
+pub func makeNoise(dog &Dog)
+	printLine("woof")
+end
+
+pub func makeNoise(cat &Cat)
+	printLine("meow")
+end
+
+pub func main()
+	var animal &Animal = &Dog()
+	makeNoise(animal)
+	animal = &Cat()
+	animal->makeNoise()
+end
+
+
+
+
+pub package physics
+from std.math import sqrt
+from std.operations import *
+
+pub struct Entity uint32
+	pub pos, vel, acc Vector
+cases
+	struct Circle
+		pub radius float64
+	end
+
+	struct Mesh
+		pub vertices owned []Vector
+	end
+end
+
+pub method update(entity &mut Entity)
+
+pub struct Vector
+	Equality, Arithmetic, To[string]
+	pub x, y, z float64
+end
+
+pub func update(circle &Circle) pass
+
+pub func update(mesh &Mesh) pass
+
+pub func .length(v &Vector) float64
+	return sqrt(v.x*v.x + v.y*v.y)
+end
+
+

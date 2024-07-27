@@ -4,7 +4,8 @@ pub struct Animal {
     pub name string
     pub age uint32
 }
-pub func makeNoise(animal &Animal)
+
+pub method makeNoise(animal &Animal)
 
 pub struct Dog {
     Animal
@@ -36,7 +37,8 @@ pub struct Pet {
 } cases {
     Dog, Cat, ..
 }
-pub func walk(pet &Pet)
+
+pub method walk(pet &Pet)
 
 pub struct Hamster {
     Pet
@@ -69,7 +71,8 @@ pub struct Shape cases {
         pub width, height float64
     }
 }
-pub func area(shape &Shape) float64
+
+pub method area(shape &Shape) float64
 
 pub func area(circle &Circle) float64 {
     return pi*circle.radius*circle.radius
@@ -109,11 +112,12 @@ pub struct Entity {
         pub vertices owned []Vector
     }
 }
-pub func update(entity &mut Entity)
+
+pub method update(entity &mut Entity)
 
 pub struct Vector {
     Equality, Arithmetic, To[string]
-    x, y, z float64
+    pub x, y, z float64
 }
 
 pub func collide(a, b &mut Entity) {
@@ -130,6 +134,40 @@ pub func update(circle &mut Circle) {}
 pub func update(mesh &mut Mesh) {}
 
 pub func to[string](vector &Vector) {}
+
+
+
+
+pub package lexer
+
+pub struct TokenType uint32 cases {
+    default invalid
+    number, character, string, identifier
+}
+
+pub struct Token {
+    pub type TokenType
+    pub text string
+    pub index usize
+}
+
+pub struct LexingErrorMessage string cases {
+    default invalidToken = "Invalid token."
+    unclosedSingleQuote = "Unclosed single quote."
+    unclosedDoubleQuote = "Unclosed double quote."
+}
+
+pub struct LexingError {
+    pub message LexingErrorMessage
+    pub token Token
+}
+
+pub struct LexingResult {
+    pub tokens owned []Token
+    pub errors owned []LexingError
+}
+
+pub func lex(text string) LexingResult
 
 
 
@@ -160,10 +198,10 @@ struct Board [8][8]char
 
 
 
-pub struct any[T..] cases {
-    T, ..
+pub struct any[T...] cases {
+    T, ...
 }
 
-pub struct all[T..] {
+pub struct all[T...] {
     T
 }
