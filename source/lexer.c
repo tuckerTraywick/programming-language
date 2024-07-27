@@ -34,6 +34,8 @@ static ReservedWord operators[] = {
 // TODO: Add formatting specifiers to these that take the token as an argument.
 char *lexingErrorMessages[] = {
 	[INVALID_TOKEN] = "Invalid token.",
+	[UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
+	[UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
 };
 
 // Returns true if `string` starts with `prefix`.
@@ -72,25 +74,25 @@ void LexingResultPrint(LexingResult *result) {
 	printf("%lu TOKENS:\n", result->tokens.count);
 	for (size_t i = 0; i < result->tokens.count; ++i) {
 		Token *token = (Token*)ListGet(&result->tokens, i);
-		printf("%3zu \"%.*s\" %s\n", token->index, (int)token->length, token->text, tokenTypeNames[token->type]);
+		printf("%-3zu `%.*s` %s\n", token->index, (int)token->length, token->text, tokenTypeNames[token->type]);
 	}
 
 	printf("\n%lu ERRORS:\n", result->errors.count);
 	for (size_t i = 0; i < result->errors.count; ++i) {
 		LexingError *error = (LexingError*)ListGet(&result->errors, i);
-		printf("%3zu \"%.*s\": %s\n", error->token.index, (int)error->token.length, error->token.text, lexingErrorMessages[error->type]);
+		printf("%-3zu `%.*s`: %s\n", error->token.index, (int)error->token.length, error->token.text, lexingErrorMessages[error->type]);
 	}
 }
 
-LexingResult lex(char *text, size_t length) {
+LexingResult lex(char *text) {
 	TokenList tokens = ListCreate(INITIAL_TOKEN_CAPACITY, sizeof (Token));
 	LexingErrorList errors = ListCreate(INITIAL_ERROR_CAPACITY, sizeof (LexingError));
 	char *currentChar = text;
 	Token currentToken = {.text=currentChar};
 	
-	// TODO: Only loop `length` times if `length` != 0.
+	// TODO: Lex newlines.
 	while (*currentChar != '\0') {
-		if (isblank(*currentChar)) {
+		if (isspace(*currentChar)) {
 			// Skip whitespace.
 			++currentChar;
 			++currentToken.text;
@@ -101,9 +103,65 @@ LexingResult lex(char *text, size_t length) {
 				++currentChar;
 			} while (*currentChar != '\0' && isdigit(*currentChar));
 		} else if (*currentChar == '\'') {
+			// Lex a character literal.
+			currentToken.type = CHARACTER;
+			do {
+				// TODO: Emit an error for an invalid or incomplete escape sequence.
+				if (*currentChar == '\\' && *(currentChar + 1) == '\'') {
+					++currentChar;
+				}
+				++currentChar;
+			} while (*currentChar != '\0' && *currentChar != '\n' && *currentChar != '\'');
 
+			if (*currentChar == '\'') {
+				++currentChar;
+			} else {
+				// Emit an error.
+				LexingError error = {
+					.type = UNCLOSED_SINGLE_QUOTE,
+					.message = lexingErrorMessages[UNCLOSED_SINGLE_QUOTE],
+					.token = {
+						.type = INVALID,
+						.text = currentToken.text,
+						.length = currentChar - currentToken.text,
+						.index = currentToken.text - text,
+					},
+				};
+				ListPushBack(&errors, &error);
+				ListPushBack(&tokens, &error.token);
+				currentToken = (Token){.text=currentChar};
+				continue;
+			}
 		} else if (*currentChar == '"') {
+			// Lex a string literal.
+			currentToken.type = STRING;
+			do {
+				// TODO: Emit an error for an invalid or incomplete escape sequence.
+				if (*currentChar == '\\' && *(currentChar + 1) == '"') {
+					++currentChar;
+				}
+				++currentChar;
+			} while (*currentChar != '\0' && *currentChar != '\n' && *currentChar != '"');
 
+			if (*currentChar == '"') {
+				++currentChar;
+			} else {
+				// Emit an error.
+				LexingError error = {
+					.type = UNCLOSED_DOUBLE_QUOTE,
+					.message = lexingErrorMessages[UNCLOSED_DOUBLE_QUOTE],
+					.token = {
+						.type = INVALID,
+						.text = currentToken.text,
+						.length = currentChar - currentToken.text,
+						.index = currentToken.text - text,
+					},
+				};
+				ListPushBack(&errors, &error);
+				ListPushBack(&tokens, &error.token);
+				currentToken = (Token){.text=currentChar};
+				continue;
+			}
 		} else if (isalpha(*currentChar) || *currentChar == '_') {
 			// Lex an identifier.
 			currentToken.type = IDENTIFIER;
@@ -131,7 +189,7 @@ LexingResult lex(char *text, size_t length) {
 				}
 			}
 
-			// If no operator was found, emit an error and recover to the next token.
+			// Recover to the next token and emit an error if no operator was found.
 			if (currentToken.type == INVALID) {
 				while (*currentChar != '\0' && *currentChar != ';' && !isblank(*currentChar)) {
 					++currentChar;
@@ -152,7 +210,7 @@ LexingResult lex(char *text, size_t length) {
 				currentToken = (Token){.text=currentChar};
 				continue;
 			}
-		}
+		} // TODO: else {emit an error}
 
 		// Append the token just lexed to the list of tokens.
 		if (currentToken.type != INVALID) {
