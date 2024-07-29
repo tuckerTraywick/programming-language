@@ -6,8 +6,8 @@
 // The initial amount of tokens to allocate.
 #define INITIAL_TOKEN_CAPACITY 500
 
-// The initial amount of errors to allocate.
-#define INITIAL_ERROR_CAPACITY 50
+// The initial amount of errot tokens to allocate.
+#define INITIAL_ERROR_CAPACITY 100
 
 // Returns the length of an array.
 #define lengthOf(array) (sizeof (array) / sizeof (array)[0])
@@ -212,19 +212,19 @@ void LexingResultPrint(LexingResult *result) {
 	for (size_t i = 0; i < result->tokens.count; ++i) {
 		Token *token = (Token*)ListGet(&result->tokens, i);
 		if (token->type == NEWLINE) {
-			printf("%-3zu `\\n` newline\n", token->index);
+			printf("%-5zu `\\n` newline\n", token->index);
 		} else {
-			printf("%-3zu `%.*s` %s\n", token->index, (int)token->length, token->text, tokenTypeNames[token->type]);
+			printf("%-5zu `%.*s` %s\n", token->index, (int)token->length, token->text, tokenTypeNames[token->type]);
 		}
 	}
 
-	printf("\n%lu ERRORS:\n", result->errors.count);
+	printf("\n%lu LEXING ERRORS:\n", result->errors.count);
 	for (size_t i = 0; i < result->errors.count; ++i) {
 		Token *error = (Token*)ListGet(&result->errors, i);
 		if (error->type == NEWLINE) {
-			printf("%-3zu `\\n` newline\n", error->index);
+			printf("%-5zu `\\n` newline\n", error->index);
 		} else {
-			printf("%-3zu `%.*s` %s\n", error->index, (int)error->length, error->text, tokenTypeNames[error->type]);
+			printf("%-5zu `%.*s` %s\n", error->index, (int)error->length, error->text, tokenTypeNames[error->type]);
 		}
 	}
 }
