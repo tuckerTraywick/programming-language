@@ -3,20 +3,26 @@
 #include "parser.h"
 #include "lexer.h"
 
+// The inital amount of nodes to allocate for the parse tree.
 #define INITIAL_NODE_CAPACITY 500
 
-SyntaxNode nullNode = {0};
+// The inital amount of error nodes to allocate.
+#define INITIAL_ERROR_CAPACITY 100
 
+// The parser sets the current node's sibling or child pointer to this node depending on whether the
+// next node is to be a sibling or child of the current node.
+static SyntaxNode nullNode = {0};
+
+// The state of the parser.
 typedef struct Parser {
 	TokenList tokens;
 	size_t tokenIndex;
 	SyntaxNodeList nodes;
-	ParsingErrorList errors;
+	SyntaxNodeList errors;
 } Parser;
 
 static SyntaxNode *currentNode(Parser *parser) {
-	assert(parser->nodes.count > 1 && "Can't get current node if the tree is empty.");
-	return ListGet(&parser->nodes, parser->nodes.count - 1);
+	return (SyntaxNode*)((char*)parser->nodes.elements + parser->nodes.count);
 }
 
 static void beginNode(Parser *parser, SyntaxNodeType type) {
@@ -36,6 +42,7 @@ static bool consume(Parser *parser, TokenType type) {
 	// If the current node is a parent, add the next node as a child.
 	if (current->child == &nullNode) {
 		current->child = ListGet(&parser->nodes, parser->nodes.count - 1);
+	// If the current node is not a parent, add the next node as a sibling.
 	} else if (current->sibling == &nullNode) {
 		current->sibling = ListGet(&parser->nodes, parser->nodes.count - 1);
 	} else {
@@ -45,14 +52,29 @@ static bool consume(Parser *parser, TokenType type) {
 	return true;
 }
 
+void ParsingResultDestroy(ParsingResult *result) {
+	ListDestroy(&result->nodes);
+	ListDestroy(&result->errors);
+	*result = (ParsingResult){0};
+}
+
+void ParsingResultPrint(ParsingResult *result) {
+	printf("%zu NODES:\n", result->nodes.count);
+	for (size_t i = 0; i < result->nodes.count; ++i) {
+		printf("");
+	}
+}
+
 ParsingResult parse(TokenList tokens) {
 	SyntaxNodeList nodes = ListCreate(INITIAL_NODE_CAPACITY, sizeof (SyntaxNode));
-	ParsingErrorList errors = ListCreate(INITIAL_NODE_CAPACITY, sizeof (ParsingError));
+	SyntaxNodeList errors = ListCreate(INITIAL_ERROR_CAPACITY, sizeof (SyntaxNode));
 	Parser parser = {
 		.tokens = tokens,
 		.nodes = nodes,
 		.errors = errors,
 	};
+	return (ParsingResult){.nodes = nodes, .errors = errors};
 }
 
 #undef INITIAL_NODE_CAPACITY
+#undef INITIAL_ERROR_CAPACITY

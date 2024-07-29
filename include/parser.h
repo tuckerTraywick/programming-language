@@ -7,35 +7,35 @@
 
 typedef List SyntaxNodeList;
 
-typedef List ParsingErrorList;
-
+// The type of thing in the grammar a node represents.
 typedef enum SyntaxNodeType {
+	INVALID_SYNTAX,
+	
 	PROGRAM,
 	STATEMENT,
 	EXPRESSION,
 } SyntaxNodeType;
 
+// A node in the abstract syntax tree.
 typedef struct SyntaxNode {
 	SyntaxNodeType type;
 	struct SyntaxNode *sibling;
 	struct SyntaxNode *child;
 } SyntaxNode;
 
-typedef struct ParsingError {
-	char *message;
-	Token *tokens;
-	size_t tokensCount;
-} ParsingError;
-
+// The output of the parser. Must be destroyed by `ParsingResultDestroy()` after use.
 typedef struct ParsingResult {
 	SyntaxNodeList nodes;
-	ParsingErrorList errors;
+	SyntaxNodeList errors;
 } ParsingResult;
 
-// The parser sets the current node's child or sibling to the address of this variable depending on
-// whether the node is a parent or a child.
-extern SyntaxNode nullNode;
+// Frees a `ParsingResult`'s lists and zeros its memory.
+void ParsingResultDestroy(ParsingResult *result);
 
+// Pretty prints a `ParsingResult` to the terminal.
+void ParsingResultPrint(ParsingResult *result);
+
+// Turns a list of tokens into an abstract syntax tree.
 ParsingResult parse(TokenList tokens);
 
 #endif // PARSER_H
