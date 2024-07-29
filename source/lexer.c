@@ -53,10 +53,10 @@ static ReservedWord keywords[] = {
 	{"continue", CONTINUE},
 	{"as", AS},
 	{"is", IS},
-	{"logical_and", LOGICAL_AND},
-	{"logical_or", LOGICAL_OR},
-	{"logical_xor", LOGICAL_XOR},
-	{"logical_not", LOGICAL_NOT},
+	{"and", LOGICAL_AND},
+	{"or", LOGICAL_OR},
+	{"xor", LOGICAL_XOR},
+	{"not", LOGICAL_NOT},
 };
 
 // All of the operators in the language.
