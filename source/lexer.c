@@ -30,14 +30,6 @@ static ReservedWord operators[] = {
 	{";", SEMICOLON},
 };
 
-// The message for each error type.
-// TODO: Add formatting specifiers to these that take the token as an argument.
-char *lexingErrorMessages[] = {
-	[INVALID_TOKEN] = "Invalid token.",
-	[UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
-	[UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
-};
-
 // Returns true if `string` starts with `prefix`.
 static bool startsWith(char *string, char *prefix) {
 	while (*prefix != '\0') {
@@ -58,41 +50,128 @@ void LexingResultDestroy(LexingResult *result) {
 
 void LexingResultPrint(LexingResult *result) {
 	static char *tokenTypeNames[] = {
-		[INVALID] = "invalid",
-		[IDENTIFIER] = "identifier",
+		[INVALID_TOKEN] = "Invalid token.",
+		[UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
+		[UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
+
+		[NEWLINE] = "newline",
 		[NUMBER] = "number",
 		[CHARACTER] = "character",
 		[STRING] = "string",
+		[IDENTIFIER] = "identifier",
 
 		[PACKAGE] = "package",
+		[FROM] = "from",
+		[IMPORT] = "import",
+		[EXPORT] = "export",
+		[VAR] = "var",
+		[FUNC] = "func",
+		[METHOD] = "method",
+		[STRUCT] = "struct",
+		[CASES] = "cases",
+		[PUB] = "pub",
+		[STATIC] = "static",
+		[CONST] = "const",
+		[MUT] = "mut",
+		[OWNED] = "owned",
+		[WEAK] = "weak",
+		[NEW] = "new",
+		[MAKE] = "make",
+		[DROP] = "drop",
+		[MOVE] = "move",
+		[DEFER] = "defer",
+		[ASSERT] = "assert",
+		[WHERE] = "where",
+		[WHILE] = "while",
+		[FOR] = "for",
+		[IF] = "if",
+		[SWITCH] = "switch",
+		[MATCH] = "match",
+		[DEFAULT] = "default",
+		[RETURN] = "return",
+		[BREAK] = "break",
+		[CONTINUE] = "continue",
+		[AS] = "as",
+		[IS] = "is",
+		[LOGICAL_AND] = "logical and",
+		[LOGICAL_OR] = "logical or",
+		[LOGICAL_XOR] = "logical xor",
+		[LOGICAL_NOT] = "logical not",
 
 		[INCREMENT] = "increment",
+		[PLUS_EQUALS] = "plus equals",
 		[PLUS] = "plus",
+		[DECREMENT] = "decrement",
+		[MINUS_EQUALS] = "minus equals",
+		[ARROW] = "arrow",
+		[MINUS] = "minus",
+		[TIMES_EQUALS] = "times equals",
+		[TIMES] = "times",
+		[DIVIDE_EQUALS] = "divide equals",
+		[DIVIDE] = "divide",
+		[LEFT_SHIFT_EQUALS] = "left shift equals",
+		[LEFT_SHIFT] = "left shift",
+		[LESS_EQUAL] = "less equal",
+		[LESS] = "less",
+		[RIGHT_SHIFT_EQUALS] = "right shift equals",
+		[RIGHT_SHIFT] = "right shift",
+		[GREATER_EQUAL] = "greater equal",
+		[GREATER] = "greater",
+		[BITWISE_AND_EQUALS] = "bitwise and equals",
+		[BITWISE_AND] = "bitwise and",
+		[BITWISE_OR_EQUALS] = "bitwise or equals",
+		[BITWISE_OR] = "bitwise or",
+		[BITWISE_XOR_EQUALS] = "bitwise xor equals",
+		[BITWISE_XOR] = "bitwise xor",
+		[BITWISE_NOT_EQUALS] = "bitwise not equals",
+		[BITWISE_NOT] = "bitwise not",
+		[COMMA] = "comma",
+		[DOT] = "dot",
 		[SEMICOLON] = "semicolon",
+		[LEFT_PARENTHESIS] = "left parenthesis",
+		[RIGHT_PARENTHESIS] = "right parenthesis",
+		[LEFT_BRACKET] = "left bracket",
+		[RIGHT_BRACKET] = "right bracket",
+		[LEFT_BRACE] = "left brace",
+		[RIGHT_BRACE] = "right brace",
 	};
 
 	printf("%lu TOKENS:\n", result->tokens.count);
 	for (size_t i = 0; i < result->tokens.count; ++i) {
 		Token *token = (Token*)ListGet(&result->tokens, i);
-		printf("%-3zu `%.*s` %s\n", token->index, (int)token->length, token->text, tokenTypeNames[token->type]);
+		if (token->type == NEWLINE) {
+			printf("%-3zu `\\n` newline\n", token->index);
+		} else {
+			printf("%-3zu `%.*s` %s\n", token->index, (int)token->length, token->text, tokenTypeNames[token->type]);
+		}
 	}
 
 	printf("\n%lu ERRORS:\n", result->errors.count);
 	for (size_t i = 0; i < result->errors.count; ++i) {
-		LexingError *error = (LexingError*)ListGet(&result->errors, i);
-		printf("%-3zu `%.*s`: %s\n", error->token.index, (int)error->token.length, error->token.text, lexingErrorMessages[error->type]);
+		Token *error = (Token*)ListGet(&result->errors, i);
+		if (error->type == NEWLINE) {
+			printf("%-3zu `\\n` newline\n", error->index);
+		} else {
+			printf("%-3zu `%.*s` %s\n", error->index, (int)error->length, error->text, tokenTypeNames[error->type]);
+		}
 	}
 }
 
 LexingResult lex(char *text) {
 	TokenList tokens = ListCreate(INITIAL_TOKEN_CAPACITY, sizeof (Token));
-	LexingErrorList errors = ListCreate(INITIAL_ERROR_CAPACITY, sizeof (LexingError));
+	TokenList errors = ListCreate(INITIAL_ERROR_CAPACITY, sizeof (Token));
 	char *currentChar = text;
 	Token currentToken = {.text=currentChar};
 	
 	// TODO: Lex newlines.
 	while (*currentChar != '\0') {
-		if (isspace(*currentChar)) {
+		if (*currentChar == '\n') {
+			// Combine multiple newlines into one token.
+			currentToken.type = NEWLINE;
+			do {
+				++currentChar;
+			} while (isspace(*currentChar));
+		} else if (isspace(*currentChar)) {
 			// Skip whitespace.
 			++currentChar;
 			++currentToken.text;
@@ -117,18 +196,14 @@ LexingResult lex(char *text) {
 				++currentChar;
 			} else {
 				// Emit an error.
-				LexingError error = {
+				Token error = {
 					.type = UNCLOSED_SINGLE_QUOTE,
-					.message = lexingErrorMessages[UNCLOSED_SINGLE_QUOTE],
-					.token = {
-						.type = INVALID,
-						.text = currentToken.text,
-						.length = currentChar - currentToken.text,
-						.index = currentToken.text - text,
-					},
+					.text = currentToken.text,
+					.length = currentChar - currentToken.text,
+					.index = currentToken.text - text,
 				};
 				ListPushBack(&errors, &error);
-				ListPushBack(&tokens, &error.token);
+				ListPushBack(&tokens, &error);
 				currentToken = (Token){.text=currentChar};
 				continue;
 			}
@@ -147,18 +222,14 @@ LexingResult lex(char *text) {
 				++currentChar;
 			} else {
 				// Emit an error.
-				LexingError error = {
+				Token error = {
 					.type = UNCLOSED_DOUBLE_QUOTE,
-					.message = lexingErrorMessages[UNCLOSED_DOUBLE_QUOTE],
-					.token = {
-						.type = INVALID,
-						.text = currentToken.text,
-						.length = currentChar - currentToken.text,
-						.index = currentToken.text - text,
-					},
+					.text = currentToken.text,
+					.length = currentChar - currentToken.text,
+					.index = currentToken.text - text,
 				};
 				ListPushBack(&errors, &error);
-				ListPushBack(&tokens, &error.token);
+				ListPushBack(&tokens, &error);
 				currentToken = (Token){.text=currentChar};
 				continue;
 			}
@@ -190,30 +261,27 @@ LexingResult lex(char *text) {
 			}
 
 			// Recover to the next token and emit an error if no operator was found.
-			if (currentToken.type == INVALID) {
-				while (*currentChar != '\0' && *currentChar != ';' && !isblank(*currentChar)) {
+			if (currentToken.type == INVALID_TOKEN) {
+				while (*currentChar != '\0' && *currentChar != ';' && !isspace(*currentChar)) {
 					++currentChar;
 				}
 
-				LexingError error = {
+				// Emit an error.
+				Token error = {
 					.type = INVALID_TOKEN,
-					.message = lexingErrorMessages[INVALID_TOKEN],
-					.token = {
-						.type = INVALID,
-						.length = currentChar - currentToken.text,
-						.text = currentToken.text,
-						.index = currentToken.text - text,
-					},
+					.text = currentToken.text,
+					.length = currentChar - currentToken.text,
+					.index = currentToken.text - text,
 				};
 				ListPushBack(&errors, &error);
-				ListPushBack(&tokens, &error.token);
+				ListPushBack(&tokens, &error);
 				currentToken = (Token){.text=currentChar};
 				continue;
 			}
-		} // TODO: else {emit an error}
+		} // TODO: else {emit an error for non-printable characters}
 
 		// Append the token just lexed to the list of tokens.
-		if (currentToken.type != INVALID) {
+		if (currentToken.type != INVALID_TOKEN) {
 			currentToken.length = currentChar - currentToken.text;
 			currentToken.index = currentToken.text - text;
 			ListPushBack(&tokens, &currentToken);
