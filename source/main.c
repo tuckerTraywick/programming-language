@@ -3,7 +3,7 @@
 #include "parser.h"
 
 int main(void) {
-    char *text = "foo bar";
+    char *text = "1";
     LexingResult lexingResult = lex(text);
     LexingResultPrint(&lexingResult);
 

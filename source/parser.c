@@ -48,6 +48,8 @@ static bool consume(Parser *parser, TokenType type) {
 
 	SyntaxNode next = {.type = TOKEN, .sibling = &nullNode};
 	ListPushBack(&parser->nodes, &next);
+
+	++parser->tokenIndex;
 	return true;
 }
 
