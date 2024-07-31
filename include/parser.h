@@ -11,6 +11,7 @@ typedef List SyntaxNodeList;
 typedef enum SyntaxNodeType {
 	INVALID_SYNTAX,
 	
+	TOKEN,
 	PROGRAM,
 	STATEMENT,
 	EXPRESSION,

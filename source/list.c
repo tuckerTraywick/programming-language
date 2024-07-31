@@ -60,8 +60,8 @@ void ListInsert(List *list, size_t index, void *element) {
     ListResize(list, list->count + 1);
     if (index < list->count - 1) {
         memmove(
-            ListGet(list, index + 1),
-            ListGet(list, index),
+            (char*)list->elements + index + 1,//ListGet(list, index + 1),
+            (char*)list->elements + index,//ListGet(list, index),
             (list->count - index - 2)*list->elementSize
         );
     }
