@@ -45,6 +45,7 @@ static void beginNode(Parser *parser, SyntaxNodeType type) {
 static bool endNode(Parser *parser) {
 	ListPopBack(&parser->currentTokenIndexStack, 1, NULL);
 	ListPopBack(&parser->currentNodeIndexStack, 1, &parser->currentNodeIndex);
+	parser->isChild = false;
 	return true;
 }
 
@@ -75,6 +76,7 @@ static void addNode(Parser *parser, SyntaxNode *node) {
 	assert(current != NULL && "Can't consume a token without a root node.");
 	if (parser->isChild) {
 		current->child = (SyntaxNode*)ListGet(&parser->nodes, parser->nodes.count - 1);
+		parser->isChild = false;
 	} else {
 		current->sibling = (SyntaxNode*)ListGet(&parser->nodes, parser->nodes.count - 1);
 	}
@@ -92,8 +94,16 @@ static bool consume(Parser *parser, TokenType type) {
 	++parser->currentTokenIndex;
 
 	// Append the next node.
-	SyntaxNode next = {.type = (SyntaxNodeType)token->type};
+	SyntaxNode next = {.type = TOKEN, .token = token};
 	addNode(parser, &next);
+	return true;
+}
+
+// Adds an error of the given type to the syntax tree and ends the current parent node.
+static bool error(Parser *parser, SyntaxNodeType type) {
+	SyntaxNode next = {.type = type};
+	addNode(parser, &next);
+	endNode(parser);
 	return true;
 }
 
@@ -106,9 +116,16 @@ static bool consume(Parser *parser, TokenType type) {
 // 			if (consume(parser, DOT)) break;
 // 			if (!consume(parser, IDENTIFIER)) return error(parser, MISSING_SUBPACKAGE_NAME);
 // 		}
-// 		if (!consume(parser, SEMICOLON)) return recover(parser, EXPECTED_SEMICOLON, SEMICOLON);
+// 		if (!consume(parser, SEMICOLON)) return error(parser, EXPECTED_SEMICOLON) && recover(parser, SEMICOLON);
 // 	return endNode(parser);
 // }
+
+static bool parseProgram(Parser *parser) {
+	beginNode(parser, PROGRAM);
+		consume(parser, IDENTIFIER);
+		consume(parser, IDENTIFIER);
+	return endNode(parser);
+}
 
 void ParsingResultDestroy(ParsingResult *result) {
 	ListDestroy(&result->nodes);
@@ -118,24 +135,34 @@ void ParsingResultDestroy(ParsingResult *result) {
 
 void ParsingResultPrint(ParsingResult *result) {
 	static char *nodeTypeNames[] = {
-		[IDENTIFIER] = "identifier",
-
 		[INVALID_SYNTAX] = "Invalid syntax.",
 
 		[PROGRAM] = "program",
 		[STATEMENT] = "statement",
 		[EXPRESSION] = "expression",
+
+		[MISSING_PACKAGE_NAME] = "Missing package name.",
 	};
 	printf("%zu NODES:\n", result->nodes.count);
 	for (size_t i = 0; i < result->nodes.count; ++i) {
 		SyntaxNode *node = (SyntaxNode*)ListGet(&result->nodes, i);
-		printf(
-			"%-5zu %s sibling=%zu, child=%zu\n",
-			i,
-			nodeTypeNames[node->type],
-			(node->sibling) ? node->sibling - (SyntaxNode*)result->nodes.elements : 0,
-			(node->child) ? node->child - (SyntaxNode*)result->nodes.elements : 0
-		);
+		if (node->type == TOKEN) {
+			printf(
+				"%-5zu token `%.*s` sibling=%zu\n",
+				i,
+				(int)node->token->length,
+				node->token->text,
+				(node->sibling) ? node->sibling - (SyntaxNode*)result->nodes.elements : 0
+			);
+		} else {
+			printf(
+				"%-5zu %s sibling=%zu, child=%zu\n",
+				i,
+				nodeTypeNames[node->type],
+				(node->sibling) ? node->sibling - (SyntaxNode*)result->nodes.elements : 0,
+				(node->child) ? node->child - (SyntaxNode*)result->nodes.elements : 0
+			);
+		}
 	}
 }
 
@@ -152,10 +179,7 @@ ParsingResult parse(TokenList tokens) {
 		.currentNodeIndexStack = currentNodeIndexStack,
 	};
 
-	beginNode(&parser, PROGRAM);
-		consume(&parser, IDENTIFIER);
-		consume(&parser, IDENTIFIER);
-	endNode(&parser);
+	parseProgram(&parser);
 
 	ListDestroy(&currentTokenIndexStack);
 	ListDestroy(&currentNodeIndexStack);
