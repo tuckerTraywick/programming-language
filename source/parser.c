@@ -66,17 +66,9 @@ static SyntaxNode *currentNode(Parser *parser) {
 	}
 }
 
-// If the next token matches the given type, advances past it and adds it to the syntax tree.
-static bool consume(Parser *parser, TokenType type) {
-	// Return early if the next token doesn't match.
-	Token *token = currentToken(parser);
-	if (!token || token->type != type) {
-		return false;
-	}
-
-	// Append the next node.
-	SyntaxNode next = {.type = (SyntaxNodeType)token->type};
-	ListPushBack(&parser->nodes, &next);
+// Adds a node to the parse tree in the appropriate place.
+static void addNode(Parser *parser, SyntaxNode *node) {
+	ListPushBack(&parser->nodes, node);
 
 	// Attach the next node to the current node.
 	SyntaxNode *current = currentNode(parser);
@@ -87,8 +79,21 @@ static bool consume(Parser *parser, TokenType type) {
 		current->sibling = (SyntaxNode*)ListGet(&parser->nodes, parser->nodes.count - 1);
 	}
 
-	++parser->currentTokenIndex;
 	parser->currentNodeIndex = parser->nodes.count - 1;
+}
+
+// If the next token matches the given type, advances past it and adds it to the syntax tree.
+static bool consume(Parser *parser, TokenType type) {
+	Token *token = currentToken(parser);
+	// Return early if the next token doesn't match.
+	if (!token || token->type != type) {
+		return false;
+	}
+	++parser->currentTokenIndex;
+
+	// Append the next node.
+	SyntaxNode next = {.type = (SyntaxNodeType)token->type};
+	addNode(parser, &next);
 	return true;
 }
 
