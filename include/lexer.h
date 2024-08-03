@@ -98,6 +98,8 @@ typedef enum TokenType {
 	RIGHT_BRACKET,
 	LEFT_BRACE,
 	RIGHT_BRACE,
+
+	TOKEN_TYPE_COUNT,
 } TokenType;
 
 // A token from the input string. Can be a keyword, operator, literal, or identifier.

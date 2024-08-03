@@ -1,7 +1,10 @@
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include "parser.h"
 #include "lexer.h"
+
+typedef List SizeList;
 
 // The inital amount of nodes to allocate for the parse tree.
 #define INITIAL_NODE_CAPACITY 500
@@ -9,49 +12,98 @@
 // The inital amount of error nodes to allocate.
 #define INITIAL_ERROR_CAPACITY 100
 
-// The parser sets the current node's sibling or child pointer to this node depending on whether the
-// next node is to be a sibling or child of the current node.
-static SyntaxNode nullNode = {0};
+// The initial recursion depth limit.
+#define INITIAL_STACK_CAPACITY 200
 
 // The state of the parser.
 typedef struct Parser {
 	TokenList tokens;
-	size_t tokenIndex;
 	SyntaxNodeList nodes;
 	SyntaxNodeList errors;
+	SizeList currentTokenIndexStack;
+	SizeList currentNodeIndexStack;
+	size_t currentTokenIndex;
+	size_t currentNodeIndex;
+	bool isChild; // Whether the next node created is a child or a sibling.
 } Parser;
 
-static SyntaxNode *currentNode(Parser *parser) {
-	// TODO: make this more readable. Get the previous node if there is one else get the first node.
-	return (SyntaxNode*)parser->nodes.elements + parser->nodes.count - ((parser->nodes.count) ? 1 : 0);
-}
-
+// Starts a new parent node in the syntax tree.
 static void beginNode(Parser *parser, SyntaxNodeType type) {
-	SyntaxNode node = {.type = type, .child = &nullNode};
+	parser->isChild = true;
+	if (parser->nodes.count) {
+		++parser->currentNodeIndex;
+	}
+	
+	SyntaxNode node = {.type = type};
 	ListPushBack(&parser->nodes, &node);
+	ListPushBack(&parser->currentTokenIndexStack, &parser->currentTokenIndex);
+	ListPushBack(&parser->currentNodeIndexStack, &parser->currentNodeIndex);
 }
 
+// Ends a node in the syntax tree. Designates the next node as a sibling to the parent node being
+// ended.
+static bool endNode(Parser *parser) {
+	ListPopBack(&parser->currentTokenIndexStack, 1, NULL);
+	ListPopBack(&parser->currentNodeIndexStack, 1, &parser->currentNodeIndex);
+	return true;
+}
+
+// Returns a pointer to the current token being parsed.
+static Token *currentToken(Parser *parser) {
+	if (parser->currentTokenIndex < parser->tokens.count) {
+		return (Token*)ListGet(&parser->tokens, parser->currentTokenIndex);
+	} else {
+		return NULL;
+	}
+}
+
+// Returns a pointer to the last node added to the syntax tree.
+static SyntaxNode *currentNode(Parser *parser) {
+	if (parser->currentNodeIndex < parser->nodes.count) {
+		return (SyntaxNode*)ListGet(&parser->nodes, parser->currentNodeIndex);
+	} else {
+		return NULL;
+	}
+}
+
+// If the next token matches the given type, advances past it and adds it to the syntax tree.
 static bool consume(Parser *parser, TokenType type) {
 	// Return early if the next token doesn't match.
-	if (parser->tokenIndex >= parser->tokens.count || ((Token*)ListGet(&parser->tokens, parser->tokenIndex))->type != type) {
+	Token *token = currentToken(parser);
+	if (!token || token->type != type) {
 		return false;
 	}
 
-	SyntaxNode *current = currentNode(parser);
-	// If the current node is a parent, add the next node as a child.
-	if (current->child == &nullNode) {
-		current->child = current + 1;
-	// If the current node is not a parent, add the next node as a sibling.
-	} else if (current->sibling == &nullNode) {
-		current->sibling = current + 1;
-	}
-
-	SyntaxNode next = {.type = TOKEN, .sibling = &nullNode};
+	// Append the next node.
+	SyntaxNode next = {.type = (SyntaxNodeType)token->type};
 	ListPushBack(&parser->nodes, &next);
 
-	++parser->tokenIndex;
+	// Attach the next node to the current node.
+	SyntaxNode *current = currentNode(parser);
+	assert(current != NULL && "Can't consume a token without a root node.");
+	if (parser->isChild) {
+		current->child = (SyntaxNode*)ListGet(&parser->nodes, parser->nodes.count - 1);
+	} else {
+		current->sibling = (SyntaxNode*)ListGet(&parser->nodes, parser->nodes.count - 1);
+	}
+
+	++parser->currentTokenIndex;
+	parser->currentNodeIndex = parser->nodes.count - 1;
 	return true;
 }
+
+// static bool parseProgram(Parser *parser) {
+// 	beginNode(parser, PROGRAM);
+// 		consume(parser, PUB);
+// 		if (!consume(parser, PACKAGE)) return backtrack(parser);
+// 		if (!consume(parser, IDENTIFIER)) return error(parser, MISSING_PACKAGE_NAME);
+// 		while (consume(parser, DOT)) {
+// 			if (consume(parser, DOT)) break;
+// 			if (!consume(parser, IDENTIFIER)) return error(parser, MISSING_SUBPACKAGE_NAME);
+// 		}
+// 		if (!consume(parser, SEMICOLON)) return recover(parser, EXPECTED_SEMICOLON, SEMICOLON);
+// 	return endNode(parser);
+// }
 
 void ParsingResultDestroy(ParsingResult *result) {
 	ListDestroy(&result->nodes);
@@ -61,9 +113,10 @@ void ParsingResultDestroy(ParsingResult *result) {
 
 void ParsingResultPrint(ParsingResult *result) {
 	static char *nodeTypeNames[] = {
+		[IDENTIFIER] = "identifier",
+
 		[INVALID_SYNTAX] = "Invalid syntax.",
 
-		[TOKEN] = "token",
 		[PROGRAM] = "program",
 		[STATEMENT] = "statement",
 		[EXPRESSION] = "expression",
@@ -75,8 +128,8 @@ void ParsingResultPrint(ParsingResult *result) {
 			"%-5zu %s sibling=%zu, child=%zu\n",
 			i,
 			nodeTypeNames[node->type],
-			node->sibling,
-			node->child
+			(node->sibling) ? node->sibling - (SyntaxNode*)result->nodes.elements : 0,
+			(node->child) ? node->child - (SyntaxNode*)result->nodes.elements : 0
 		);
 	}
 }
@@ -84,17 +137,26 @@ void ParsingResultPrint(ParsingResult *result) {
 ParsingResult parse(TokenList tokens) {
 	SyntaxNodeList nodes = ListCreate(INITIAL_NODE_CAPACITY, sizeof (SyntaxNode));
 	SyntaxNodeList errors = ListCreate(INITIAL_ERROR_CAPACITY, sizeof (SyntaxNode));
+	SizeList currentTokenIndexStack = ListCreate(INITIAL_STACK_CAPACITY, sizeof (size_t));
+	SizeList currentNodeIndexStack = ListCreate(INITIAL_STACK_CAPACITY, sizeof (size_t));
 	Parser parser = {
 		.tokens = tokens,
 		.nodes = nodes,
 		.errors = errors,
+		.currentTokenIndexStack = currentTokenIndexStack,
+		.currentNodeIndexStack = currentNodeIndexStack,
 	};
 
-	consume(&parser, IDENTIFIER);
-	consume(&parser, IDENTIFIER);
+	beginNode(&parser, PROGRAM);
+		consume(&parser, IDENTIFIER);
+		consume(&parser, IDENTIFIER);
+	endNode(&parser);
 
+	ListDestroy(&currentTokenIndexStack);
+	ListDestroy(&currentNodeIndexStack);
 	return (ParsingResult){.nodes = parser.nodes, .errors = parser.errors};
 }
 
 #undef INITIAL_NODE_CAPACITY
 #undef INITIAL_ERROR_CAPACITY
+#undef INITIAL_STACK_CAPACITY

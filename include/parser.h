@@ -9,12 +9,16 @@ typedef List SyntaxNodeList;
 
 // The type of thing in the grammar a node represents.
 typedef enum SyntaxNodeType {
-	INVALID_SYNTAX,
-	
-	TOKEN,
+	INVALID_SYNTAX = TOKEN_TYPE_COUNT,
+	MISSING_PACKAGE_NAME,
+	MISSING_SUBPACKAGE_NAME,
+	EXPECTED_SEMICOLON,
+
 	PROGRAM,
 	STATEMENT,
 	EXPRESSION,
+
+	STYNAX_NODE_TYPE_COUNT,
 } SyntaxNodeType;
 
 // A node in the abstract syntax tree.
