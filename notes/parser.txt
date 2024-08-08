@@ -6,8 +6,64 @@ current token can be a child.
 
 
 
+// arena.h
+typedef struct ArenaData *Arena;
+
+Arena ArenaCreate(size_t capacity);
+
+Arena ArenaCreateTemporary(size_t capacity);
+
+void ArenaDestroy(Arena arena);
+
+void ArenaAllocate(size_t size);
+
+void ArenaZero(Arena arena, size_t amount);
+
+void ArenaFree(Arena arena, size_t amount);
 
 
+// arena.c
+typedef struct ArenaData {
+    struct Arena *parent;
+    size_t capacity;
+    size_t size;
+    char *data;
+} Arena;
+
+
+
+void foo(Arena result);
+
+void main(void) {
+    Arena heap = ArenaCreate(1024*5);
+        Arena temp = ArenaCreateTemporary(heap, 0);
+            foo(heap);
+        ArenaFree(temp);
+    ArenaFree(heap);
+}
+
+
+
+
+
+void parsePackageStatement() {
+    if (!shift(IDENTIFIER)) {
+        error(EXPECTED_PACKAGE_NAME)
+        reduce(PACKAGE_STATEMENT);
+        return;
+    }
+
+    while (shift(DOT)) {
+        if (shift(IDENTIFIER)) continue;
+        if (shift(TIMES)) break;
+        error(EXPECTED_SUBPACKAGE_NAME)
+        reduce(PACKAGE_STATEMENT);
+        return;
+    }
+
+    if (!shift(SEMICOLON)) error(EXPECTED_SEMICOLON);
+    reduce(PACKAGE_STATEMENT);
+}
 
 
 

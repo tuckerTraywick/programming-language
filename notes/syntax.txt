@@ -176,7 +176,7 @@ pub package std.collections
 from std.traits import *
 from std.operations import *
 
-pub struct List[T Sized] {
+pub struct List[T impl Sized] {
     Equality, Comparison, TryAirthmetic, To[string], TryFrom[string]
     length usize
     elements []T

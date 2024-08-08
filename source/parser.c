@@ -13,7 +13,7 @@ typedef List SizeList;
 #define INITIAL_ERROR_CAPACITY 100
 
 // The initial recursion depth limit.
-#define INITIAL_STACK_CAPACITY 200
+#define INITIAL_STACK_CAPACITY 100
 
 // The state of the parser.
 typedef struct Parser {
@@ -29,15 +29,13 @@ typedef struct Parser {
 
 // Starts a new parent node in the syntax tree.
 static void beginNode(Parser *parser, SyntaxNodeType type) {
-	parser->isChild = true;
-	if (parser->nodes.count) {
-		++parser->currentNodeIndex;
-	}
-	
-	SyntaxNode node = {.type = type};
-	ListPushBack(&parser->nodes, &node);
 	ListPushBack(&parser->currentTokenIndexStack, &parser->currentTokenIndex);
 	ListPushBack(&parser->currentNodeIndexStack, &parser->currentNodeIndex);
+	SyntaxNode node = {.type = type};
+	ListPushBack(&parser->nodes, &node);
+
+	parser->isChild = true;
+	++parser->currentNodeIndex;
 }
 
 // Ends a node in the syntax tree. Designates the next node as a sibling to the parent node being
@@ -107,13 +105,22 @@ static bool error(Parser *parser, SyntaxNodeType type) {
 	return true;
 }
 
+// Cancels parsing the current parent node and removes it and all of its children from the parse
+// tree.
+static bool backtrack(Parser *parser) {
+	ListPopBack(&parser->currentTokenIndexStack, 1, &parser->currentTokenIndex);
+	size_t previousIndex = parser->currentNodeIndex;
+	ListPopBack(&parser->currentNodeIndexStack, 1, &parser->currentNodeIndex);
+	ListPopBack(&parser->nodes, previousIndex - parser->currentNodeIndex, NULL);
+	return false;
+}
+
 // static bool parseProgram(Parser *parser) {
 // 	beginNode(parser, PROGRAM);
 // 		consume(parser, PUB);
 // 		if (!consume(parser, PACKAGE)) return backtrack(parser);
 // 		if (!consume(parser, IDENTIFIER)) return error(parser, MISSING_PACKAGE_NAME);
 // 		while (consume(parser, DOT)) {
-// 			if (consume(parser, DOT)) break;
 // 			if (!consume(parser, IDENTIFIER)) return error(parser, MISSING_SUBPACKAGE_NAME);
 // 		}
 // 		if (!consume(parser, SEMICOLON)) return error(parser, EXPECTED_SEMICOLON) && recover(parser, SEMICOLON);
@@ -122,8 +129,9 @@ static bool error(Parser *parser, SyntaxNodeType type) {
 
 static bool parseProgram(Parser *parser) {
 	beginNode(parser, PROGRAM);
-		consume(parser, IDENTIFIER);
-		consume(parser, IDENTIFIER);
+		if (!consume(parser, IDENTIFIER)) return backtrack(parser);
+		if (!consume(parser, IDENTIFIER)) return backtrack(parser);
+		if (!consume(parser, IDENTIFIER)) return backtrack(parser);
 	return endNode(parser);
 }
 
