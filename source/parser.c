@@ -95,12 +95,14 @@ static bool recover(Parser *parser, TokenType type) {
 	if (hasTokens(parser) && currentToken(parser)->type == type) {
 		++parser->currentTokenIndex;
 	}
+	return true;
 }
 // Keeps consuming tokens until it sees one of the given type.
 static bool recoverUntil(Parser *parser, TokenType type) {
 	while (hasTokens(parser) && currentToken(parser)->type != type) {
 		++parser->currentTokenIndex;
 	}
+	return true;
 }
 
 // Cancels parsing the current parent node and removes it and all of its children from the parse
