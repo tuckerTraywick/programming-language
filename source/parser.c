@@ -97,6 +97,7 @@ static bool recover(Parser *parser, TokenType type) {
 	}
 	return true;
 }
+
 // Keeps consuming tokens until it sees one of the given type.
 static bool recoverUntil(Parser *parser, TokenType type) {
 	while (hasTokens(parser) && currentToken(parser)->type != type) {
