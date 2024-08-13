@@ -17,6 +17,7 @@ typedef enum SyntaxNodeType {
 	TOKEN,
 	PROGRAM,
 	STATEMENT,
+	PACKAGE_STATEMENT,
 	EXPRESSION,
 
 	STYNAX_NODE_TYPE_COUNT,
@@ -27,7 +28,7 @@ typedef struct SyntaxNode {
 	SyntaxNodeType type;
 	struct SyntaxNode *sibling;
 	struct SyntaxNode *child;
-	Token *token; // NULL if the node doesn't represent a token.
+	Token *token;
 } SyntaxNode;
 
 // The output of the parser. Must be destroyed by `ParsingResultDestroy()` after use.

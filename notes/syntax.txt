@@ -142,6 +142,7 @@ pub package lexer
 
 pub struct TokenType uint32 cases {
     default invalid
+    unclosedSingleQuote, unclosedDoubleQuote
     number, character, string, identifier
 }
 
@@ -151,20 +152,9 @@ pub struct Token {
     pub index usize
 }
 
-pub struct LexingErrorMessage string cases {
-    default invalidToken = "Invalid token."
-    unclosedSingleQuote = "Unclosed single quote."
-    unclosedDoubleQuote = "Unclosed double quote."
-}
-
-pub struct LexingError {
-    pub message LexingErrorMessage
-    pub token Token
-}
-
 pub struct LexingResult {
     pub tokens owned []Token
-    pub errors owned []LexingError
+    pub errors owned []Token
 }
 
 pub func lex(text string) LexingResult
@@ -176,7 +166,7 @@ pub package std.collections
 from std.traits import *
 from std.operations import *
 
-pub struct List[T impl Sized] {
+pub struct List[T < Sized] {
     Equality, Comparison, TryAirthmetic, To[string], TryFrom[string]
     length usize
     elements []T
@@ -193,8 +183,36 @@ package chess
 from std.io import printLine, inputLine
 from std.operations import tryTo, tryFrom
 
-struct Board [8][8]char
+struct Board [8][8]Square
 
+struct Square {
+    color cases {
+        default white
+        black
+    }
+    type cases {
+        default empty
+        king, queen, knight, rook, bishop, pawn
+    }
+}
+
+func make() Board {
+    return [...]
+}
+
+func takeTurn(turn uint32, board &mut Board) bool {
+
+}
+
+func main() {
+    var board mut Board
+    var turn uint32
+
+    printWelcomeMessage()
+    while true {
+        printTurnMessage(turn)
+    }
+}
 
 
 

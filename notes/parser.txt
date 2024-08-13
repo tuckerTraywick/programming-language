@@ -4,6 +4,7 @@ token.
 In a top-down parser, you have to decide what the parent node is ahead of time and check if the
 current token can be a child.
 
+2*3*x + 0
 
 
 // arena.h
@@ -21,14 +22,13 @@ void ArenaZero(Arena arena, size_t amount);
 
 void ArenaFree(Arena arena, size_t amount);
 
-
 // arena.c
 typedef struct ArenaData {
-    struct Arena *parent;
+    struct ArenaData *parent;
     size_t capacity;
     size_t size;
     char *data;
-} Arena;
+} ArenaData;
 
 
 
@@ -43,27 +43,6 @@ void main(void) {
 }
 
 
-
-
-
-void parsePackageStatement() {
-    if (!shift(IDENTIFIER)) {
-        error(EXPECTED_PACKAGE_NAME)
-        reduce(PACKAGE_STATEMENT);
-        return;
-    }
-
-    while (shift(DOT)) {
-        if (shift(IDENTIFIER)) continue;
-        if (shift(TIMES)) break;
-        error(EXPECTED_SUBPACKAGE_NAME)
-        reduce(PACKAGE_STATEMENT);
-        return;
-    }
-
-    if (!shift(SEMICOLON)) error(EXPECTED_SEMICOLON);
-    reduce(PACKAGE_STATEMENT);
-}
 
 
 
