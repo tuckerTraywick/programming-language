@@ -3,7 +3,7 @@
 #include "parser.h"
 
 int main(void) {
-    char *text = "package std.math.a.*; package b;";
+    char *text = "package .a.*; package b;";
     LexingResult lexingResult = lex(text);
     LexingResultPrint(&lexingResult);
 

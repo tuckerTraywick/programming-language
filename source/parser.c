@@ -50,9 +50,14 @@ static bool endNode(Parser *parser) {
 	return true;
 }
 
+// Returns true if the parser hasn't reached the end of the token stream.
+static bool hasTokens(Parser *parser) {
+	return parser->currentTokenIndex < parser->tokens.count;
+}
+
 // Returns a pointer to the current token being parsed.
 static Token *currentToken(Parser *parser) {
-	if (parser->currentTokenIndex < parser->tokens.count) {
+	if (hasTokens(parser)) {
 		return (Token*)parser->tokens.elements + parser->currentTokenIndex;
 	} else {
 		return NULL;
@@ -82,8 +87,20 @@ static bool error(Parser *parser, SyntaxNodeType type) {
 }
 
 // Keeps consuming tokens until it consumes one of the given type.
-static bool recover(Parser *parser, SyntaxNodeType type) {
-	return false;
+static bool recover(Parser *parser, TokenType type) {
+	while (hasTokens(parser) && currentToken(parser)->type != type) {
+		++parser->currentTokenIndex;
+	}
+
+	if (hasTokens(parser) && currentToken(parser)->type == type) {
+		++parser->currentTokenIndex;
+	}
+}
+// Keeps consuming tokens until it sees one of the given type.
+static bool recoverUntil(Parser *parser, TokenType type) {
+	while (hasTokens(parser) && currentToken(parser)->type != type) {
+		++parser->currentTokenIndex;
+	}
 }
 
 // Cancels parsing the current parent node and removes it and all of its children from the parse
@@ -100,12 +117,12 @@ static bool parseProgram(Parser *parser) {
 	beginNode(parser, PACKAGE_STATEMENT);
 		consume(parser, PUB);
 		if (!consume(parser, PACKAGE)) return backtrack(parser);
-		if (!consume(parser, IDENTIFIER)) return error(parser, MISSING_PACKAGE_NAME) && endNode(parser);
+		if (!consume(parser, IDENTIFIER)) error(parser, MISSING_PACKAGE_NAME);
 		while (consume(parser, DOT)) {
 			if (consume(parser, TIMES)) break;
-			if (!consume(parser, IDENTIFIER)) return error(parser, MISSING_SUBPACKAGE_NAME) && endNode(parser);
+			if (!consume(parser, IDENTIFIER)) error(parser, MISSING_SUBPACKAGE_NAME);
 		}
-		if (!consume(parser, SEMICOLON)) error(parser, EXPECTED_SEMICOLON);
+		if (!consume(parser, SEMICOLON)) error(parser, EXPECTED_SEMICOLON) && recover(parser, SEMICOLON);
 	return endNode(parser);
 }
 
