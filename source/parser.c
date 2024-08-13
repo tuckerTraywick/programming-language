@@ -24,32 +24,10 @@ typedef struct Parser {
 	SizeList nextNodeIndexStack;
 	size_t currentTokenIndex;
 	size_t nextNodeIndex;
-	size_t previousNodeIndex;
-	bool isChild; // Whether the next node created is a child or a sibling.
 } Parser;
 
-// Returns a pointer to the next node to be added to the syntax tree.
-static SyntaxNode *nextNode(Parser *parser) {
-	return (SyntaxNode*)parser->nodes.elements + parser->nextNodeIndex;
-}
-
-// Returns a pointer to the previous node added to the syntax tree.
-static SyntaxNode *previousNode(Parser *parser) {
-	return (parser->nextNodeIndex) ? nextNode(parser) - 1 : NULL;
-}
-
-// Adds a node to the parse tree in the appropriate place.
+// Adds a node to the parse tree.
 static void addNode(Parser *parser, SyntaxNode *node) {
-	// Attach the next previous node to the current node.
-	SyntaxNode *previous = previousNode(parser);
-	if (previous) {
-		if (parser->isChild) {
-			previous->child = nextNode(parser);
-			parser->isChild = false;
-		} else {
-			previous->sibling = nextNode(parser);
-		}
-	}
 	ListPushBack(&parser->nodes, node);
 	++parser->nextNodeIndex;
 }
@@ -57,10 +35,9 @@ static void addNode(Parser *parser, SyntaxNode *node) {
 // Starts a new parent node in the syntax tree.
 static void beginNode(Parser *parser, SyntaxNodeType type) {
 	ListPushBack(&parser->currentTokenIndexStack, &parser->currentTokenIndex);
+	ListPushBack(&parser->nextNodeIndexStack, &parser->nextNodeIndex);
 	SyntaxNode node = {.type = type};
 	addNode(parser, &node);
-	ListPushBack(&parser->nextNodeIndexStack, &parser->nextNodeIndex);
-	parser->isChild = true;
 }
 
 // Ends a node in the syntax tree. Designates the next node as a sibling to the parent node being
@@ -68,7 +45,8 @@ static void beginNode(Parser *parser, SyntaxNodeType type) {
 static bool endNode(Parser *parser) {
 	ListPopBack(&parser->currentTokenIndexStack, 1, NULL);
 	ListPopBack(&parser->nextNodeIndexStack, 1, NULL);
-	parser->isChild = false;
+	SyntaxNode node = {.type = END};
+	addNode(parser, &node);
 	return true;
 }
 
@@ -88,8 +66,8 @@ static bool consume(Parser *parser, TokenType type) {
 	if (!token || token->type != type) {
 		return false;
 	}
-	++parser->currentTokenIndex;
 
+	++parser->currentTokenIndex;
 	// Append the next node.
 	SyntaxNode next = {.type = TOKEN, .token = token};
 	addNode(parser, &next);
@@ -141,6 +119,8 @@ void ParsingResultPrint(ParsingResult *result) {
 	static char *nodeTypeNames[] = {
 		[INVALID_SYNTAX] = "Invalid syntax.",
 
+		[END] = "end",
+
 		[PROGRAM] = "program",
 		[STATEMENT] = "statement",
 		[PACKAGE_STATEMENT] = "package statement",
@@ -155,19 +135,16 @@ void ParsingResultPrint(ParsingResult *result) {
 		SyntaxNode *node = (SyntaxNode*)ListGet(&result->nodes, i);
 		if (node->type == TOKEN) {
 			printf(
-				"%-5zu token `%.*s` sibling=%zu\n",
+				"%-5zu token `%.*s`\n",
 				i,
 				(int)node->token->length,
-				node->token->text,
-				(node->sibling) ? node->sibling - (SyntaxNode*)result->nodes.elements : 0
+				node->token->text
 			);
 		} else {
 			printf(
-				"%-5zu %s sibling=%zu, child=%zu\n",
+				"%-5zu %s\n",
 				i,
-				nodeTypeNames[node->type],
-				(node->sibling) ? node->sibling - (SyntaxNode*)result->nodes.elements : 0,
-				(node->child) ? node->child - (SyntaxNode*)result->nodes.elements : 0
+				nodeTypeNames[node->type]
 			);
 		}
 	}

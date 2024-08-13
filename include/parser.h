@@ -14,6 +14,8 @@ typedef enum SyntaxNodeType {
 	MISSING_SUBPACKAGE_NAME,
 	EXPECTED_SEMICOLON,
 
+	END, // Indicates the end of a tree.
+
 	TOKEN,
 	PROGRAM,
 	STATEMENT,
@@ -23,11 +25,9 @@ typedef enum SyntaxNodeType {
 	STYNAX_NODE_TYPE_COUNT,
 } SyntaxNodeType;
 
-// A node in the abstract syntax tree.
+// An element in an abstract syntax tree.
 typedef struct SyntaxNode {
 	SyntaxNodeType type;
-	struct SyntaxNode *sibling;
-	struct SyntaxNode *child;
 	Token *token;
 } SyntaxNode;
 
