@@ -83,6 +83,7 @@ static bool consume(Parser *parser, TokenType type) {
 static bool error(Parser *parser, SyntaxNodeType type) {
 	SyntaxNode next = {.type = type};
 	addNode(parser, &next);
+	ListPushBack(&parser->errors, &next);
 	return true;
 }
 
@@ -116,6 +117,10 @@ static bool backtrack(Parser *parser) {
 	return false;
 }
 
+static bool lineEnd(Parser *parser) {
+	return consume(parser, NEWLINE) || consume(parser, STREAM_END);
+}
+
 static bool parseProgram(Parser *parser) {
 	beginNode(parser, PACKAGE_STATEMENT);
 		consume(parser, PUB);
@@ -125,7 +130,7 @@ static bool parseProgram(Parser *parser) {
 			if (consume(parser, TIMES)) break;
 			if (!consume(parser, IDENTIFIER)) error(parser, MISSING_SUBPACKAGE_NAME);
 		}
-		if (!consume(parser, SEMICOLON)) error(parser, EXPECTED_SEMICOLON) && recover(parser, SEMICOLON);
+		if (!lineEnd(parser)) error(parser, EXPECTED_LINE_END) && recover(parser, NEWLINE);
 	return endNode(parser);
 }
 
@@ -146,27 +151,32 @@ void ParsingResultPrint(ParsingResult *result) {
 		[PACKAGE_STATEMENT] = "package statement",
 		[EXPRESSION] = "expression",
 
-		[MISSING_PACKAGE_NAME] = "Missing package name.",
-		[MISSING_SUBPACKAGE_NAME] = "Missing subpackage name.",
-		[EXPECTED_SEMICOLON] = "Expected a semicolon.",
+		[MISSING_PACKAGE_NAME] = "Expected a package name.",
+		[MISSING_SUBPACKAGE_NAME] = "Expected a subpackage name.",
+		[EXPECTED_LINE_END] = "Expected end of line.",
 	};
+
 	printf("%zu NODES:\n", result->nodes.count);
 	for (size_t i = 0; i < result->nodes.count; ++i) {
 		SyntaxNode *node = (SyntaxNode*)ListGet(&result->nodes, i);
 		if (node->type == TOKEN) {
-			printf(
-				"%-5zu token `%.*s`\n",
-				i,
-				(int)node->token->length,
-				node->token->text
-			);
+			printf("%-5zu token ", i);
+			if (node->token->type == NEWLINE) {
+				printf("`\\n`\n");
+			} else if (node->token->type == STREAM_END) {
+				printf("EOF\n");
+			} else {
+				printf("`%.*s`\n", (int)node->token->length, node->token->text);
+			}
 		} else {
-			printf(
-				"%-5zu %s\n",
-				i,
-				nodeTypeNames[node->type]
-			);
+			printf("%-5zu %s\n", i, nodeTypeNames[node->type]);
 		}
+	}
+
+	printf("\n%zu PARSING ERRORS:\n", result->errors.count);
+	for (size_t i = 0; i < result->errors.count; ++i) {
+		SyntaxNode *error = (SyntaxNode*)ListGet(&result->errors, i);
+		printf("%-5zu %s\n", i, nodeTypeNames[error->type]);
 	}
 }
 

@@ -12,7 +12,7 @@ typedef enum SyntaxNodeType {
 	INVALID_SYNTAX,
 	MISSING_PACKAGE_NAME,
 	MISSING_SUBPACKAGE_NAME,
-	EXPECTED_SEMICOLON,
+	EXPECTED_LINE_END,
 
 	END, // Indicates the end of a tree.
 

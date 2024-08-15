@@ -213,6 +213,8 @@ void LexingResultPrint(LexingResult *result) {
 		Token *token = (Token*)ListGet(&result->tokens, i);
 		if (token->type == NEWLINE) {
 			printf("%-5zu `\\n` newline\n", token->index);
+		} else if (token->type == STREAM_END) {
+			printf("%-5zu EOF\n", token->index);
 		} else {
 			printf("%-5zu `%.*s` %s\n", token->index, (int)token->length, token->text, tokenTypeNames[token->type]);
 		}
@@ -359,6 +361,9 @@ LexingResult lex(char *text) {
 			currentToken = (Token){.text=currentChar};
 		}
 	}
+
+	currentToken = (Token){.type=STREAM_END, .text=NULL, .index=currentChar - text};
+	ListPushBack(&tokens, &currentToken);
 
 	return (LexingResult){
 		.tokens = tokens,
