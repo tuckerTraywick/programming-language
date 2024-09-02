@@ -3,7 +3,7 @@
 #include "parser.h"
 
 int main(void) {
-    char *text = "lijlkjlk 'package a.b.\npackage";
+    char *text = "2 * 3 + 4";
     LexingResult lexingResult = lex(text);
     LexingResultPrint(&lexingResult);
 

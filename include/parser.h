@@ -14,13 +14,16 @@ typedef enum SyntaxNodeType {
 	MISSING_SUBPACKAGE_NAME,
 	EXPECTED_LINE_END,
 
-	END, // Indicates the end of a tree.
+	END, // Indicates the end of a subtree.
 
 	TOKEN,
 	PROGRAM,
 	STATEMENT,
 	PACKAGE_STATEMENT,
 	EXPRESSION,
+	BASIC_EXPRESSION,
+	INFIX_EXPRESSION,
+	PREFIX_EXPRESSION,
 
 	STYNAX_NODE_TYPE_COUNT,
 } SyntaxNodeType;

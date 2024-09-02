@@ -1,3 +1,33 @@
+Parsing is just copying the tokens to a new array and inserting begin, end, and error nodes.
+
+expression
+    = term *([+-] term)
+
+term
+    = factor *([*/] factor)
+
+factor
+    = "(" factor ")"
+    | number
+
+
+expression(p)
+    = basic(p) *(infixOp(p) expression(p+1))
+
+basic(p)
+    = prefixOp(p) expression(p+1)
+    | "(" expression(0) ")"
+    | number
+
+
+start at the roots leaves of the grammar tree
+find the first match
+if theres a nonterminal, push it
+if you match a rule, make sure it matches the nonterminal on the stack and pop it
+
+
+
+
 program
     = ?packageStatement *programStatement
 

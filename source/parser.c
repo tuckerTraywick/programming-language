@@ -79,6 +79,31 @@ static bool consume(Parser *parser, TokenType type) {
 	return true;
 }
 
+// Consumes an infix operator of at least the given precedence and returns the operator's
+// precedence.
+static size_t consumeInfix(Parser *parser, size_t precedence) {
+	// A map of all tokens to their infix precedence. A precedence of 0 means that that the token is
+	// not an infix operator.
+	static size_t precedences[] = {
+		[PLUS] = 10,
+		[MINUS] = 10,
+		[TIMES] = 20,
+		[DIVIDE] = 20,
+	};
+
+	Token *token = currentToken(parser);
+	// Return early if the next token doesn't match.
+	if (!token || precedences[token->type] <= precedence) {
+		return false;
+	}
+
+	++parser->currentTokenIndex;
+	// Append the next node.
+	SyntaxNode next = {.type = TOKEN, .token = token};
+	addNode(parser, &next);
+	return precedences[token->type];
+}
+
 // Adds an error of the given type to the syntax tree and ends the current parent node.
 static bool error(Parser *parser, SyntaxNodeType type) {
 	SyntaxNode next = {.type = type};
@@ -99,14 +124,6 @@ static bool recover(Parser *parser, TokenType type) {
 	return true;
 }
 
-// Keeps consuming tokens until it sees one of the given type.
-static bool recoverUntil(Parser *parser, TokenType type) {
-	while (hasTokens(parser) && currentToken(parser)->type != type) {
-		++parser->currentTokenIndex;
-	}
-	return true;
-}
-
 // Cancels parsing the current parent node and removes it and all of its children from the parse
 // tree.
 static bool backtrack(Parser *parser) {
@@ -119,6 +136,20 @@ static bool backtrack(Parser *parser) {
 
 static bool lineEnd(Parser *parser) {
 	return consume(parser, NEWLINE) || consume(parser, STREAM_END);
+}
+
+static bool parseBasicExpression(Parser *parser) {
+	return consume(parser, NUMBER);
+}
+
+static bool parseInfixExpression(Parser *parser, size_t minimumPrecedence) {
+	beginNode(parser, INFIX_EXPRESSION);
+		parseBasicExpression(parser);
+		size_t newPrecedence;
+		while (newPrecedence = consumeInfix(parser, minimumPrecedence)) {
+			parseInfixExpression(parser, newPrecedence + 1);
+		}
+	return endNode(parser);
 }
 
 static bool parseProgram(Parser *parser) {
@@ -150,6 +181,9 @@ void ParsingResultPrint(ParsingResult *result) {
 		[STATEMENT] = "statement",
 		[PACKAGE_STATEMENT] = "package statement",
 		[EXPRESSION] = "expression",
+		[BASIC_EXPRESSION] = "basic expression",
+		[INFIX_EXPRESSION] = "infix expression",
+		[PREFIX_EXPRESSION] = "prefix expression",
 
 		[MISSING_PACKAGE_NAME] = "Expected a package name.",
 		[MISSING_SUBPACKAGE_NAME] = "Expected a subpackage name.",
@@ -193,8 +227,7 @@ ParsingResult parse(TokenList tokens) {
 		.nextNodeIndexStack = nextNodeIndexStack,
 	};
 
-	parseProgram(&parser);
-	parseProgram(&parser);
+	parseInfixExpression(&parser, 0);
 
 	ListDestroy(&currentTokenIndexStack);
 	ListDestroy(&nextNodeIndexStack);
