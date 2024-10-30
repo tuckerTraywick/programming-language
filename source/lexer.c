@@ -197,6 +197,8 @@ void LexingResultPrint(LexingResult *result) {
 		[BITWISE_XOR] = "bitwise xor",
 		[BITWISE_NOT_ASSIGN] = "bitwise not assign",
 		[BITWISE_NOT] = "bitwise not",
+		[EQUAL] = "equal",
+		[ASSIGN] = "assign",
 		[COMMA] = "comma",
 		[DOT] = "dot",
 		[SEMICOLON] = "semicolon",
@@ -235,7 +237,7 @@ LexingResult lex(char *text) {
 	TokenList tokens = ListCreate(INITIAL_TOKEN_CAPACITY, sizeof (Token));
 	TokenList errors = ListCreate(INITIAL_ERROR_CAPACITY, sizeof (Token));
 	char *currentChar = text;
-	Token currentToken = {.text=currentChar};
+	Token currentToken = {.text = currentChar};
 	
 	// TODO: Lex newlines.
 	while (*currentChar != '\0') {
@@ -362,7 +364,7 @@ LexingResult lex(char *text) {
 		}
 	}
 
-	currentToken = (Token){.type=STREAM_END, .text=NULL, .index=currentChar - text};
+	currentToken = (Token){.type = STREAM_END, .text = NULL, .index = currentChar - text};
 	ListPushBack(&tokens, &currentToken);
 
 	return (LexingResult){

@@ -1,3 +1,53 @@
+0 a -> 1, 1 -> 2
+1 a -> 1
+  else -> identifier, 0
+2 1 -> 2
+  else -> number, 0
+
+
+typedef struct LexerAction {
+    NodeType tokenType;
+    size_t goto;
+} LexerAction;
+
+typedef LexerAction LexerTable[LEXER_TABLE_LENGTH];
+
+
+typedef struct ParserAction {
+    NodeType
+} ParserAction;
+
+
+
+
+
+Lexer
+- goto
+- emit token
+- emit error
+- accept
+
+Parser
+- goto
+- begin node
+- end node
+- emit error
+- accept
+
+
+
+
+
+
+The lexer and parser don't choose whether to consume a character or token, they just choose what
+state to go to next and whether to emit something.
+asdfasdf
+
+
+
+
+
+
 In a bottom-up parser, you have to decide what the parent node is going to be based on the current
 token.
 

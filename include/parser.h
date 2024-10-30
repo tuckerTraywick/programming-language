@@ -5,39 +5,47 @@
 #include "lexer.h"
 #include "list.h"
 
-typedef List SyntaxNodeList;
+typedef List NodeList;
 
 // The type of thing in the grammar a node represents.
-typedef enum SyntaxNodeType {
+typedef enum NodeType {
 	INVALID_SYNTAX,
+	EXPECTED_LINE_END,
 	MISSING_PACKAGE_NAME,
 	MISSING_SUBPACKAGE_NAME,
-	EXPECTED_LINE_END,
-
-	END, // Indicates the end of a subtree.
+	EXPECTED_VARIABLE_NAME,
+	EXPECTED_TYPE,
 
 	TOKEN,
 	PROGRAM,
 	STATEMENT,
 	PACKAGE_STATEMENT,
+	IMPORT_STATEMENT,
+	VARIABLE_DEFINITION,
+	STRUCT_DEFINITION,
+	TYPE,
+
+	ATOM,
 	EXPRESSION,
-	BASIC_EXPRESSION,
-	INFIX_EXPRESSION,
-	PREFIX_EXPRESSION,
 
 	STYNAX_NODE_TYPE_COUNT,
-} SyntaxNodeType;
+} NodeType;
 
 // An element in an abstract syntax tree.
-typedef struct SyntaxNode {
-	SyntaxNodeType type;
-	Token *token;
-} SyntaxNode;
+typedef struct Node {
+	NodeType type;
+	struct Node *parent;
+	struct Node *child;
+	struct Node *next;
+	struct Node *previous;
+	Token *tokens;
+	size_t tokenCount;
+} Node;
 
 // The output of the parser. Must be destroyed by `ParsingResultDestroy()` after use.
 typedef struct ParsingResult {
-	SyntaxNodeList nodes;
-	SyntaxNodeList errors;
+	NodeList nodes;
+	NodeList errors;
 } ParsingResult;
 
 // Frees a `ParsingResult`'s lists and zeros its memory.

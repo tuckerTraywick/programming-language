@@ -4,7 +4,7 @@
 #include <string.h>
 #include "list.h"
 
-#define max(a, b) ((a) >= (b)) ? (a) : (b)
+#define max(a, b) (((a) >= (b)) ? (a) : (b))
 
 List ListCreate(size_t capacity, size_t elementSize) {
     return (List){
@@ -140,6 +140,17 @@ void ListCombine(List *first, List *second) {
         second->count*second->elementSize
     );
     first->count += second->count;
+}
+
+void *ListFront(List *list) {
+    return list->elements;
+}
+
+void *ListBack(List *list) {
+    if (list->elements) {
+        return ListGet(list, list->count - 1);
+    }
+    return NULL;
 }
 
 #undef max

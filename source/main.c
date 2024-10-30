@@ -3,15 +3,15 @@
 #include "parser.h"
 
 int main(void) {
-    char *text = "2 * 3 + 4";
+    char *text = "1 2 3 4";
     LexingResult lexingResult = lex(text);
+    printf("LEXING\n");
     LexingResultPrint(&lexingResult);
 
-    ParsingResult ParsingResult = parse(lexingResult.tokens);
-    printf("\n");
-    ParsingResultPrint(&ParsingResult);
-
+    ParsingResult parsingResult = parse(lexingResult.tokens);
+    printf("\nPARSING\n");
+    ParsingResultPrint(&parsingResult);
+    
     LexingResultDestroy(&lexingResult);
-    ParsingResultDestroy(&ParsingResult);
     return 0;
 }

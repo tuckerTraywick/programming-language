@@ -7,8 +7,6 @@
 
 typedef List TokenList;
 
-typedef List LexingErrorList;
-
 // The type of thing a token represents.
 typedef enum TokenType {
 	INVALID_TOKEN,
@@ -106,9 +104,9 @@ typedef enum TokenType {
 // A token from the input string. Can be a keyword, operator, literal, or identifier.
 typedef struct Token {
 	TokenType type;
-	size_t length;
 	char *text; // Points to the input string. Does not need to be freed.
-	size_t index; // Index in the input string of the first character of `text`.
+	size_t length;
+	size_t index; // Index in the input string of the first character of the token.
 } Token;
 
 // The output of the lexer. Must be destroyed by `LexingResultDestroy()` after use.

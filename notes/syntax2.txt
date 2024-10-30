@@ -1,3 +1,19 @@
+struct Animal
+	name string
+	age uint32
+abstracts
+	struct Dog
+		tag string
+	end
+
+	struct Cat
+		breed string
+	end
+end
+
+
+
+
 struct Color
 	r, g, b uint8
 cases
@@ -16,9 +32,8 @@ from std.io import printLine
 pub struct Animal
 	pub name string
 	pub age uint32
+	pub makeNoise(&this)
 end
-
-pub method makeNoise(animal &Animal)
 
 pub struct Dog
 	Animal
@@ -40,9 +55,9 @@ end
 
 pub func main()
 	var animal &Animal = &Dog()
-	makeNoise(animal)
+	animal.makeNoise()
 	animal = &Cat()
-	animal->makeNoise()
+	animal.makeNoise()
 end
 
 
@@ -54,6 +69,7 @@ from std.operations import *
 
 pub struct Entity uint32
 	pub pos, vel, acc Vector
+	pub update(&mut this)
 cases
 	struct Circle
 		pub radius float64
@@ -63,8 +79,6 @@ cases
 		pub vertices owned []Vector
 	end
 end
-
-pub method update(entity &mut Entity)
 
 pub struct Vector
 	Equality, Arithmetic, To[string]
@@ -78,5 +92,3 @@ pub func update(mesh &Mesh) pass
 pub func .length(v &Vector) float64
 	return sqrt(v.x*v.x + v.y*v.y)
 end
-
-

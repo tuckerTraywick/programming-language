@@ -62,4 +62,10 @@ void ListPopBack(List *list, size_t amount, void *result);
 // Combines two lists in place. Puts the result in `first`.
 void ListCombine(List *first, List *second);
 
+// Returns a pointer to the first element in the list. Returns null if the list is empty.
+void *ListFront(List *list);
+
+// Returns a pointer to the last element in the list. Returns null if the list is empty.
+void *ListBack(List *list);
+
 #endif // LIST_H
