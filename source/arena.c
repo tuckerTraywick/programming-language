@@ -3,6 +3,10 @@
 #include <string.h>
 #include "arena.h"
 
+#define min(a, b) (((a) <= (b)) ? (a) : (b))
+
+#define max(a, b) (((a) >= (b)) ? (a) : (b))
+
 typedef struct Arena_Header {
 	size_t capacity;
 	size_t size;
@@ -24,24 +28,6 @@ void *arena_create(size_t capacity) {
 
 void arena_destroy(void *arena) {
 	free((Arena_Header*)arena - 1);
-}
-
-void *arena_allocate(void *arena, size_t size) {
-	Arena_Header *header = arena_get_header(arena);
-	if (header->size + size > header->capacity) {
-		return NULL;
-	}
-	void *allocation = (char*)arena + header->size;
-	header->size += size;
-	return allocation;
-}
-
-void *arena_allocate_zeroed(void *arena, size_t size) {
-	void *allocation = arena_allocate(arena, size);
-	if (allocation) {
-		memset(allocation, 0, size);
-	}
-	return allocation;
 }
 
 size_t arena_get_capacity(void *arena) {
@@ -67,8 +53,44 @@ size_t arena_get_size(void *arena) {
 void *arena_set_size(void *arena, size_t size) {
 	Arena_Header *header = arena_get_header(arena);
 	if (size > header->capacity) {
-		return arena_set_capacity(arena, arena_get_capacity(arena)*2);
+		return arena_set_capacity(arena, max(arena_get_capacity(arena)*2, size));
 	}
 	header->size = size;
 	return arena;
 }
+
+void *arena_allocate(void *arena, size_t size) {
+	Arena_Header *header = arena_get_header(arena);
+	if (header->size + size > header->capacity) {
+		return NULL;
+	}
+	void *allocation = (char*)arena + header->size;
+	header->size += size;
+	return allocation;
+}
+
+void *arena_allocate_zeroed(void *arena, size_t size) {
+	void *allocation = arena_allocate(arena, size);
+	if (allocation) {
+		memset(allocation, 0, size);
+	}
+	return allocation;
+}
+
+void *arena_push(void *arena, void *value, size_t size) {
+	void *allocation = arena_allocate(arena, size);
+	if (allocation) {
+		memcpy(allocation, value, size);
+	}
+	return allocation;
+}
+
+size_t arena_pop(void *arena, size_t size) {
+	Arena_Header *header = arena_get_header(arena);
+	size_t amount_popped = min(header->size, size);
+	header->size -= amount_popped;
+	return amount_popped;
+}
+
+#undef min
+#undef max
