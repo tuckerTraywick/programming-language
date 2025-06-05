@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"stddef.h": "c",
+		"lexer.h": "c",
+		"vector": "c"
+	}
+}

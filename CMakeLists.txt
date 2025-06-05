@@ -5,6 +5,9 @@ set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
 add_executable(run
+	source/arena.c
+	source/lexer.c
+	source/parser.c
 	source/main.c
 )
 target_include_directories(run PUBLIC include)
