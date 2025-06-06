@@ -183,9 +183,9 @@ Lexer_Result lex(char *text) {
 				++current_token.text_length;
 			} while (isalnum(*text) || *text == '_');
 			current_token.type = TOKEN_TYPE_IDENTIFIER;
-			for (size_t i = TOKEN_TYPE_MODULE; i < (sizeof reserved_words)/(sizeof reserved_words[0]); ++i) {
+			for (size_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
-				if (strcmp(reserved_words[i], text - current_token.text_length) == 0) {
+				if (strncmp(reserved_words[i], text - current_token.text_length, strlen(reserved_words[i])) == 0) {
 					current_token.type = i;
 					break;
 				}
@@ -193,8 +193,9 @@ Lexer_Result lex(char *text) {
 		// Lex operators.
 		} else {
 			bool found_operator = false;
-			for (size_t i = TOKEN_TYPE_PLUS; i < (sizeof reserved_words)/(sizeof reserved_words[0]); ++i) {
+			for (size_t i = TOKEN_TYPE_DOT; i < TOKEN_TYPE_LEFT_ANGLE_BRACKET; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
+				printf("match %s\n", reserved_words[i]);
 				if (strncmp(reserved_words[i], text, strlen(reserved_words[i])) == 0) {
 					current_token.type = i;
 					current_token.text_length = strlen(reserved_words[i]);

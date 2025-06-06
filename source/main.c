@@ -20,7 +20,7 @@ static void Lexer_Result_print(Lexer_Result *result, char *text) {
 }
 
 int main(void) {
-	char *text = "'//asdf\nasdf//hi\n123";
+	char *text = "+=";
 	Lexer_Result result = lex(text);
 	Lexer_Result_print(&result, text);
 	Lexer_Result_destroy(&result);
