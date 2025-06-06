@@ -13,6 +13,8 @@
 
 #define STARTING_ERROR_CAPACITY 100
 
+#define max(a, b) (((a) >= (b)) ? (a) : (b))
+
 char *reserved_words[] = {
 	// Literals
 	[TOKEN_TYPE_NUMBER] = "number",
@@ -185,7 +187,7 @@ Lexer_Result lex(char *text) {
 			current_token.type = TOKEN_TYPE_IDENTIFIER;
 			for (size_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
-				if (strncmp(reserved_words[i], text - current_token.text_length, strlen(reserved_words[i])) == 0) {
+				if (strncmp(reserved_words[i], text - current_token.text_length, max(strlen(reserved_words[i]), current_token.text_length)) == 0) {
 					current_token.type = i;
 					break;
 				}
