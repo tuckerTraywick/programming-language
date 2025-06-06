@@ -63,6 +63,28 @@ Lexer_Result lex(char *text) {
 			++text;
 			++current_token.text_length;
 			current_token.type = TOKEN_TYPE_CHARACTER;
+		// Lex strings.
+		} else if (*text == '"') {
+			do {
+				++text;
+				++current_token.text_length;
+				// TODO: Handle escape characters and check length.
+			} while (*text && *text != '"' && *text != '\r' && *text != '\n');
+			if (*text != '"') {
+				Lexer_Error error = {
+					.text_index = current_token.text_index,
+					.text_length = current_token.text_length,
+					.type = LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
+				};
+				// TODO: Handle null return value.
+				arena_push(result.errors, &error, sizeof error);
+				current_token.text_index += error.text_length;
+				current_token.text_length = 0;
+				continue;
+			}
+			++text;
+			++current_token.text_length;
+			current_token.type = TOKEN_TYPE_STRING;
 		// Lex identifiers and keywords.
 		} else if (isalpha(*text) || *text == '_') {
 			do {

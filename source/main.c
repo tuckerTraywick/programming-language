@@ -33,7 +33,7 @@ static void Lexer_Result_print(Lexer_Result *result, char *text) {
 }
 
 int main(void) {
-	char *text = "1 2 3 4 5";
+	char *text = "\"hello -\"  \n123";
 	Lexer_Result result = lex(text);
 	Lexer_Result_print(&result, text);
 	Lexer_Result_destroy(&result);

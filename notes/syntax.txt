@@ -7,16 +7,16 @@ struct Color {
 	blue = (0, 0, 255)
 }
 
-struct List<T type> {
-	elements owned []T
-	length usize
+struct Array<Element type, count usize> {
+	elements [count]Element
 }
+
 
 
 
 pub module animals
 import {
-	std.io.print_line
+	std.io.print_line,
 }
 
 pub trait Animal {
@@ -50,3 +50,30 @@ pub func main() {
 	pet = &Cat()
 	pet->make_noise()
 }
+
+
+
+
+pub module physics
+import {
+	std.math,
+	std.operations,
+}
+
+pub struct Entity {
+	pub position, velocity, acceleration Vector
+} cases {
+	struct Circle {pub radius float64}
+	struct Mesh {pub vertices owned []Vector}
+}
+
+pub method update(entity &Entity)
+
+pub struct Vector {
+	embed std.operations.To<string>, .Arithmetic
+	pub x, y, z float64
+}
+
+pub func update(circle &Circle)
+
+pub func update(mesh &Mesh)
