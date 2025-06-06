@@ -30,7 +30,7 @@ typedef struct Parser_Result {
 	Parser_Error *errors; // Points to an arena. Owned by this struct.
 } Parser_Result;
 
-Parser_Result_destroy(Parser_Result *result);
+void Parser_Result_destroy(Parser_Result *result);
 
 // `tokens` must point to an arena.
 Parser_Result parse(Token *tokens);
