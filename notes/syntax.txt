@@ -1,0 +1,52 @@
+struct Color {
+	r, g, b uint8
+} cases {
+	struct Rgb
+	red = (255, 0, 0)
+	green = (0, 255, 0)
+	blue = (0, 0, 255)
+}
+
+struct List<T type> {
+	elements owned []T
+	length usize
+}
+
+
+
+pub module animals
+import {
+	std.io.print_line
+}
+
+pub trait Animal {
+	pub name string
+	pub age uint32
+}
+
+pub method make_noise(animal &Animal)
+
+pub struct Dog {
+	embed Animal
+	pub tag string
+}
+
+pub struct Cat {
+	embed Animal
+	pub breed string
+}
+
+pub func make_noise(dog &Dog) {
+	print_line("woof")
+}
+
+pub func make_noise(cat &Cat) {
+	print_line("meow")
+}
+
+pub func main() {
+	var pet mut &Animal = &Dog()
+	make_noise(pet)
+	pet = &Cat()
+	pet->make_noise()
+}
