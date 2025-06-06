@@ -1,3 +1,5 @@
+// TODO: Recgonize open <.
+
 #include <assert.h>
 #include <stdio.h>
 
