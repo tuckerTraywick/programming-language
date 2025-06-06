@@ -4,6 +4,9 @@
 		"lexer.h": "c",
 		"vector": "c",
 		"arena.h": "c",
-		"parser.h": "c"
+		"parser.h": "c",
+		"string.h": "c",
+		"ctype.h": "c",
+		"stdbool.h": "c"
 	}
 }

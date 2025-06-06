@@ -13,14 +13,98 @@
 
 #define STARTING_ERROR_CAPACITY 100
 
-Lexer_Result lex(char *text) {
-	static char *keywords[] = {
-		[TOKEN_TYPE_NAMESPACE] = "namespace",
-	};
-	static char *operators[] = {
-		[TOKEN_TYPE_PLUS] = "+",
-	};
+char *reserved_words[] = {
+	// Literals
+	[TOKEN_TYPE_NUMBER] = "number",
+	[TOKEN_TYPE_CHARACTER] = "character",
+	[TOKEN_TYPE_STRING] = "string",
+	[TOKEN_TYPE_IDENTIFIER] = "identifier",
+	// Keywords
+	[TOKEN_TYPE_MODULE] = "module",
+	[TOKEN_TYPE_IMPORT] = "import",
+	[TOKEN_TYPE_VAR] = "var",
+	[TOKEN_TYPE_FUNC] = "func",
+	[TOKEN_TYPE_METHOD] = "method",
+	[TOKEN_TYPE_STRUCT] = "struct",
+	[TOKEN_TYPE_TRAIT] = "trait",
+	[TOKEN_TYPE_CASES] = "cases",
+	[TOKEN_TYPE_EMBED] = "embed",
+	[TOKEN_TYPE_PUB] = "pub",
+	[TOKEN_TYPE_MUT] = "mut",
+	[TOKEN_TYPE_AS] = "as",
+	[TOKEN_TYPE_IS] = "is",
+	[TOKEN_TYPE_BOOLEAN_AND] = "and",
+	[TOKEN_TYPE_BOOLEAN_OR] = "or",
+	[TOKEN_TYPE_BOOLEAN_XOR] = "xor",
+	[TOKEN_TYPE_BOOLEAN_NOT] = "not",
+	[TOKEN_TYPE_RETURN] = "return",
+	[TOKEN_TYPE_BREAK] = "break",
+	[TOKEN_TYPE_CONTINUE] = "continue",
+	[TOKEN_TYPE_NEXT] = "next",
+	[TOKEN_TYPE_DO] = "do",
+	[TOKEN_TYPE_WHILE] = "while",
+	[TOKEN_TYPE_FOR] = "for",
+	[TOKEN_TYPE_IN] = "in",
+	[TOKEN_TYPE_THRU] = "thru",
+	[TOKEN_TYPE_UNTIL] = "until",
+	[TOKEN_TYPE_BY] = "by",
+	[TOKEN_TYPE_IF] = "if",
+	[TOKEN_TYPE_ELSE] = "else",
+	[TOKEN_TYPE_SWITCH] = "switch",
+	[TOKEN_TYPE_CASE] = "case",
+	[TOKEN_TYPE_DEFAULT] = "default",
+	// Operators
+	[TOKEN_TYPE_DOT] = ".",
+	[TOKEN_TYPE_COMMA] = ",",
+	[TOKEN_TYPE_COLON] = ":",
+	[TOKEN_TYPE_SEMICOLON] = ";",
+	[TOKEN_TYPE_LEFT_PARENTHESIS] = "(",
+	[TOKEN_TYPE_RIGHT_PARENTHESIS] = ")",
+	[TOKEN_TYPE_LEFT_BRACKET] = "[",
+	[TOKEN_TYPE_RIGHT_BRACKET] = "]",
+	[TOKEN_TYPE_LEFT_BRACE] = "{",
+	[TOKEN_TYPE_RIGHT_BRACE] = "}",
+	[TOKEN_TYPE_PLUS_ASSIGN] = "+=",
+	[TOKEN_TYPE_PLUS] = "+",
+	[TOKEN_TYPE_ARROW] = "->",
+	[TOKEN_TYPE_MINUS_ASSIGN] = "-=",
+	[TOKEN_TYPE_MINUS] = "-",
+	[TOKEN_TYPE_TIMES_ASSIGN] = "*=",
+	[TOKEN_TYPE_TIMES] = "*",
+	[TOKEN_TYPE_DIVIDE_ASSIGN] = "/=",
+	[TOKEN_TYPE_DIVIDE] = "/",
+	[TOKEN_TYPE_MODULUS_ASSIGN] = "%=",
+	[TOKEN_TYPE_MODULUS] = "%",
+	[TOKEN_TYPE_BITWISE_AND_ASSIGN] = "&=",
+	[TOKEN_TYPE_BITWISE_AND] = "&",
+	[TOKEN_TYPE_BITWISE_OR_ASSIGN] = "|=",
+	[TOKEN_TYPE_BITWISE_OR] = "|",
+	[TOKEN_TYPE_BITWISE_XOR_ASSIGN] = "^=",
+	[TOKEN_TYPE_BITWISE_XOR] = "^",
+	[TOKEN_TYPE_BITWISE_NOT_ASSIGN] = "~=",
+	[TOKEN_TYPE_BITWISE_NOT] = "~",
+	[TOKEN_TYPE_LEFT_SHIFT_ASSIGN] = "<<=",
+	[TOKEN_TYPE_LEFT_SHIFT] = "<<",
+	[TOKEN_TYPE_RIGHT_SHIFT_ASSIGN] = ">>=",
+	[TOKEN_TYPE_RIGHT_SHIFT] = ">>",
+	[TOKEN_TYPE_EQUAL] = "==",
+	[TOKEN_TYPE_ASSIGN] = "=",
+	[TOKEN_TYPE_NOT_EQUAL] = "!=",
+	[TOKEN_TYPE_GREATER_EQUAL] = ">=",
+	[TOKEN_TYPE_GREATER] = ">",
+	[TOKEN_TYPE_LESS_EQUAL] = "<=",
+	[TOKEN_TYPE_LESS] = "<",
+	[TOKEN_TYPE_LEFT_ANGLE_BRACKET] = "<",
+};
 
+char *lexer_error_messages[] = {
+	[LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN] = "Unrecognized token.",
+	[LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
+	[LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
+
+};
+
+Lexer_Result lex(char *text) {
 	Lexer_Result result = {
 		.tokens = arena_create(STARTING_TOKEN_CAPACITY*sizeof (Token)),
 		.errors = arena_create(STARTING_ERROR_CAPACITY*sizeof (Lexer_Error)),
@@ -33,6 +117,13 @@ Lexer_Result lex(char *text) {
 		if (isspace(*text)) {
 			++text;
 			++current_token.text_index;
+			continue;
+		// Skip line comments.
+		} else if (*text == '/' && *(text + 1) == '/') {
+			do {
+				++text;
+				++current_token.text_index;
+			} while (*text && *text != '\n');
 			continue;
 		// Lex numbers.
 		} else if (isdigit(*text)) {
@@ -92,9 +183,9 @@ Lexer_Result lex(char *text) {
 				++current_token.text_length;
 			} while (isalnum(*text) || *text == '_');
 			current_token.type = TOKEN_TYPE_IDENTIFIER;
-			for (size_t i = TOKEN_TYPE_NAMESPACE; i < (sizeof keywords)/(sizeof keywords[0]); ++i) {
-				// TODO: Store the lengths of the keywords somewhere to avoid `strlen()`.
-				if (strcmp(keywords[i], text - current_token.text_length) == 0) {
+			for (size_t i = TOKEN_TYPE_MODULE; i < (sizeof reserved_words)/(sizeof reserved_words[0]); ++i) {
+				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
+				if (strcmp(reserved_words[i], text - current_token.text_length) == 0) {
 					current_token.type = i;
 					break;
 				}
@@ -102,11 +193,11 @@ Lexer_Result lex(char *text) {
 		// Lex operators.
 		} else {
 			bool found_operator = false;
-			for (size_t i = TOKEN_TYPE_PLUS; i < (sizeof operators)/(sizeof operators[0]); ++i) {
-				// TODO: Store the lengths of the operators somewhere to avoid `strlen()`.
-				if (strncmp(operators[i], text, strlen(operators[i])) == 0) {
+			for (size_t i = TOKEN_TYPE_PLUS; i < (sizeof reserved_words)/(sizeof reserved_words[0]); ++i) {
+				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
+				if (strncmp(reserved_words[i], text, strlen(reserved_words[i])) == 0) {
 					current_token.type = i;
-					current_token.text_length = strlen(operators[i]);
+					current_token.text_length = strlen(reserved_words[i]);
 					text += current_token.text_length;
 					found_operator = true;
 					break;

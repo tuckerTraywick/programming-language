@@ -1,5 +1,2 @@
 clear
-cmake -Bbuild -S.
-cmake --build build
-echo
-./build/run
+cmake -Bbuild -S. && cmake --build build && echo "" && ./build/run
