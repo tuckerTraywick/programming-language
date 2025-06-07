@@ -47,12 +47,12 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 	printf("\n\n---- PARSER ERRORS ----\n");
 	for (size_t i = 0; i < arena_get_size(result->errors)/sizeof *result->errors; ++i) {
 		Parser_Error *error = result->errors + i;
-		printf("%s (starting at token %d)\n", lexer_error_messages[error->type], error->token_index);
+		printf("%s (starting at token %d)\n", parser_error_messages[error->type], error->token_index);
 	}
 }
 
 int main(void) {
-	char *text = "";
+	char *text = "pub ";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 

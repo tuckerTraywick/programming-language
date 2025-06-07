@@ -93,7 +93,8 @@ static bool parse_token(Parser *parser, Token_Type type) {
 
 static void parse_program(Parser *parser) {
 	parse_token(parser, TOKEN_TYPE_PUB);
-	if (!parse_token(parser, TOKEN_TYPE_MODULE)) emit_error(parser, PARSER_ERROR_TYPE_INVALID_SYNTAX);
+	if (!parse_token(parser, TOKEN_TYPE_MODULE)) return;
+	if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
 }
 
 char *node_type_names[] = {
@@ -103,6 +104,7 @@ char *node_type_names[] = {
 
 char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
+	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",
 };
 
 void Parser_Result_destroy(Parser_Result *result) {
