@@ -35,10 +35,6 @@ static uint32_t last_node_index(Parser *parser) {
 	return arena_get_size(parser->nodes)/sizeof *parser->nodes - 1;
 }
 
-static Node *last_node(Parser *parser) {
-	return parser->nodes + last_node_index(parser);
-}
-
 // Appends a node to the list of nodes without modifying the current parent index.
 static Node *add_node(Parser *parser, Node_Type type) {
 	// TODO: Handle null return value.
@@ -68,6 +64,18 @@ static bool end_node(Parser *parser) {
 	return true;
 }
 
+static bool emit_error(Parser *parser, Parser_Error_Type type) {
+	// TODO: Count error tokens.
+	// TODO: Handle null return value.
+	Parser_Error *error = arena_allocate(parser->errors, sizeof *parser->errors);
+	*error = (Parser_Error){
+		.type = type,
+		.token_index = parser->current_token_index,
+		.token_count = 0,
+	};
+	return false;
+}
+
 static bool peek_token(Parser *parser, Token_Type type) {
 	Token *token = current_token(parser);
 	return token != NULL && token->type == type;
@@ -83,11 +91,18 @@ static bool parse_token(Parser *parser, Token_Type type) {
 	return true;
 }
 
-static bool parse_expression(Parser *parser);
+static void parse_program(Parser *parser) {
+	parse_token(parser, TOKEN_TYPE_PUB);
+	if (!parse_token(parser, TOKEN_TYPE_MODULE)) emit_error(parser, PARSER_ERROR_TYPE_INVALID_SYNTAX);
+}
 
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
+};
+
+char *parser_error_messages[] = {
+	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
 };
 
 void Parser_Result_destroy(Parser_Result *result) {
@@ -109,14 +124,7 @@ Parser_Result parse(Token *tokens) {
 	};
 	parser.current_node_is_parent = true;
 
-	parse_token(&parser, TOKEN_TYPE_NUMBER);
-	begin_node(&parser, NODE_TYPE_PROGRAM);
-	begin_node(&parser, NODE_TYPE_PROGRAM);
-	parse_token(&parser, TOKEN_TYPE_NUMBER);
-	parse_token(&parser, TOKEN_TYPE_NUMBER);
-	end_node(&parser);
-	end_node(&parser);
-	parse_token(&parser, TOKEN_TYPE_NUMBER);
+	parse_program(&parser);
 
 	Parser_Result result = {
 		.nodes = parser.nodes,

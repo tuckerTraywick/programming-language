@@ -9,7 +9,7 @@ static void Lexer_Result_print(Lexer_Result *result, char *text) {
 	printf("---- TOKENS ----\n");
 	for (size_t i = 0; i < arena_get_size(result->tokens)/sizeof *result->tokens; ++i) {
 		Token *token = result->tokens + i;
-		printf("%s `%.*s`\n", reserved_words[token->type], token->text_length, text + token->text_index);
+		printf("%zu %s `%.*s`\n", i, reserved_words[token->type], token->text_length, text + token->text_index);
 	}
 
 	printf("\n---- LEXER ERRORS ----\n");
@@ -44,11 +44,15 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 	printf("\n---- NODES ----\n");
 	print_node(result->nodes, tokens, text, 0, 0);
 
-	printf("\n---- PARSER ERRORS ----\n");
+	printf("\n\n---- PARSER ERRORS ----\n");
+	for (size_t i = 0; i < arena_get_size(result->errors)/sizeof *result->errors; ++i) {
+		Parser_Error *error = result->errors + i;
+		printf("%s (starting at token %d)\n", lexer_error_messages[error->type], error->token_index);
+	}
 }
 
 int main(void) {
-	char *text = "1 2 3 4";
+	char *text = "";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 

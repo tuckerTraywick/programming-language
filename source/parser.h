@@ -20,7 +20,7 @@ typedef struct Node {
 
 // The type of an error encountered during parsing.
 typedef enum Parser_Error_Type {
-	INVALID_SYNTAX,
+	PARSER_ERROR_TYPE_INVALID_SYNTAX,
 } Parser_Error_Type;
 
 // An error encountered during parsing.
@@ -38,6 +38,9 @@ typedef struct Parser_Result {
 
 // A map of node types to their names. Indexed by the type of a node.
 extern char *node_type_names[];
+
+// A map of parser error types to their messages. Indexed by the type of an error.
+extern char *parser_error_messages[];
 
 // Destroys a `Parser_Result` and frees its arenas.
 void Parser_Result_destroy(Parser_Result *result);
