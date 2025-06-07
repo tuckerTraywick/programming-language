@@ -20,7 +20,7 @@ typedef struct Parser {
 } Parser;
 
 static Token *current_token(Parser *parser) {
-	if (parser->current_token_index > arena_get_size(parser->tokens)/sizeof *parser->tokens) {
+	if (parser->current_token_index >= arena_get_size(parser->tokens)/sizeof *parser->tokens) {
 		return NULL;
 	}
 	return parser->tokens + parser->current_token_index;
@@ -34,6 +34,57 @@ static uint32_t last_node_index(Parser *parser) {
 	return arena_get_size(parser->nodes)/sizeof *parser->nodes - 1;
 }
 
+static Node *last_node(Parser *parser) {
+	return parser->nodes + last_node_index(parser);
+}
+
+// Appends a node to the list of nodes without modifying the current parent index.
+static Node *add_node(Parser *parser, Node *node) {
+	Node *previous_node = last_node(parser);
+	// TODO: Handle null return value.
+	Node *new_node = arena_push(parser->nodes, node, sizeof *node);
+	if (previous_node == current_parent(parser)) {
+		previous_node->child_index = last_node_index(parser);
+	} else {
+		previous_node->next_index = last_node_index(parser);
+	}
+	return new_node;
+}
+
+static void begin_node(Parser *parser, Node_Type type) {
+	Node new_node = {
+		.type = type,
+		.parent_index = parser->current_parent_index,
+	};
+	add_node(parser, &new_node);
+	parser->current_parent_index = last_node_index(parser);
+}
+
+static bool end_node(Parser *parser) {
+	parser->current_parent_index = last_node(parser)->parent_index;
+	return true;
+}
+
+static bool peek_token(Parser *parser, Token_Type type) {
+	Token *token = current_token(parser);
+	return token != NULL && token->type == type;
+}
+
+static bool parse_token(Parser *parser, Token_Type type) {
+	if (!peek_token(parser, type)) {
+		return false;
+	}
+	Node node = {
+		.type = NODE_TYPE_TOKEN,
+		.child_index = parser->current_token_index,
+	};
+	add_node(parser, &node);
+	++parser->current_token_index;
+	return true;
+}
+
+static bool parse_expression(Parser *parser);
+
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
@@ -44,31 +95,6 @@ void Parser_Result_destroy(Parser_Result *result) {
 	arena_destroy(result->errors);
 	*result = (Parser_Result){0};
 }
-
-void begin_node(Parser *parser, Node_Type type) {
-	uint32_t last_index = last_node_index(parser);
-	Node *last_node = parser->nodes + last_index;
-	// TODO: Handle null return value.
-	Node *new_node = arena_allocate(parser->nodes, sizeof *new_node);
-	*new_node = (Node){
-		.parent_index = parser->current_parent_index,
-	};
-	
-	if (parser->current_parent_index == last_index) {
-		last_node->child_index = last_node_index(parser);
-	} else {
-		last_node->next_index = last_node_index(parser);
-	}
-	parser->current_parent_index = last_node_index(parser);
-}
-
-bool end_node(Parser *parser);
-
-bool peek_token(Parser *parser);
-
-bool parse_token(Parser *parser);
-
-bool parse_expression(Parser *parser);
 
 Parser_Result parse(Token *tokens) {
 	Parser parser = {
@@ -82,7 +108,7 @@ Parser_Result parse(Token *tokens) {
 		.type = NODE_TYPE_PROGRAM,
 	};
 
-	begin_node(&parser, NODE_TYPE_TOKEN);
+	parse_token(&parser, TOKEN_TYPE_NUMBER);
 
 	Parser_Result result = {
 		.nodes = parser.nodes,

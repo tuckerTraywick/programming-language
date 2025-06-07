@@ -3,6 +3,7 @@ project(language LANGUAGES C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_C_STANDARD_REQUIRED True)
+add_compile_options(-Wall -Wpedantic -g3 -o)
 
 add_executable(run
 	source/arena.c
