@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <ctype.h>
@@ -13,7 +12,7 @@
 
 #define STARTING_TOKEN_CAPACITY 2000
 
-#define STARTING_ERROR_CAPACITY 100
+#define STARTING_LEXER_ERROR_CAPACITY 100
 
 #define max(a, b) (((a) >= (b)) ? (a) : (b))
 
@@ -108,10 +107,16 @@ char *lexer_error_messages[] = {
 
 };
 
+void Lexer_Result_destroy(Lexer_Result *result) {
+	arena_destroy(result->tokens);
+	arena_destroy(result->errors);
+	*result = (Lexer_Result){0};
+}
+
 Lexer_Result lex(char *text) {
 	Lexer_Result result = {
 		.tokens = arena_create(STARTING_TOKEN_CAPACITY*sizeof (Token)),
-		.errors = arena_create(STARTING_ERROR_CAPACITY*sizeof (Lexer_Error)),
+		.errors = arena_create(STARTING_LEXER_ERROR_CAPACITY*sizeof (Lexer_Error)),
 	};
 	assert(result.tokens && result.errors && "Failed malloc.");
 
@@ -187,7 +192,7 @@ Lexer_Result lex(char *text) {
 				++current_token.text_length;
 			} while (isalnum(*text) || *text == '_');
 			current_token.type = TOKEN_TYPE_IDENTIFIER;
-			for (size_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
+			for (uint32_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
 				if (strncmp(reserved_words[i], text - current_token.text_length, max(strlen(reserved_words[i]), current_token.text_length)) == 0) {
 					current_token.type = i;
@@ -197,7 +202,7 @@ Lexer_Result lex(char *text) {
 		// Lex operators.
 		} else {
 			bool found_operator = false;
-			for (size_t i = TOKEN_TYPE_DOT; i < TOKEN_TYPE_LEFT_ANGLE_BRACKET; ++i) {
+			for (uint32_t i = TOKEN_TYPE_DOT; i < TOKEN_TYPE_LEFT_ANGLE_BRACKET; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
 				printf("match %s\n", reserved_words[i]);
 				if (strncmp(reserved_words[i], text, strlen(reserved_words[i])) == 0) {
@@ -233,10 +238,4 @@ Lexer_Result lex(char *text) {
 		current_token.text_length = 0;
 	}
 	return result;
-}
-
-void Lexer_Result_destroy(Lexer_Result *result) {
-	arena_destroy(result->tokens);
-	arena_destroy(result->errors);
-	*result = (Lexer_Result){0};
 }

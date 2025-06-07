@@ -115,14 +115,17 @@ typedef struct Lexer_Result {
 	Lexer_Error *errors; // Points to an arena. Owned by this struct.
 } Lexer_Result;
 
+// A map from token types to their string values. Indexed by the type of a token.
 extern char *reserved_words[];
 
+// A map from lexer error types to their error messages. Indexed by the type of an error.
 extern char *lexer_error_messages[];
 
 // Destroys a `Lexer_Result` and frees its arenas.
 void Lexer_Result_destroy(Lexer_Result *result);
 
-// Splits a string into tokens and reports any errors.
+// Splits a string into tokens and reports any errors. Return value must be destroyed with
+// `Lexer_Result_destroy()`.
 Lexer_Result lex(char *text);
 
 #endif // LEXER_H
