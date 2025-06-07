@@ -19,30 +19,36 @@ static void Lexer_Result_print(Lexer_Result *result, char *text) {
 	}
 }
 
-static void print_node(Node *nodes, uint32_t node_index, uint32_t depth) {
+static void print_node(Node *nodes, Token *tokens, char *text, uint32_t node_index, uint32_t depth) {
 	Node *node = nodes + node_index;
 	for (uint32_t i = 0; i < depth; ++i) {
 		printf("| ");
 	}
-	printf("%s", node_type_names[node->type]);
 
+	if (node->type == NODE_TYPE_TOKEN) {
+		Token *token = tokens + node->child_index;
+		printf("%s `%.*s`", reserved_words[token->type], token->text_length, text + token->text_index);
+		return;
+	}
+	
+	printf("%s", node_type_names[node->type]);
 	uint32_t child = node->child_index;
 	while (child) {
 		printf("\n");
-		print_node(nodes, child, depth + 1);
+		print_node(nodes, tokens, text, child, depth + 1);
 		child = nodes[child].next_index;
 	}
 }
 
 static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text) {
 	printf("\n---- NODES ----\n");
-	print_node(result->nodes, 0, 0);
+	print_node(result->nodes, tokens, text, 0, 0);
 
 	printf("\n---- PARSER ERRORS ----\n");
 }
 
 int main(void) {
-	char *text = "1";
+	char *text = "1 2 3 4";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 
