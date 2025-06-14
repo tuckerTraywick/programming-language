@@ -8,7 +8,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "lexer.h"
-#include "arena.h"
+#include "list.h"
 
 #define STARTING_TOKEN_CAPACITY 2000
 
@@ -108,15 +108,15 @@ char *lexer_error_messages[] = {
 };
 
 void Lexer_Result_destroy(Lexer_Result *result) {
-	arena_destroy(result->tokens);
-	arena_destroy(result->errors);
+	list_destroy(result->tokens);
+	list_destroy(result->errors);
 	*result = (Lexer_Result){0};
 }
 
 Lexer_Result lex(char *text) {
 	Lexer_Result result = {
-		.tokens = arena_create(STARTING_TOKEN_CAPACITY*sizeof (Token)),
-		.errors = arena_create(STARTING_LEXER_ERROR_CAPACITY*sizeof (Lexer_Error)),
+		.tokens = list_create(STARTING_TOKEN_CAPACITY, sizeof (Token)),
+		.errors = list_create(STARTING_LEXER_ERROR_CAPACITY, sizeof (Lexer_Error)),
 	};
 	assert(result.tokens && result.errors && "Failed malloc.");
 
@@ -155,7 +155,7 @@ Lexer_Result lex(char *text) {
 					.type = LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
 				};
 				// TODO: Handle null return value.
-				arena_push(result.errors, &error, sizeof error);
+				list_push(result.errors, &error, sizeof error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -177,7 +177,7 @@ Lexer_Result lex(char *text) {
 					.type = LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
 				};
 				// TODO: Handle null return value.
-				arena_push(result.errors, &error, sizeof error);
+				list_push(result.errors, &error, sizeof error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -226,14 +226,14 @@ Lexer_Result lex(char *text) {
 					++error.text_length;
 				}
 				// TODO: Handle null return value.
-				arena_push(result.errors, &error, sizeof error);
+				list_push(result.errors, &error, sizeof error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
 			}
 		}
 		// TODO: Handle null return value.
-		arena_push(result.tokens, &current_token, sizeof current_token);
+		list_push(result.tokens, &current_token, sizeof current_token);
 		current_token.text_index += current_token.text_length;
 		current_token.text_length = 0;
 	}

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "parser.h"
 #include "lexer.h"
-#include "arena.h"
+#include "list.h"
 
 #define STARTING_NODE_CAPACITY 2000
 

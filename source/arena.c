@@ -1,92 +1,92 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "arena.h"
+#include "list.h"
 
 #define min(a, b) (((a) <= (b)) ? (a) : (b))
 
 #define max(a, b) (((a) >= (b)) ? (a) : (b))
 
-typedef struct Arena_Header {
+typedef struct List_Header {
 	size_t capacity;
 	size_t size;
 	char data[];
-} Arena_Header;
+} List_Header;
 
-static Arena_Header *arena_get_header(void *arena) {
-	return (Arena_Header*)arena - 1;
+static List_Header *list_get_header(void *list) {
+	return (List_Header*)list - 1;
 }
 
-void *arena_create(size_t capacity) {
-	Arena_Header *arena = malloc(sizeof (Arena_Header) + capacity);
-	if (!arena) {
+void *list_create(size_t capacity) {
+	List_Header *list = malloc(sizeof (List_Header) + capacity);
+	if (!list) {
 		return NULL;
 	}
-	arena->capacity = capacity;
-	return arena + 1;
+	list->capacity = capacity;
+	return list + 1;
 }
 
-void arena_destroy(void *arena) {
-	free((Arena_Header*)arena - 1);
+void list_destroy(void *list) {
+	free((List_Header*)list - 1);
 }
 
-size_t arena_get_capacity(void *arena) {
-	Arena_Header *header = arena_get_header(arena);
+size_t list_get_capacity(void *list) {
+	List_Header *header = list_get_header(list);
 	return header->capacity;
 }
 
-void *arena_set_capacity(void *arena, size_t capacity) {
-	Arena_Header *header = arena_get_header(arena);
-	Arena_Header *new_arena = realloc(header, capacity);
-	if (!new_arena) {
+void *list_set_capacity(void *list, size_t capacity) {
+	List_Header *header = list_get_header(list);
+	List_Header *new_list = realloc(header, capacity);
+	if (!new_list) {
 		return NULL;
 	}
-	new_arena->capacity = capacity;
-	return new_arena + 1;
+	new_list->capacity = capacity;
+	return new_list + 1;
 }
 
-size_t arena_get_size(void *arena) {
-	Arena_Header *header = arena_get_header(arena);
+size_t list_get_size(void *list) {
+	List_Header *header = list_get_header(list);
 	return header->size;
 }
 
-void *arena_set_size(void *arena, size_t size) {
-	Arena_Header *header = arena_get_header(arena);
+void *list_set_size(void *list, size_t size) {
+	List_Header *header = list_get_header(list);
 	if (size > header->capacity) {
-		return arena_set_capacity(arena, max(arena_get_capacity(arena)*2, size));
+		return list_set_capacity(list, max(list_get_capacity(list)*2, size));
 	}
 	header->size = size;
-	return arena;
+	return list;
 }
 
-void *arena_allocate(void *arena, size_t size) {
-	Arena_Header *header = arena_get_header(arena);
+void *list_allocate(void *list, size_t size) {
+	List_Header *header = list_get_header(list);
 	if (header->size + size > header->capacity) {
 		return NULL;
 	}
-	void *allocation = (char*)arena + header->size;
+	void *allocation = (char*)list + header->size;
 	header->size += size;
 	return allocation;
 }
 
-void *arena_allocate_zeroed(void *arena, size_t size) {
-	void *allocation = arena_allocate(arena, size);
+void *list_allocate_zeroed(void *list, size_t size) {
+	void *allocation = list_allocate(list, size);
 	if (allocation) {
 		memset(allocation, 0, size);
 	}
 	return allocation;
 }
 
-void *arena_push(void *arena, void *value, size_t size) {
-	void *allocation = arena_allocate(arena, size);
+void *list_push(void *list, void *value, size_t size) {
+	void *allocation = list_allocate(list, size);
 	if (allocation) {
 		memcpy(allocation, value, size);
 	}
 	return allocation;
 }
 
-size_t arena_pop(void *arena, size_t size) {
-	Arena_Header *header = arena_get_header(arena);
+size_t list_pop(void *list, size_t size) {
+	List_Header *header = list_get_header(list);
 	size_t amount_popped = min(header->size, size);
 	header->size -= amount_popped;
 	return amount_popped;
