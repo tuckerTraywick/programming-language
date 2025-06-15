@@ -54,14 +54,14 @@
 int main(void) {
 	int *numbers = list_create(1, sizeof *numbers);
 	int num = 1;
-	list_push(&numbers, &num);
-	printf("numbers[0] = %d\n", numbers[0]);
+	numbers = list_push(numbers, &(int){1});
+	numbers = list_push(numbers, &(int){2});
 	printf("size = %zu\n", list_get_size(numbers));
 	printf("capacity = %zu\n", list_get_capacity(numbers));
-	list_push(&numbers, &num);
+	for (size_t i = 0; i < list_get_size(numbers); ++i) {
+		printf("numbers[%zu] = %d\n", i, numbers[i]);
+	}
 
-	
-	
 	list_destroy(numbers);
 
 	// char *text = "pub ";

@@ -13,6 +13,7 @@
 typedef struct List_Header {
 	size_t capacity;
 	size_t size;
+	size_t element_size;
 	char data[];
 } List_Header;
 
@@ -25,7 +26,10 @@ void *list_create(size_t capacity, size_t element_size) {
 	if (!list) {
 		return NULL;
 	}
-	list->capacity = capacity;
+	*list = (List_Header){
+		.capacity = capacity,
+		.element_size = element_size,
+	};
 	return list + 1;
 }
 
@@ -38,15 +42,13 @@ size_t list_get_capacity(void *list) {
 	return header->capacity;
 }
 
-bool list_set_capacity(void **list, size_t capacity) {
-	List_Header *header = list_get_header(*list);
-	List_Header *new_list = realloc(header, capacity);
+void *list_set_capacity(void *list, size_t capacity) {
+	List_Header *new_list = realloc(list_get_header(list), capacity);
 	if (!new_list) {
-		return false;
+		return NULL;
 	}
 	new_list->capacity = capacity;
-	*list = new_list + 1;
-	return true;
+	return new_list + 1;
 }
 
 size_t list_get_size(void *list) {
@@ -54,30 +56,37 @@ size_t list_get_size(void *list) {
 	return header->size;
 }
 
-bool list_set_size(void **list, size_t size) {
-	List_Header *header = list_get_header(*list);
-	if (size > header->capacity) {
-		return list_set_capacity(*list, max(list_get_capacity(list)*2, size));
+void *list_set_size(void *list, size_t size) {
+	if (size >= list_get_capacity(list)) {
+		list = list_set_capacity(list, max(list_get_capacity(list)*2, size));
+		if (!list) {
+			return NULL;
+		}
 	}
+	List_Header *header = list_get_header(list);
 	header->size = size;
-	return true;
+	return list;
 }
 
-bool list_push_impl(void **list, void *element, size_t element_size) {
-	if (!list_set_size(list, list_get_size(*list) + 1)) {
-		return false;
-	}
-	memcpy((char*)*list + (list_get_size(*list) - 1)*element_size, element, element_size);
-	return true;
+size_t list_get_element_size(void *list) {
+	List_Header *header = list_get_header(list);
+	return header->element_size;
 }
 
-bool list_pop_impl(void **list, void *destination, size_t element_size) {
-	assert(list_get_size(*list) > 0);
-	if (!list_set_size(list, list_get_size(*list) - 1)) {
-		return false;
+void *list_push(void *list, void *element) {
+	list = list_set_size(list, list_get_size(list) + 1);
+	if (list) {
+		memcpy((char*)list + (list_get_size(list) - 1)*list_get_element_size(list), element, list_get_element_size(list));
 	}
-	memcpy(destination, (char*)*list + (list_get_size(*list) + 1)*element_size, element_size);
-	return true;
+	return list;
+}
+
+void *list_pop(void *list, void *destination) {
+	list = list_set_size(list, list_get_size(list) - 1);
+	if (list) {
+		memcpy(destination, (char*)list + (list_get_size(list) + 1)*list_get_element_size(list), list_get_element_size(list));
+	}
+	return list;
 }
 
 #undef min
