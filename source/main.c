@@ -2,22 +2,22 @@
 #include <string.h>
 
 #include "list.h"
-// #include "lexer.h"
+#include "lexer.h"
 // #include "parser.h"
 
-// static void Lexer_Result_print(Lexer_Result *result, char *text) {
-// 	printf("---- TOKENS ----\n");
-// 	for (size_t i = 0; i < arena_get_size(result->tokens)/sizeof *result->tokens; ++i) {
-// 		Token *token = result->tokens + i;
-// 		printf("%zu %s `%.*s`\n", i, reserved_words[token->type], token->text_length, text + token->text_index);
-// 	}
+static void Lexer_Result_print(Lexer_Result *result, char *text) {
+	printf("---- TOKENS ----\n");
+	for (size_t i = 0; i < list_get_size(result->tokens); ++i) {
+		Token *token = result->tokens + i;
+		printf("%zu %s `%.*s`\n", i, reserved_words[token->type], token->text_length, text + token->text_index);
+	}
 
-// 	printf("\n---- LEXER ERRORS ----\n");
-// 	for (size_t i = 0; i < arena_get_size(result->errors)/sizeof *result->errors; ++i) {
-// 		Lexer_Error *error = result->errors + i;
-// 		printf("%s `%.*s`\n", lexer_error_messages[error->type], error->text_length, text + error->text_index);
-// 	}
-// }
+	printf("\n---- LEXER ERRORS ----\n");
+	for (size_t i = 0; i < list_get_size(result->errors); ++i) {
+		Lexer_Error *error = result->errors + i;
+		printf("%s `%.*s`\n", lexer_error_messages[error->type], error->text_length, text + error->text_index);
+	}
+}
 
 // static void print_node(Node *nodes, Token *tokens, char *text, uint32_t node_index, uint32_t depth) {
 // 	Node *node = nodes + node_index;
@@ -45,33 +45,33 @@
 // 	print_node(result->nodes, tokens, text, 0, 0);
 
 // 	printf("\n\n---- PARSER ERRORS ----\n");
-// 	for (size_t i = 0; i < arena_get_size(result->errors)/sizeof *result->errors; ++i) {
+// 	for (size_t i = 0; i < list_get_size(result->errors); ++i) {
 // 		Parser_Error *error = result->errors + i;
 // 		printf("%s (starting at token %d)\n", parser_error_messages[error->type], error->token_index);
 // 	}
 // }
 
 int main(void) {
-	int *numbers = list_create(1, sizeof *numbers);
-	int num = 1;
-	numbers = list_push(numbers, &(int){1});
-	numbers = list_push(numbers, &(int){2});
-	printf("size = %zu\n", list_get_size(numbers));
-	printf("capacity = %zu\n", list_get_capacity(numbers));
-	for (size_t i = 0; i < list_get_size(numbers); ++i) {
-		printf("numbers[%zu] = %d\n", i, numbers[i]);
-	}
+	// int *numbers = list_create(1, sizeof *numbers);
+	// int num = 1;
+	// numbers = list_push(numbers, &(int){1});
+	// numbers = list_push(numbers, &(int){2});
+	// printf("size = %zu\n", list_get_size(numbers));
+	// printf("capacity = %zu\n", list_get_capacity(numbers));
+	// for (size_t i = 0; i < list_get_size(numbers); ++i) {
+	// 	printf("numbers[%zu] = %d\n", i, numbers[i]);
+	// }
+	// list_destroy(numbers);
 
-	list_destroy(numbers);
+	char *text = "pub func main(a int32) {return a '+ \n1;}\n1 2 2 2 2 2 2 2 2 22 2 2 2 2 2 ";
+	Lexer_Result lexer_result = lex(text);
+	printf("size = %zu\n", list_get_size(lexer_result.tokens));
+	Lexer_Result_print(&lexer_result, text);
 
-	// char *text = "pub ";
-	//Lexer_Result lexer_result = lex(text);
-	//Lexer_Result_print(&lexer_result, text);
+	// // Parser_Result parser_result = parse(lexer_result.tokens);
+	// // Parser_Result_print(&parser_result, lexer_result.tokens, text);
 
-	//Parser_Result parser_result = parse(lexer_result.tokens);
-	//Parser_Result_print(&parser_result, lexer_result.tokens, text);
-
-	//Lexer_Result_destroy(&lexer_result);
-	//Parser_Result_destroy(&parser_result);
+	Lexer_Result_destroy(&lexer_result);
+	// Parser_Result_destroy(&parser_result);
 	return 0;
 }

@@ -10,9 +10,9 @@
 #include "lexer.h"
 #include "list.h"
 
-#define STARTING_TOKEN_CAPACITY 2000
+#define STARTING_TOKEN_CAPACITY 1
 
-#define STARTING_LEXER_ERROR_CAPACITY 100
+#define STARTING_LEXER_ERROR_CAPACITY 1
 
 #define max(a, b) (((a) >= (b)) ? (a) : (b))
 
@@ -155,7 +155,7 @@ Lexer_Result lex(char *text) {
 					.type = LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
 				};
 				// TODO: Handle null return value.
-				list_push(result.errors, &error, sizeof error);
+				result.errors = list_push(result.errors, &error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -177,7 +177,7 @@ Lexer_Result lex(char *text) {
 					.type = LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
 				};
 				// TODO: Handle null return value.
-				list_push(result.errors, &error, sizeof error);
+				result.errors = list_push(result.errors, &error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -204,7 +204,6 @@ Lexer_Result lex(char *text) {
 			bool found_operator = false;
 			for (uint32_t i = TOKEN_TYPE_DOT; i < TOKEN_TYPE_LEFT_ANGLE_BRACKET; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
-				printf("match %s\n", reserved_words[i]);
 				if (strncmp(reserved_words[i], text, strlen(reserved_words[i])) == 0) {
 					current_token.type = i;
 					current_token.text_length = strlen(reserved_words[i]);
@@ -226,14 +225,14 @@ Lexer_Result lex(char *text) {
 					++error.text_length;
 				}
 				// TODO: Handle null return value.
-				list_push(result.errors, &error, sizeof error);
+				result.errors = list_push(result.errors, &error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
 			}
 		}
 		// TODO: Handle null return value.
-		list_push(result.tokens, &current_token, sizeof current_token);
+		result.tokens = list_push(result.tokens, &current_token);
 		current_token.text_index += current_token.text_length;
 		current_token.text_length = 0;
 	}

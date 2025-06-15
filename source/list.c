@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdio.h>
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -43,7 +44,8 @@ size_t list_get_capacity(void *list) {
 }
 
 void *list_set_capacity(void *list, size_t capacity) {
-	List_Header *new_list = realloc(list_get_header(list), capacity);
+	printf("realloc %zu\n", capacity);
+	List_Header *new_list = realloc(list_get_header(list), capacity*list_get_element_size(list));
 	if (!new_list) {
 		return NULL;
 	}
