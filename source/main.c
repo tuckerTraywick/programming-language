@@ -56,6 +56,13 @@ int main(void) {
 	// int num = 1;
 	// numbers = list_push(numbers, &(int){1});
 	// numbers = list_push(numbers, &(int){2});
+	// numbers = list_push(numbers, &(int){2});
+	// numbers = list_push(numbers, &(int){2});
+	// numbers = list_push(numbers, &(int){2});
+	// numbers = list_push(numbers, &(int){2});
+	// numbers = list_push(numbers, &(int){2});
+	// numbers = list_push(numbers, &(int){2});
+	// numbers = list_push(numbers, &(int){2});
 	// printf("size = %zu\n", list_get_size(numbers));
 	// printf("capacity = %zu\n", list_get_capacity(numbers));
 	// for (size_t i = 0; i < list_get_size(numbers); ++i) {
@@ -63,7 +70,7 @@ int main(void) {
 	// }
 	// list_destroy(numbers);
 
-	char *text = "pub func main(a int32) {return a '+ \n1;}\n1 2 2 2 2 2 2 2 2 22 2 2 2 2 2 ";
+	char *text = "pub func main(a int32) {return a '+ \n1;}\n";
 	Lexer_Result lexer_result = lex(text);
 	printf("size = %zu\n", list_get_size(lexer_result.tokens));
 	Lexer_Result_print(&lexer_result, text);

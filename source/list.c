@@ -15,6 +15,7 @@ typedef struct List_Header {
 	size_t capacity;
 	size_t size;
 	size_t element_size;
+	size_t pad;
 	char data[];
 } List_Header;
 
@@ -44,8 +45,7 @@ size_t list_get_capacity(void *list) {
 }
 
 void *list_set_capacity(void *list, size_t capacity) {
-	printf("realloc %zu\n", capacity);
-	List_Header *new_list = realloc(list_get_header(list), capacity*list_get_element_size(list));
+	List_Header *new_list = realloc(list_get_header(list), sizeof (List_Header) + capacity*list_get_element_size(list));
 	if (!new_list) {
 		return NULL;
 	}

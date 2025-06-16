@@ -1,3 +1,27 @@
+pub module animals
+import {
+	std.io.printLine
+}
+
+pub type Animal {
+	pub name string
+	pub age uint32
+}
+
+pub method makeNoise(animal &Animal)
+
+pub type Dog {
+	impl Animal
+	pub tag string
+}
+
+pub func makeNoise(dog &Dog) {
+	printLine("woof")
+}
+
+
+
+
 struct Color {
 	r, g, b uint8
 } cases {
