@@ -10,9 +10,9 @@
 #include "lexer.h"
 #include "list.h"
 
-#define STARTING_TOKEN_CAPACITY 1
+#define STARTING_TOKEN_CAPACITY 1000
 
-#define STARTING_LEXER_ERROR_CAPACITY 1
+#define STARTING_LEXER_ERROR_CAPACITY 100
 
 #define max(a, b) (((a) >= (b)) ? (a) : (b))
 

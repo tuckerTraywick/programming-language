@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+// Returns a pointer to the last element of a list. Returns null if the list is empty.
+#define list_get_last(list) ((list_get_size(list)) ? list + list_get_size(list) : NULL)
+
 void *list_create(size_t capacity, size_t element_size);
 
 void list_destroy(void *list);
