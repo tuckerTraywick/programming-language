@@ -72,7 +72,7 @@ static bool emit_error(Parser *parser, Parser_Error_Type type) {
 		.token_count = 0,
 	};
 	// TODO: Handle null return value.
-	parser->errors = list_push(parser->nodes, &error);
+	parser->errors = list_push(parser->errors, &error);
 	return false;
 }
 
