@@ -20,6 +20,14 @@ typedef struct Parser {
 	bool current_node_is_parent;
 } Parser;
 
+static uint32_t prefix_precedences[] = {
+	[TOKEN_TYPE_BOOLEAN_NOT] = 0,
+	[TOKEN_TYPE_PLUS] = 0,
+	[TOKEN_TYPE_MINUS] = 0,
+	[TOKEN_TYPE_TIMES] = 0,
+	[TOKEN_TYPE_BITWISE_NOT] = 0,
+};
+
 static Token *current_token(Parser *parser) {
 	if (parser->current_token_index >= list_get_size(parser->tokens)) {
 		return NULL;
@@ -81,6 +89,11 @@ static bool peek_token(Parser *parser, Token_Type type) {
 	return token != NULL && token->type == type;
 }
 
+static bool peek_prefix_operator(Parser *parser) {
+	Token *token = current_token(parser);
+	return token != NULL && token->type >= 
+}
+
 static bool parse_token(Parser *parser, Token_Type type) {
 	if (!peek_token(parser, type)) {
 		return false;
@@ -89,6 +102,12 @@ static bool parse_token(Parser *parser, Token_Type type) {
 	new_node->child_index = parser->current_token_index;
 	++parser->current_token_index;
 	return true;
+}
+
+static bool parse_prefix(Parser *parser) {
+	if (peek_prefix_operator(parser)) {
+
+	}
 }
 
 static void parse_program(Parser *parser) {
