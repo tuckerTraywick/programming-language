@@ -104,7 +104,6 @@ char *lexer_error_messages[] = {
 	[LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN] = "Unrecognized token.",
 	[LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
 	[LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
-
 };
 
 void Lexer_Result_destroy(Lexer_Result *result) {

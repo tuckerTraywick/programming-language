@@ -6,9 +6,9 @@
 #include "lexer.h"
 #include "list.h"
 
-#define STARTING_NODE_CAPACITY 1
+#define STARTING_NODE_CAPACITY 1000
 
-#define STARTING_PARSER_ERROR_CAPACITY 1
+#define STARTING_PARSER_ERROR_CAPACITY 100
 
 // The state passed between parsing functions.
 typedef struct Parser {
@@ -20,12 +20,20 @@ typedef struct Parser {
 	bool current_node_is_parent;
 } Parser;
 
-static uint32_t prefix_precedences[] = {
-	[TOKEN_TYPE_BOOLEAN_NOT] = 0,
-	[TOKEN_TYPE_PLUS] = 0,
-	[TOKEN_TYPE_MINUS] = 0,
-	[TOKEN_TYPE_TIMES] = 0,
-	[TOKEN_TYPE_BITWISE_NOT] = 0,
+static uint32_t prefix_precedences[TOKEN_TYPE_COUNT] = {
+	// [TOKEN_TYPE_BOOLEAN_NOT] = 1,
+	[TOKEN_TYPE_PLUS] = 300,
+	[TOKEN_TYPE_MINUS] = 300,
+	// [TOKEN_TYPE_TIMES] = 1,
+	// [TOKEN_TYPE_BITWISE_NOT] = 1,
+};
+
+static uint32_t infix_precedences[TOKEN_TYPE_COUNT] = {
+	[TOKEN_TYPE_BITWISE_XOR] = 400,
+	[TOKEN_TYPE_TIMES] = 200,
+	[TOKEN_TYPE_DIVIDE] = 200,
+	[TOKEN_TYPE_PLUS] = 100,
+	[TOKEN_TYPE_MINUS] = 100,
 };
 
 static Token *current_token(Parser *parser) {
@@ -86,12 +94,7 @@ static bool emit_error(Parser *parser, Parser_Error_Type type) {
 
 static bool peek_token(Parser *parser, Token_Type type) {
 	Token *token = current_token(parser);
-	return token != NULL && token->type == type;
-}
-
-static bool peek_prefix_operator(Parser *parser) {
-	Token *token = current_token(parser);
-	// return token != NULL && token->type >= 
+	return token && token->type == type;
 }
 
 static bool parse_token(Parser *parser, Token_Type type) {
@@ -104,10 +107,53 @@ static bool parse_token(Parser *parser, Token_Type type) {
 	return true;
 }
 
-static bool parse_prefix(Parser *parser) {
-	if (peek_prefix_operator(parser)) {
-
+static uint32_t peek_prefix_operator(Parser *parser) {
+	Token *token = current_token(parser);
+	if (token) {
+		return prefix_precedences[token->type];
 	}
+	return 0;
+}
+
+static uint32_t parse_prefix_operator(Parser *parser) {
+	uint32_t precedence = peek_prefix_operator(parser);
+	if (precedence) {
+		parse_token(parser, current_token(parser)->type);
+		return precedence;
+	}
+	return 0;
+}
+
+static uint32_t peek_infix_operator(Parser *parser) {
+	Token *token = current_token(parser);
+	if (token) {
+		return infix_precedences[token->type];
+	}
+	return 0;
+}
+
+static uint32_t parse_infix_operator(Parser *parser) {
+	uint32_t precedence = peek_infix_operator(parser);
+	if (precedence) {
+		parse_token(parser, current_token(parser)->type);
+		return precedence;
+	}
+	return 0;
+}
+
+static bool parse_basic_expression(Parser *parser) {
+	return parse_token(parser, TOKEN_TYPE_NUMBER);
+}
+
+static bool parse_prefix_expression(Parser *parser) {
+	uint32_t precedence = peek_prefix_operator(parser);
+	if (!precedence) {
+		return parse_basic_expression(parser);
+	}
+	begin_node(parser, NODE_TYPE_PREFIX_EXPRESSION);
+		parse_prefix_operator(parser);
+		if (!parse_basic_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+	return end_node(parser);
 }
 
 static void parse_program(Parser *parser) {
@@ -119,11 +165,14 @@ static void parse_program(Parser *parser) {
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
+	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
+	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
 };
 
 char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
 	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",
+	[PARSER_ERROR_TYPE_EXPECTED_EXPRESSION] = "Expected an expression.",
 };
 
 void Parser_Result_destroy(Parser_Result *result) {
@@ -146,7 +195,8 @@ Parser_Result parse(Token *tokens) {
 	parser.nodes = list_push(parser.nodes, &node);
 	parser.current_node_is_parent = true;
 
-	parse_program(&parser);
+	// parse_program(&parser);
+	parse_prefix_expression(&parser);
 
 	Parser_Result result = {
 		.nodes = parser.nodes,

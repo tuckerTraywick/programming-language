@@ -8,6 +8,9 @@
 typedef enum Node_Type {
 	NODE_TYPE_TOKEN,
 	NODE_TYPE_PROGRAM,
+	NODE_TYPE_PREFIX_EXPRESSION,
+	NODE_TYPE_INFIX_EXPRESSION,
+	NODE_TYPE_COUNT,
 } Node_Type;
 
 // A node in the abstract syntax tree. Can point to a token.
@@ -22,6 +25,8 @@ typedef struct Node {
 typedef enum Parser_Error_Type {
 	PARSER_ERROR_TYPE_INVALID_SYNTAX,
 	PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME,
+	PARSER_ERROR_TYPE_EXPECTED_EXPRESSION,
+	PARSER_ERROR_TYPE_COUNT,
 } Parser_Error_Type;
 
 // An error encountered during parsing.

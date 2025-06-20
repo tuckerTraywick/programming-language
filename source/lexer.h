@@ -86,6 +86,7 @@ typedef enum Token_Type {
 	TOKEN_TYPE_LESS_EQUAL,
 	TOKEN_TYPE_LESS,
 	TOKEN_TYPE_LEFT_ANGLE_BRACKET,
+	TOKEN_TYPE_COUNT,
 } Token_Type;
 
 // A span of characters in the input text.
@@ -100,6 +101,7 @@ typedef enum Lexer_Error_Type {
 	LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN,
 	LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
 	LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
+	LEXER_ERROR_TYPE_COUNT,
 } Lexer_Error_Type;
 
 // An error encountered during lexing.
