@@ -7,6 +7,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Wpedantic -g3 -o")
 
 add_executable(run
 	source/list.c
+	source/trie.c
 	source/lexer.c
 	source/parser.c
 	source/main.c

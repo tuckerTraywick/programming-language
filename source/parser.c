@@ -91,7 +91,7 @@ static bool peek_token(Parser *parser, Token_Type type) {
 
 static bool peek_prefix_operator(Parser *parser) {
 	Token *token = current_token(parser);
-	return token != NULL && token->type >= 
+	// return token != NULL && token->type >= 
 }
 
 static bool parse_token(Parser *parser, Token_Type type) {

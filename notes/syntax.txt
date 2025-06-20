@@ -1,27 +1,3 @@
-pub module animals
-import {
-	std.io.printLine
-}
-
-pub type Animal {
-	pub name string
-	pub age uint32
-}
-
-pub method makeNoise(animal &Animal)
-
-pub type Dog {
-	impl Animal
-	pub tag string
-}
-
-pub func makeNoise(dog &Dog) {
-	printLine("woof")
-}
-
-
-
-
 struct Color {
 	r, g, b uint8
 } cases {
@@ -39,16 +15,14 @@ struct Array<Element type, count usize> {
 
 
 pub module animals
-import {
-	std.io.print_line,
-}
+import std.io.printLine
 
 pub trait Animal {
 	pub name string
 	pub age uint32
 }
 
-pub method make_noise(animal &Animal)
+pub method makeNoise(animal &Animal)
 
 pub struct Dog {
 	embed Animal
@@ -60,29 +34,27 @@ pub struct Cat {
 	pub breed string
 }
 
-pub func make_noise(dog &Dog) {
-	print_line("woof")
+pub func makeNoise(dog &Dog) {
+	printLine("woof")
 }
 
-pub func make_noise(cat &Cat) {
-	print_line("meow")
+pub func makeNoise(cat &Cat) {
+	printLine("meow")
 }
 
 pub func main() {
 	var pet mut &Animal = &Dog()
-	make_noise(pet)
+	makeNoise(pet)
 	pet = &Cat()
-	pet->make_noise()
+	pet->makeNoise()
 }
 
 
 
 
 pub module physics
-import {
-	std.math,
-	std.operations,
-}
+import std.math
+import std.operations
 
 pub struct Entity {
 	pub position, velocity, acceleration Vector

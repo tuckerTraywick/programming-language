@@ -22,7 +22,6 @@ typedef struct Node {
 typedef enum Parser_Error_Type {
 	PARSER_ERROR_TYPE_INVALID_SYNTAX,
 	PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME,
-	// PARSER_ERROR_TYPE_,
 } Parser_Error_Type;
 
 // An error encountered during parsing.

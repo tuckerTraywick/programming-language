@@ -54,7 +54,6 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 int main(void) {
 	char *text = "pub module; func main(a int32) {return a '+ \n1;}\n";
 	Lexer_Result lexer_result = lex(text);
-	printf("size = %zu\n", list_get_size(lexer_result.tokens));
 	Lexer_Result_print(&lexer_result, text);
 
 	Parser_Result parser_result = parse(lexer_result.tokens);
