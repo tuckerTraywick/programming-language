@@ -145,6 +145,8 @@ static bool parse_basic_expression(Parser *parser) {
 	return parse_token(parser, TOKEN_TYPE_NUMBER);
 }
 
+static bool parse_infix_expression(Parser *parser, uint32_t precedence);
+
 static bool parse_prefix_expression(Parser *parser) {
 	uint32_t precedence = peek_prefix_operator(parser);
 	if (!precedence) {
@@ -152,7 +154,19 @@ static bool parse_prefix_expression(Parser *parser) {
 	}
 	begin_node(parser, NODE_TYPE_PREFIX_EXPRESSION);
 		parse_prefix_operator(parser);
-		if (!parse_basic_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		if (!parse_infix_expression(parser, precedence)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+	return end_node(parser);
+}
+
+static bool parse_infix_expression(Parser *parser, uint32_t precedence) {
+	begin_node(parser, NODE_TYPE_INFIX_EXPRESSION);
+	if (!parse_prefix_expression(parser)) return false;
+	uint32_t new_precedence = 0;
+	while ((new_precedence = peek_infix_operator(parser)) > precedence) {
+		parse_infix_operator(parser);
+		if (!parse_infix_expression(parser, new_precedence)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+	}
+	// TODO: Maybe tidy up tree by removing unnecessary parent node if it only has one child.
 	return end_node(parser);
 }
 
@@ -195,8 +209,7 @@ Parser_Result parse(Token *tokens) {
 	parser.nodes = list_push(parser.nodes, &node);
 	parser.current_node_is_parent = true;
 
-	// parse_program(&parser);
-	parse_prefix_expression(&parser);
+	parse_infix_expression(&parser, 0);
 
 	Parser_Result result = {
 		.nodes = parser.nodes,
