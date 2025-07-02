@@ -26,6 +26,7 @@ static uint32_t prefix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_MINUS] = 300,
 	// [TOKEN_TYPE_TIMES] = 1,
 	// [TOKEN_TYPE_BITWISE_NOT] = 1,
+	[TOKEN_TYPE_LEFT_PARENTHESIS] = 1,
 };
 
 static uint32_t infix_precedences[TOKEN_TYPE_COUNT] = {
@@ -141,6 +142,18 @@ static uint32_t parse_infix_operator(Parser *parser) {
 	return 0;
 }
 
+static bool parse_expression(Parser *parser);
+
+static bool parse_function_arguments(Parser *parser) {
+	begin_node(parser, NODE_TYPE_FUNCTION_ARGUMENTS);
+	if (!parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
+	while (parse_expression(parser)) {
+		if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
+	}
+	if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
+	return end_node(parser);
+}
+
 static bool parse_basic_expression(Parser *parser) {
 	return parse_token(parser, TOKEN_TYPE_NUMBER);
 }
@@ -152,6 +165,10 @@ static bool parse_prefix_expression(Parser *parser) {
 	if (!precedence) {
 		return parse_basic_expression(parser);
 	}
+	if (precedence == prefix_precedences[TOKEN_TYPE_LEFT_PARENTHESIS]) {
+		return parse_function_arguments(parser);
+	}
+
 	begin_node(parser, NODE_TYPE_PREFIX_EXPRESSION);
 		parse_prefix_operator(parser);
 		if (!parse_infix_expression(parser, precedence)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
@@ -170,6 +187,10 @@ static bool parse_infix_expression(Parser *parser, uint32_t precedence) {
 	return end_node(parser);
 }
 
+static bool parse_expression(Parser *parser) {
+	return parse_infix_expression(parser, 0);
+}
+
 static void parse_program(Parser *parser) {
 	parse_token(parser, TOKEN_TYPE_PUB);
 	if (!parse_token(parser, TOKEN_TYPE_MODULE)) return;
@@ -179,6 +200,7 @@ static void parse_program(Parser *parser) {
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
+	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
 	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
 };
@@ -187,6 +209,7 @@ char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
 	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",
 	[PARSER_ERROR_TYPE_EXPECTED_EXPRESSION] = "Expected an expression.",
+	[PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS] = "Unclosed parenthesis.",
 };
 
 void Parser_Result_destroy(Parser_Result *result) {
