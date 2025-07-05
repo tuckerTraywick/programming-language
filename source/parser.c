@@ -48,6 +48,9 @@ static uint32_t begin_node(Parser *parser) {
 }
 
 static bool end_node(Parser *parser, Node_Type type, uint32_t child_index) {
+	if (child_index) {
+		parser->nodes[child_index - 1].next_index = parser->next_node_index;
+	}
 	Node node = {.type = type, .next_index = NODE_END, .child_index = child_index,};
 	// TODO: Handle null return value.
 	parser->nodes = list_push(parser->nodes, &node);
@@ -124,11 +127,24 @@ static bool parse_token(Parser *parser, Token_Type type) {
 // 	return 0;
 // }
 
+static bool parse_variable_definition(Parser *parser) {
+	uint32_t child = begin_node(parser);
+	if (!parse_token(parser, TOKEN_TYPE_VAR)) return false;
+	return end_node(parser, NODE_TYPE_VARIABLE_DEFINITION, child);
+}
 
+static bool parse_program(Parser *parser) {
+	uint32_t child = begin_node(parser);
+	if (!parse_token(parser, TOKEN_TYPE_PUB)) return false;
+	if (!parse_variable_definition(parser)) return false;
+	if (!parse_token(parser, TOKEN_TYPE_PUB)) return false;
+	return end_node(parser, NODE_TYPE_PROGRAM, child);
+}
 
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
+	[NODE_TYPE_VARIABLE_DEFINITION] = "variable definition",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
 	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
@@ -154,11 +170,7 @@ Parser_Result parse(Token *tokens) {
 		.errors = list_create(STARTING_PARSER_ERROR_CAPACITY, sizeof (Parser_Error)),
 	};
 
-	Node node = {.type = NODE_TYPE_INFIX_EXPRESSION, .next_index = NODE_END, .child_index = NODE_END};
-	uint32_t child = begin_node(&parser);
-	add_leaf(&parser, &node);
-	add_leaf(&parser, &node);
-	end_node(&parser, NODE_TYPE_PROGRAM, child);
+	parse_program(&parser);
 
 	Parser_Result result = {
 		.nodes = parser.nodes,
