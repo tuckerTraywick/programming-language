@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "lexer.h"
 
+#define NODE_END UINT32_MAX
+
 // What type of thing a node represents.
 typedef enum Node_Type {
 	NODE_TYPE_TOKEN,

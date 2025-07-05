@@ -11,8 +11,6 @@
 
 #define STARTING_PARSER_ERROR_CAPACITY 100
 
-#define NODE_END UINT32_MAX
-
 // The state passed between parsing functions.
 typedef struct Parser {
 	Token *tokens;
@@ -53,6 +51,7 @@ static bool end_node(Parser *parser, Node_Type type, uint32_t child_index) {
 	Node node = {.type = type, .next_index = NODE_END, .child_index = child_index,};
 	// TODO: Handle null return value.
 	parser->nodes = list_push(parser->nodes, &node);
+	++parser->next_node_index;
 	return true;
 }
 
@@ -125,61 +124,7 @@ static bool parse_token(Parser *parser, Token_Type type) {
 // 	return 0;
 // }
 
-// static bool parse_expression(Parser *parser);
 
-// static bool parse_function_arguments(Parser *parser) {
-// 	begin_node(parser, NODE_TYPE_FUNCTION_ARGUMENTS);
-// 	if (!parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
-// 	while (parse_expression(parser)) {
-// 		if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
-// 	}
-// 	if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
-// 	return end_node(parser);
-// }
-
-// static bool parse_basic_expression(Parser *parser) {
-// 	return parse_token(parser, TOKEN_TYPE_NUMBER);
-// }
-
-
-// static bool parse_infix_expression(Parser *parser, uint32_t precedence) {
-// 	while (current_token(parser)) {
-// 		uint32_t literal_index = 0;
-// 		uint32_t new_precedence = 0;
-// 		if (peek_token(parser, TOKEN_TYPE_NUMBER)) {
-// 			literal_index = parser->current_token_index;
-// 			++parser->current_token_index;
-// 		} else if ((new_precedence = peek_prefix_operator(parser))) {
-// 			begin_node(parser, NODE_TYPE_PREFIX_EXPRESSION);
-// 			parse_prefix_operator(parser);
-// 			if (!parse_expression(parser, new_precedence)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
-// 			end_node(parser);
-// 		} else if ((new_precedence = peek_infix_operator(parser))) {
-// 			begin_node(parser, NODE_TYPE_INFIX_EXPRESSION);
-// 			// Add the previous literal to the syntax tree.
-// 		}
-// 	}
-// }
-
-// static bool parse_expression(Parser *parser, uint32_t precedence) {
-// 	if (peek_prefix_operator(parser)) {
-// 		begin_node(parser, NODE_TYPE_PREFIX_EXPRESSION);
-// 		uint32_t new_precedence = parse_prefix_operator(parser);
-// 		if (!parse_expression(parser, new_precedence)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
-// 		end_node(parser);
-// 	}
-// 	uint32_t literal_index = 0;
-// 	if (peek_token(parser, TOKEN_TYPE_NUMBER)) {
-// 		literal_index = parser->current_token_index;
-// 		++parser->current_token_index;
-// 	}
-// }
-
-// static void parse_program(Parser *parser) {
-// 	parse_token(parser, TOKEN_TYPE_PUB);
-// 	if (!parse_token(parser, TOKEN_TYPE_MODULE)) return;
-// 	if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
-// }
 
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
@@ -209,7 +154,11 @@ Parser_Result parse(Token *tokens) {
 		.errors = list_create(STARTING_PARSER_ERROR_CAPACITY, sizeof (Parser_Error)),
 	};
 
-
+	Node node = {.type = NODE_TYPE_INFIX_EXPRESSION, .next_index = NODE_END, .child_index = NODE_END};
+	uint32_t child = begin_node(&parser);
+	add_leaf(&parser, &node);
+	add_leaf(&parser, &node);
+	end_node(&parser, NODE_TYPE_PROGRAM, child);
 
 	Parser_Result result = {
 		.nodes = parser.nodes,

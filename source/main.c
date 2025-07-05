@@ -33,7 +33,7 @@ static void print_node(Node *nodes, Token *tokens, char *text, uint32_t node_ind
 	
 	printf("%s", node_type_names[node->type]);
 	uint32_t child = node->child_index;
-	while (child) {
+	while (child != NODE_END) {
 		printf("\n");
 		print_node(nodes, tokens, text, child, depth + 1);
 		child = nodes[child].next_index;
@@ -43,7 +43,7 @@ static void print_node(Node *nodes, Token *tokens, char *text, uint32_t node_ind
 static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text) {
 	printf("\n---- NODES ----\n");
 	if (list_get_size(result->nodes)) {
-		print_node(result->nodes, tokens, text, 0, 0);
+		print_node(result->nodes, tokens, text, list_get_size(result->nodes) - 1, 0);
 	}
 
 	printf("\n\n---- PARSER ERRORS ----\n");
