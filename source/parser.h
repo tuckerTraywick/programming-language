@@ -17,7 +17,6 @@ typedef enum Node_Type {
 // A node in the abstract syntax tree. Can point to a token.
 typedef struct Node {
 	uint32_t next_index;
-	uint32_t parent_index;
 	uint32_t child_index; // Holds the index of a token if `type` is `NODE_TYPE_TOKEN`.
 	Node_Type type;
 } Node;

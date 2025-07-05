@@ -1,3 +1,15 @@
+1 * 2 + 3
+1 * 2 infix + 3 infix
+
+
+1 + 2 * 3
+1 + 2 * 3 infix infix
+
+
+1 * 2 + 3
+1 * 2 infix + 3 infix
+
+
 struct Color {
 	r, g, b uint8
 } cases {

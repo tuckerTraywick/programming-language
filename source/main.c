@@ -42,7 +42,9 @@ static void print_node(Node *nodes, Token *tokens, char *text, uint32_t node_ind
 
 static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text) {
 	printf("\n---- NODES ----\n");
-	print_node(result->nodes, tokens, text, 0, 0);
+	if (list_get_size(result->nodes)) {
+		print_node(result->nodes, tokens, text, 0, 0);
+	}
 
 	printf("\n\n---- PARSER ERRORS ----\n");
 	for (size_t i = 0; i < list_get_size(result->errors); ++i) {
@@ -52,7 +54,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 }
 
 int main(void) {
-	char *text = "(1, 2)";
+	char *text = "1";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 
