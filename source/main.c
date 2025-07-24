@@ -1,5 +1,6 @@
-#include <stdio.h>
+#include <stddef.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "list.h"
 #include "lexer.h"
