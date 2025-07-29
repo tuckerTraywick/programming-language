@@ -1,6 +1,5 @@
-#include <stddef.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "list.h"
 #include "lexer.h"
@@ -34,7 +33,7 @@ static void print_node(Node *nodes, Token *tokens, char *text, uint32_t node_ind
 	
 	printf("%s", node_type_names[node->type]);
 	uint32_t child = node->child_index;
-	while (child != NODE_END) {
+	while (child) {
 		printf("\n");
 		print_node(nodes, tokens, text, child, depth + 1);
 		child = nodes[child].next_index;
@@ -43,9 +42,7 @@ static void print_node(Node *nodes, Token *tokens, char *text, uint32_t node_ind
 
 static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text) {
 	printf("\n---- NODES ----\n");
-	if (list_get_size(result->nodes)) {
-		print_node(result->nodes, tokens, text, list_get_size(result->nodes) - 1, 0);
-	}
+	print_node(result->nodes, tokens, text, 0, 0);
 
 	printf("\n\n---- PARSER ERRORS ----\n");
 	for (size_t i = 0; i < list_get_size(result->errors); ++i) {
@@ -55,7 +52,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 }
 
 int main(void) {
-	char *text = "pub var pub";
+	char *text = "(1, 2)";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 

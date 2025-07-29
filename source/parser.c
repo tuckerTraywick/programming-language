@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #include <stdint.h>
-#include <limits.h>
 #include <stdbool.h>
 #include "parser.h"
 #include "lexer.h"
@@ -17,12 +16,16 @@ typedef struct Parser {
 	Node *nodes;
 	Parser_Error *errors;
 	uint32_t current_token_index;
-	uint32_t next_node_index;
+	uint32_t current_node_index;
+	bool current_node_is_parent;
 } Parser;
 
 static uint32_t prefix_precedences[TOKEN_TYPE_COUNT] = {
+	// [TOKEN_TYPE_BOOLEAN_NOT] = 1,
 	[TOKEN_TYPE_PLUS] = 300,
 	[TOKEN_TYPE_MINUS] = 300,
+	// [TOKEN_TYPE_TIMES] = 1,
+	// [TOKEN_TYPE_BITWISE_NOT] = 1,
 	[TOKEN_TYPE_LEFT_PARENTHESIS] = 1,
 };
 
@@ -34,32 +37,52 @@ static uint32_t infix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_MINUS] = 100,
 };
 
-static void add_leaf(Parser *parser, Node *node) {
-	// TODO: Handle null return value.
-	parser->nodes = list_push(parser->nodes, node);
-	if (parser->next_node_index > 0) {
-		parser->nodes[parser->next_node_index - 1].next_index = parser->next_node_index;
+static Token *current_token(Parser *parser) {
+	if (parser->current_token_index >= list_get_size(parser->tokens)) {
+		return NULL;
 	}
-	++parser->next_node_index;
+	return parser->tokens + parser->current_token_index;
 }
 
-static uint32_t begin_node(Parser *parser) {
-	return parser->next_node_index;
+static Node *current_node(Parser *parser) {
+	return parser->nodes + parser->current_node_index;
 }
 
-static bool end_node(Parser *parser, Node_Type type, uint32_t child_index) {
-	if (child_index) {
-		parser->nodes[child_index - 1].next_index = parser->next_node_index;
-	}
-	Node node = {.type = type, .next_index = NODE_END, .child_index = child_index,};
+static uint32_t last_node_index(Parser *parser) {
+	return list_get_size(parser->nodes) - 1;
+}
+
+// Appends a node to the list of nodes without modifying the current parent index.
+static Node *add_node(Parser *parser, Node_Type type) {
+	Node new_node = {
+		.type = type,
+	};
 	// TODO: Handle null return value.
-	parser->nodes = list_push(parser->nodes, &node);
-	++parser->next_node_index;
+	parser->nodes = list_push(parser->nodes, &new_node);
+	if (parser->current_node_is_parent) {
+		current_node(parser)->child_index = last_node_index(parser);
+		list_get_last(parser->nodes)->parent_index = parser->current_node_index;
+		parser->current_node_is_parent = false;
+	} else {
+		current_node(parser)->next_index = last_node_index(parser);
+		list_get_last(parser->nodes)->parent_index = current_node(parser)->parent_index;
+	}
+	parser->current_node_index = last_node_index(parser);
+	return list_get_last(parser->nodes);
+}
+
+static void begin_node(Parser *parser, Node_Type type) {
+	add_node(parser, type);
+	parser->current_node_is_parent = true;
+}
+
+static bool end_node(Parser *parser) {
+	parser->current_node_index = current_node(parser)->parent_index;
 	return true;
 }
 
 static bool emit_error(Parser *parser, Parser_Error_Type type) {
-	// TODO: Count number of tokens in error.
+	// TODO: Count error tokens.
 	Parser_Error error = {
 		.type = type,
 		.token_index = parser->current_token_index,
@@ -70,81 +93,113 @@ static bool emit_error(Parser *parser, Parser_Error_Type type) {
 	return false;
 }
 
-static Token *current_token(Parser *parser) {
-	if (parser->current_token_index < list_get_size(parser->tokens)) {
-		return parser->tokens + parser->current_token_index;
-	}
-	return NULL;
+static bool peek_token(Parser *parser, Token_Type type) {
+	Token *token = current_token(parser);
+	return token && token->type == type;
 }
-
-// static bool peek_token(Parser *parser, Token_Type type) {
-// 	Token *token = current_token(parser);
-// 	return token && token->type == type;
-// }
 
 static bool parse_token(Parser *parser, Token_Type type) {
-	Token *token = current_token(parser);
-	if (token && token->type == type) {
-		Node node = {.type = NODE_TYPE_TOKEN, .next_index = NODE_END, .child_index = parser->current_token_index};
-		add_leaf(parser, &node);
-		++parser->current_token_index;
-		return true;
+	if (!peek_token(parser, type)) {
+		return false;
 	}
-	return false;
+	Node *new_node = add_node(parser, NODE_TYPE_TOKEN);
+	new_node->child_index = parser->current_token_index;
+	++parser->current_token_index;
+	return true;
 }
 
-// static uint32_t peek_prefix_operator(Parser *parser) {
-// 	Token *token = current_token(parser);
-// 	if (token) {
-// 		return prefix_precedences[token->type];
-// 	}
-// 	return 0;
-// }
-
-// static uint32_t parse_prefix_operator(Parser *parser) {
-// 	uint32_t precedence = peek_prefix_operator(parser);
-// 	if (precedence) {
-// 		parse_token(parser, current_token(parser)->type);
-// 		return precedence;
-// 	}
-// 	return 0;
-// }
-
-// static uint32_t peek_infix_operator(Parser *parser) {
-// 	Token *token = current_token(parser);
-// 	if (token) {
-// 		return infix_precedences[token->type];
-// 	}
-// 	return 0;
-// }
-
-// static uint32_t parse_infix_operator(Parser *parser) {
-// 	uint32_t precedence = peek_infix_operator(parser);
-// 	if (precedence) {
-// 		parse_token(parser, current_token(parser)->type);
-// 		return precedence;
-// 	}
-// 	return 0;
-// }
-
-static bool parse_variable_definition(Parser *parser) {
-	uint32_t child = begin_node(parser);
-	if (!parse_token(parser, TOKEN_TYPE_VAR)) return false;
-	return end_node(parser, NODE_TYPE_VARIABLE_DEFINITION, child);
+static uint32_t peek_prefix_operator(Parser *parser) {
+	Token *token = current_token(parser);
+	if (token) {
+		return prefix_precedences[token->type];
+	}
+	return 0;
 }
 
-static bool parse_program(Parser *parser) {
-	uint32_t child = begin_node(parser);
-	if (!parse_token(parser, TOKEN_TYPE_PUB)) return false;
-	if (!parse_variable_definition(parser)) return false;
-	if (!parse_token(parser, TOKEN_TYPE_PUB)) return false;
-	return end_node(parser, NODE_TYPE_PROGRAM, child);
+static uint32_t parse_prefix_operator(Parser *parser) {
+	uint32_t precedence = peek_prefix_operator(parser);
+	if (precedence) {
+		parse_token(parser, current_token(parser)->type);
+		return precedence;
+	}
+	return 0;
+}
+
+static uint32_t peek_infix_operator(Parser *parser) {
+	Token *token = current_token(parser);
+	if (token) {
+		return infix_precedences[token->type];
+	}
+	return 0;
+}
+
+static uint32_t parse_infix_operator(Parser *parser) {
+	uint32_t precedence = peek_infix_operator(parser);
+	if (precedence) {
+		parse_token(parser, current_token(parser)->type);
+		return precedence;
+	}
+	return 0;
+}
+
+static bool parse_expression(Parser *parser);
+
+static bool parse_function_arguments(Parser *parser) {
+	begin_node(parser, NODE_TYPE_FUNCTION_ARGUMENTS);
+	if (!parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
+	while (parse_expression(parser)) {
+		if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
+	}
+	if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
+	return end_node(parser);
+}
+
+static bool parse_basic_expression(Parser *parser) {
+	return parse_token(parser, TOKEN_TYPE_NUMBER);
+}
+
+static bool parse_infix_expression(Parser *parser, uint32_t precedence);
+
+static bool parse_prefix_expression(Parser *parser) {
+	uint32_t precedence = peek_prefix_operator(parser);
+	if (!precedence) {
+		return parse_basic_expression(parser);
+	}
+	if (precedence == prefix_precedences[TOKEN_TYPE_LEFT_PARENTHESIS]) {
+		return parse_function_arguments(parser);
+	}
+
+	begin_node(parser, NODE_TYPE_PREFIX_EXPRESSION);
+		parse_prefix_operator(parser);
+		if (!parse_infix_expression(parser, precedence)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+	return end_node(parser);
+}
+
+static bool parse_infix_expression(Parser *parser, uint32_t precedence) {
+	begin_node(parser, NODE_TYPE_INFIX_EXPRESSION);
+	if (!parse_prefix_expression(parser)) return false;
+	uint32_t new_precedence = 0;
+	while ((new_precedence = peek_infix_operator(parser)) > precedence) {
+		parse_infix_operator(parser);
+		if (!parse_infix_expression(parser, new_precedence)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+	}
+	// TODO: Maybe tidy up tree by removing unnecessary parent node if it only has one child.
+	return end_node(parser);
+}
+
+static bool parse_expression(Parser *parser) {
+	return parse_infix_expression(parser, 0);
+}
+
+static void parse_program(Parser *parser) {
+	parse_token(parser, TOKEN_TYPE_PUB);
+	if (!parse_token(parser, TOKEN_TYPE_MODULE)) return;
+	if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
 }
 
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
-	[NODE_TYPE_VARIABLE_DEFINITION] = "variable definition",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
 	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
@@ -170,7 +225,14 @@ Parser_Result parse(Token *tokens) {
 		.errors = list_create(STARTING_PARSER_ERROR_CAPACITY, sizeof (Parser_Error)),
 	};
 
-	parse_program(&parser);
+	Node node = {
+		.type = NODE_TYPE_PROGRAM,
+	};
+	// TODO: Handle null return value.
+	parser.nodes = list_push(parser.nodes, &node);
+	parser.current_node_is_parent = true;
+
+	parse_infix_expression(&parser, 0);
 
 	Parser_Result result = {
 		.nodes = parser.nodes,
