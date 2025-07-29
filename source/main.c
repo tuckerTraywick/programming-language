@@ -54,7 +54,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 }
 
 int main(void) {
-	char *text = "(1, 2)";
+	char *text = "(1, 2, 3)";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 
