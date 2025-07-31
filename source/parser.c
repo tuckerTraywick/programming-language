@@ -26,7 +26,8 @@ static uint32_t prefix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_MINUS] = 300,
 	// [TOKEN_TYPE_TIMES] = 1,
 	// [TOKEN_TYPE_BITWISE_NOT] = 1,
-	[TOKEN_TYPE_LEFT_PARENTHESIS] = 1,
+	[TOKEN_TYPE_LEFT_PARENTHESIS] = 2,
+	[TOKEN_TYPE_LEFT_BRACKET] = 1,
 };
 
 static uint32_t infix_precedences[TOKEN_TYPE_COUNT] = {
@@ -35,8 +36,8 @@ static uint32_t infix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_DIVIDE] = 200,
 	[TOKEN_TYPE_PLUS] = 100,
 	[TOKEN_TYPE_MINUS] = 100,
-	[TOKEN_TYPE_LEFT_BRACKET] = 2,
-	[TOKEN_TYPE_LEFT_PARENTHESIS] = 1,
+	[TOKEN_TYPE_LEFT_PARENTHESIS] = 2,
+	[TOKEN_TYPE_LEFT_BRACKET] = 1,
 };
 
 static Token *current_token(Parser *parser) {
@@ -164,6 +165,16 @@ static bool parse_array_index(Parser *parser) {
 	return end_node(parser);
 }
 
+static bool parse_array(Parser *parser) {
+	begin_node(parser, NODE_TYPE_ARRAY);
+	if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACKET)) return false;
+	while (parse_expression(parser)) {
+		if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
+	}
+	if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACKET)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACKET);
+	return end_node(parser);
+}
+
 static bool parse_basic_expression(Parser *parser) {
 	return parse_token(parser, TOKEN_TYPE_NUMBER) || parse_token(parser, TOKEN_TYPE_IDENTIFIER);
 }
@@ -177,6 +188,9 @@ static bool parse_prefix_expression(Parser *parser) {
 	}
 	if (precedence == prefix_precedences[TOKEN_TYPE_LEFT_PARENTHESIS]) {
 		return parse_function_arguments(parser);
+	}
+	if (precedence == prefix_precedences[TOKEN_TYPE_LEFT_BRACKET]) {
+		return parse_array(parser);
 	}
 
 	begin_node(parser, NODE_TYPE_PREFIX_EXPRESSION);
@@ -221,6 +235,7 @@ char *node_type_names[] = {
 	[NODE_TYPE_PROGRAM] = "program",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
+	[NODE_TYPE_ARRAY] = "array",
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
 	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
 };
