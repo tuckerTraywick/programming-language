@@ -35,6 +35,8 @@ static uint32_t infix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_DIVIDE] = 200,
 	[TOKEN_TYPE_PLUS] = 100,
 	[TOKEN_TYPE_MINUS] = 100,
+	[TOKEN_TYPE_LEFT_BRACKET] = 2,
+	[TOKEN_TYPE_LEFT_PARENTHESIS] = 1,
 };
 
 static Token *current_token(Parser *parser) {
@@ -154,8 +156,16 @@ static bool parse_function_arguments(Parser *parser) {
 	return end_node(parser);
 }
 
+static bool parse_array_index(Parser *parser) {
+	begin_node(parser, NODE_TYPE_ARRAY_INDEX);
+	if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACKET)) return false;
+	if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+	if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACKET)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACKET);
+	return end_node(parser);
+}
+
 static bool parse_basic_expression(Parser *parser) {
-	return parse_token(parser, TOKEN_TYPE_NUMBER);
+	return parse_token(parser, TOKEN_TYPE_NUMBER) || parse_token(parser, TOKEN_TYPE_IDENTIFIER);
 }
 
 static bool parse_infix_expression(Parser *parser, uint32_t precedence);
@@ -181,7 +191,16 @@ static bool parse_infix_expression(Parser *parser, uint32_t precedence) {
 	uint32_t new_precedence = 0;
 	while ((new_precedence = peek_infix_operator(parser)) > precedence) {
 		parse_infix_operator(parser);
-		if (!parse_infix_expression(parser, new_precedence)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		printf("precedence = %d\n", precedence);
+		if (new_precedence == infix_precedences[TOKEN_TYPE_LEFT_PARENTHESIS]) {
+			--parser->current_token_index;
+			if (!parse_function_arguments(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS);
+		} else if (new_precedence == infix_precedences[TOKEN_TYPE_LEFT_BRACKET]) {
+			--parser->current_token_index;
+			if (!parse_array_index(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX);
+		}  else if (!parse_infix_expression(parser, new_precedence)) {
+			return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		}
 	}
 	// TODO: Maybe tidy up tree by removing unnecessary parent node if it only has one child.
 	return end_node(parser);
@@ -201,6 +220,7 @@ char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
+	[NODE_TYPE_ARRAY_INDEX] = "array index",
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
 	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
 };
@@ -209,7 +229,10 @@ char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
 	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",
 	[PARSER_ERROR_TYPE_EXPECTED_EXPRESSION] = "Expected an expression.",
+	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS] = "Expected function arguments.",
+	[PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX] = "Expected an array index.",
 	[PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS] = "Unclosed parenthesis.",
+	[PARSER_ERROR_TYPE_UNCLOSED_BRACKET] = "Unclosed bracket.",
 };
 
 void Parser_Result_destroy(Parser_Result *result) {
