@@ -229,6 +229,11 @@ static bool parse_module_statement(Parser *parser) {
 	begin_node(parser, NODE_TYPE_MODULE_DEFINITION);
 		parse_token(parser, TOKEN_TYPE_MODULE);
 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
+		while (parse_token(parser, TOKEN_TYPE_DOT)) {
+			if (parse_token(parser, TOKEN_TYPE_TIMES)) break;
+			if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+		}
+		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 	return end_node(parser);
 }
 
@@ -239,7 +244,7 @@ static bool parse_definition_body(Parser *parser) {
 
 static bool parse_definition(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_PUB)) {
-		begin_node(parser, NODE_TYPE_PUBLIC_DEFINITION);
+		begin_node(parser, NODE_TYPE_DEFINITION);
 		parse_token(parser, TOKEN_TYPE_PUB);
 		if (!parse_definition_body(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_DEFINITION);
 		return end_node(parser);
@@ -255,7 +260,7 @@ static bool parse_program(Parser *parser) {
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
-	[NODE_TYPE_PUBLIC_DEFINITION] = "public definition",
+	[NODE_TYPE_DEFINITION] = "definition",
 	[NODE_TYPE_MODULE_DEFINITION] = "module definition",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
@@ -268,9 +273,11 @@ char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
 	[PARSER_ERROR_TYPE_EXPECTED_DEFINITION] = "Expected a definition.",
 	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",
+	[PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER] = "Expected an identifier.",
 	[PARSER_ERROR_TYPE_EXPECTED_EXPRESSION] = "Expected an expression.",
 	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS] = "Expected function arguments.",
 	[PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX] = "Expected an array index.",
+	[PARSER_ERROR_TYPE_EXPECTED_SEMICOLON] = "Expected a semicolon.",
 	[PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS] = "Unclosed parenthesis.",
 	[PARSER_ERROR_TYPE_UNCLOSED_BRACKET] = "Unclosed bracket.",
 };
