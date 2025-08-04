@@ -205,7 +205,6 @@ static bool parse_infix_expression(Parser *parser, uint32_t precedence) {
 	uint32_t new_precedence = 0;
 	while ((new_precedence = peek_infix_operator(parser)) > precedence) {
 		parse_infix_operator(parser);
-		printf("precedence = %d\n", precedence);
 		if (new_precedence == infix_precedences[TOKEN_TYPE_LEFT_PARENTHESIS]) {
 			--parser->current_token_index;
 			if (!parse_function_arguments(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS);
@@ -233,6 +232,56 @@ static bool parse_assignment_body(Parser *parser) {
 static bool parse_type(Parser *parser) {
 	begin_node(parser, NODE_TYPE_TYPE);
 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
+	return end_node(parser);
+}
+
+static bool parse_definition(Parser *parser);
+
+static bool parse_block_statement(Parser *parser) {
+	if (parse_expression(parser)) {
+		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+		return true;
+	}
+	if (parse_definition(parser)) return true;
+	// tbc...
+}
+
+static bool parse_block(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_LEFT_BRACE)) return false;
+	begin_node(parser, NODE_TYPE_BLOCK);
+		parse_token(parser, TOKEN_TYPE_LEFT_BRACE);
+		while (parse_block_statement(parser)) {}
+		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+	return end_node(parser);
+}
+
+static bool parse_function_parameter(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
+	begin_node(parser, NODE_TYPE_FUNCTION_PARAMETER);
+		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(parser);
+}
+
+static bool parse_function_parameters(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
+	begin_node(parser, NODE_TYPE_FUNCTION_PARAMETERS);
+		parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS);
+		while (parse_function_parameter(parser)) {
+			if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
+		}
+		if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
+	return end_node(parser);
+}
+
+static bool parse_function_definition(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_FUNC)) return false;
+	begin_node(parser, NODE_TYPE_FUNCTION_DEFINITION);
+		parse_token(parser, TOKEN_TYPE_FUNC);
+		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+		if (!parse_function_parameters(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
 	return end_node(parser);
 }
 
@@ -268,6 +317,7 @@ static bool parse_module_definition(Parser *parser) {
 static bool parse_definition_body(Parser *parser) {
 	if (parse_module_definition(parser)) return true;
 	if (parse_variable_definition(parser)) return true;
+	if (parse_function_definition(parser)) return true;
 	return false;
 }
 
@@ -305,7 +355,11 @@ char *node_type_names[] = {
 	[NODE_TYPE_DEFINITION] = "definition",
 	[NODE_TYPE_MODULE_DEFINITION] = "module definition",
 	[NODE_TYPE_VARIABLE_DEFINITION] = "variable definition",
+	[NODE_TYPE_FUNCTION_DEFINITION] = "function definition",
+	[NODE_TYPE_FUNCTION_PARAMETERS] = "function parameters",
+	[NODE_TYPE_FUNCTION_PARAMETER] = "function parameter",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
+	[NODE_TYPE_BLOCK] = "block",
 	[NODE_TYPE_TYPE] = "type",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
 	[NODE_TYPE_ARRAY] = "array",
@@ -319,12 +373,15 @@ char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",
 	[PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER] = "Expected an identifier.",
 	[PARSER_ERROR_TYPE_EXPECTED_EXPRESSION] = "Expected an expression.",
+	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS] = "Expected function parameters.",
 	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS] = "Expected function arguments.",
+	[PARSER_ERROR_TYPE_EXPECTED_BLOCK] = "Expected a brace-enclosed block.",
 	[PARSER_ERROR_TYPE_EXPECTED_TYPE] = "Expected a type.",
 	[PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX] = "Expected an array index.",
 	[PARSER_ERROR_TYPE_EXPECTED_SEMICOLON] = "Expected a semicolon.",
 	[PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS] = "Unclosed parenthesis.",
 	[PARSER_ERROR_TYPE_UNCLOSED_BRACKET] = "Unclosed bracket.",
+	[PARSER_ERROR_TYPE_UNCLOSED_BRACE] = "Unclosed brace.",
 };
 
 void Parser_Result_destroy(Parser_Result *result) {
