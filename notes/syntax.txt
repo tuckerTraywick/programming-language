@@ -1,36 +1,20 @@
-struct Color {
-	r, g, b uint8
-} cases {
-	struct Rgb
-	red = (255, 0, 0)
-	green = (0, 255, 0)
-	blue = (0, 0, 255)
-}
-
-struct Array<Element type, count usize> {
-	elements [count]Element
-}
-
-
-
-
 pub module animals
-import std.io.printLine
+import std.io
 
-pub trait Animal {
+pub type Animal {
 	pub name string
 	pub age uint32
 }
 
-pub method makeNoise(animal &Animal)
+pub func makeNoise(animal &Animal)
 
-pub struct Dog {
-	embed Animal
+pub type Dog {
+	impl Animal
 	pub tag string
 }
 
-pub struct Cat {
-	embed Animal
+pub type Cat {
+	impl Animal
 	pub breed string
 }
 
@@ -52,24 +36,72 @@ pub func main() {
 
 
 
-pub module physics
+pub module shapes
 import std.math
-import std.operations
 
-pub struct Entity {
-	pub position, velocity, acceleration Vector
-} cases {
-	struct Circle {pub radius float64}
-	struct Mesh {pub vertices owned []Vector}
+pub type Shape cases {
+	type Rectangle {pub length, width float64}
+	type Triangle {pub base, height float64}
+	type Circle {pub radius float64}
 }
 
-pub method update(entity &Entity)
+pub func area(shape &Shape) float64
 
-pub struct Vector {
-	embed std.operations.To<string>, .Arithmetic
+pub func area(rectangle &Rectangle) {
+	return rectangle.width*rectangle.height
+}
+
+pub func area(triangle &Triangle) {
+	return 0.5*triangle.base*triangle.height
+}
+
+pub func area(circle &Circle) {
+	return std.math.pi*circle.radius*circle.radius
+}
+
+
+
+
+pub module physics
+import std.math
+import std.operators
+
+pub type Entity {
+	pub pos, vel, acc Vector
+} cases {
+	type Circle {pub radius float64}
+	type Mesh {pub vertices owned []Vector}
+}
+
+pub type Vector {
+	impl std.operators.To<string>, .Equality<This>, .Arithmetic<This>, .Arithmetic<float>
 	pub x, y, z float64
 }
 
-pub func update(circle &Circle)
+pub func collide(a, b &mut Entity)
 
-pub func update(mesh &Mesh)
+pub func collide(a, b &mut Circle) {}
+
+pub func collide(a, b &mut Mesh) {}
+
+pub func collide(a &mut Circle, b &mut Mesh) {}
+
+pub func collide(a &mut Mesh, b &mut Circle) {}
+
+pub func to<=string>(vector &Vector) {
+	return f"({vector.x}, {vector.y}, {vector.z})"
+}
+
+
+
+
+type Color {
+	r, g, b uint8
+} cases {
+	default type Rgb
+	red = (255, 0, 0)
+	green = (0, 255, 0)
+	blue = (0, 0, 255)
+}
+
+
