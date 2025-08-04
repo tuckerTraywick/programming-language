@@ -224,21 +224,26 @@ static bool parse_expression(Parser *parser) {
 	return parse_infix_expression(parser, 0);
 }
 
-static bool parse_module_statement(Parser *parser) {
+static bool parse_module_name(Parser *parser) {
+	if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
+	while (parse_token(parser, TOKEN_TYPE_DOT)) {
+		if (parse_token(parser, TOKEN_TYPE_TIMES)) break;
+		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+	}
+	return true;
+}
+
+static bool parse_module_definition(Parser *parser) {
 	if (!peek_token(parser, TOKEN_TYPE_MODULE)) return false;
 	begin_node(parser, NODE_TYPE_MODULE_DEFINITION);
 		parse_token(parser, TOKEN_TYPE_MODULE);
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
-		while (parse_token(parser, TOKEN_TYPE_DOT)) {
-			if (parse_token(parser, TOKEN_TYPE_TIMES)) break;
-			if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-		}
+		if (!parse_module_name(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 	return end_node(parser);
 }
 
 static bool parse_definition_body(Parser *parser) {
-	if (parse_module_statement(parser)) return true;
+	if (parse_module_definition(parser)) return true;
 	return false;
 }
 
@@ -252,14 +257,27 @@ static bool parse_definition(Parser *parser) {
 	return parse_definition_body(parser);
 }
 
+static bool parse_import_statement(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_IMPORT)) return false;
+	begin_node(parser, NODE_TYPE_IMPORT_STATEMENT);
+		parse_token(parser, TOKEN_TYPE_IMPORT);
+		if (!parse_module_name(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
+		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(parser);
+}
+
 static bool parse_program(Parser *parser) {
-	if (!parse_definition(parser)) return false;
+	while (parser->current_token_index < list_get_size(parser->tokens)) {
+		if (parse_import_statement(parser)) continue;
+		if (!parse_definition(parser)) return false;
+	}
 	return true;
 }
 
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
+	[NODE_TYPE_IMPORT_STATEMENT] = "import statement",
 	[NODE_TYPE_DEFINITION] = "definition",
 	[NODE_TYPE_MODULE_DEFINITION] = "module definition",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
