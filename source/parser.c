@@ -224,15 +224,39 @@ static bool parse_expression(Parser *parser) {
 	return parse_infix_expression(parser, 0);
 }
 
-static void parse_program(Parser *parser) {
-	parse_token(parser, TOKEN_TYPE_PUB);
-	if (!parse_token(parser, TOKEN_TYPE_MODULE)) return;
-	if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
+static bool parse_module_statement(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_MODULE)) return false;
+	begin_node(parser, NODE_TYPE_MODULE_DEFINITION);
+		parse_token(parser, TOKEN_TYPE_MODULE);
+		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
+	return end_node(parser);
+}
+
+static bool parse_definition_body(Parser *parser) {
+	if (parse_module_statement(parser)) return true;
+	return false;
+}
+
+static bool parse_definition(Parser *parser) {
+	if (peek_token(parser, TOKEN_TYPE_PUB)) {
+		begin_node(parser, NODE_TYPE_PUBLIC_DEFINITION);
+		parse_token(parser, TOKEN_TYPE_PUB);
+		if (!parse_definition_body(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_DEFINITION);
+		return end_node(parser);
+	}
+	return parse_definition_body(parser);
+}
+
+static bool parse_program(Parser *parser) {
+	if (!parse_definition(parser)) return false;
+	return true;
 }
 
 char *node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
+	[NODE_TYPE_PUBLIC_DEFINITION] = "public definition",
+	[NODE_TYPE_MODULE_DEFINITION] = "module definition",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
 	[NODE_TYPE_ARRAY] = "array",
@@ -242,6 +266,7 @@ char *node_type_names[] = {
 
 char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
+	[PARSER_ERROR_TYPE_EXPECTED_DEFINITION] = "Expected a definition.",
 	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",
 	[PARSER_ERROR_TYPE_EXPECTED_EXPRESSION] = "Expected an expression.",
 	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS] = "Expected function arguments.",
@@ -270,7 +295,7 @@ Parser_Result parse(Token *tokens) {
 	parser.nodes = list_push(parser.nodes, &node);
 	parser.current_node_is_parent = true;
 
-	parse_infix_expression(&parser, 0);
+	parse_program(&parser);
 
 	Parser_Result result = {
 		.nodes = parser.nodes,
