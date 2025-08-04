@@ -54,7 +54,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 }
 
 int main(void) {
-	char *text = "type Dog {a int32; b string;} func f() int32 {}";
+	char *text = "type Dog {embed A; pub a int32; impl B;}";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 

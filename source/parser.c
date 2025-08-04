@@ -237,9 +237,25 @@ static bool parse_type(Parser *parser) {
 	return end_node(parser);
 }
 
+static bool parse_impl_statement(Parser *parser) {
+	begin_node(parser, NODE_TYPE_IMPL_STATEMENT);
+		parse_token(parser, TOKEN_TYPE_IMPL);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(parser);
+}
+
+static bool parse_embed_statement(Parser *parser) {
+	begin_node(parser, NODE_TYPE_EMBED_STATEMENT);
+		parse_token(parser, TOKEN_TYPE_EMBED);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(parser);
+}
+
 static bool parse_field_definition(Parser *parser) {
-	// if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
-	// if (peek_token(parser, TOKEN_TYPE_IMPL)) return parse_impl_statement(parser);
+	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
+	if (peek_token(parser, TOKEN_TYPE_IMPL)) return parse_impl_statement(parser);
 	if (!(peek_token(parser, TOKEN_TYPE_IDENTIFIER) || peek_token(parser, TOKEN_TYPE_PUB))) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
 	begin_node(parser, NODE_TYPE_FIELD_DEFINITION);
 		parse_token(parser, TOKEN_TYPE_PUB);
@@ -394,6 +410,8 @@ char *node_type_names[] = {
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
 	[NODE_TYPE_TYPE_DEFINITION] = "type definition",
 	[NODE_TYPE_FIELD_DEFINITION] = "field definition",
+	[NODE_TYPE_EMBED_STATEMENT] = "embed statement",
+	[NODE_TYPE_IMPL_STATEMENT] = "impl statement",
 	[NODE_TYPE_BLOCK] = "block",
 	[NODE_TYPE_TYPE] = "type",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
