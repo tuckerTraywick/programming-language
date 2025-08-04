@@ -148,12 +148,14 @@ static uint32_t parse_infix_operator(Parser *parser) {
 static bool parse_expression(Parser *parser);
 
 static bool parse_function_arguments(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
 	begin_node(parser, NODE_TYPE_FUNCTION_ARGUMENTS);
-	if (!parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
-	while (parse_expression(parser)) {
-		if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
-	}
-	if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
+		parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS);
+		while (!peek_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) {
+			if (!parse_expression(parser)) return false;
+			if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
+		}
+		if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
 	return end_node(parser);
 }
 
@@ -238,11 +240,11 @@ static bool parse_type(Parser *parser) {
 static bool parse_definition(Parser *parser);
 
 static bool parse_block_statement(Parser *parser) {
+	if (parse_definition(parser)) return true;
 	if (parse_expression(parser)) {
 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 		return true;
 	}
-	if (parse_definition(parser)) return true;
 	// tbc...
 }
 
@@ -250,8 +252,9 @@ static bool parse_block(Parser *parser) {
 	if (!peek_token(parser, TOKEN_TYPE_LEFT_BRACE)) return false;
 	begin_node(parser, NODE_TYPE_BLOCK);
 		parse_token(parser, TOKEN_TYPE_LEFT_BRACE);
-		while (parse_block_statement(parser)) {}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+		while (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
+			if (!parse_block_statement(parser)) break;
+		}
 	return end_node(parser);
 }
 

@@ -54,7 +54,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 }
 
 int main(void) {
-	char *text = "module a; import a.b; var a int32; func f() int32 {} var a int32;";
+	char *text = "func f() int32 {f(1, 2);} var a int32;";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 
