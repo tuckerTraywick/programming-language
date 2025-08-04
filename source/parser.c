@@ -224,6 +224,29 @@ static bool parse_expression(Parser *parser) {
 	return parse_infix_expression(parser, 0);
 }
 
+static bool parse_assignment_body(Parser *parser) {
+	if (!parse_token(parser, TOKEN_TYPE_ASSIGN)) return true;
+	if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+	return true;
+}
+
+static bool parse_type(Parser *parser) {
+	begin_node(parser, NODE_TYPE_TYPE);
+		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
+	return end_node(parser);
+}
+
+static bool parse_variable_definition(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_VAR)) return false;
+	begin_node(parser, NODE_TYPE_VARIABLE_DEFINITION);
+		parse_token(parser, TOKEN_TYPE_VAR);
+		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		if (!parse_assignment_body(parser)) return false;
+		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(parser);
+}
+
 static bool parse_module_name(Parser *parser) {
 	if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
 	while (parse_token(parser, TOKEN_TYPE_DOT)) {
@@ -244,6 +267,7 @@ static bool parse_module_definition(Parser *parser) {
 
 static bool parse_definition_body(Parser *parser) {
 	if (parse_module_definition(parser)) return true;
+	if (parse_variable_definition(parser)) return true;
 	return false;
 }
 
@@ -280,7 +304,9 @@ char *node_type_names[] = {
 	[NODE_TYPE_IMPORT_STATEMENT] = "import statement",
 	[NODE_TYPE_DEFINITION] = "definition",
 	[NODE_TYPE_MODULE_DEFINITION] = "module definition",
+	[NODE_TYPE_VARIABLE_DEFINITION] = "variable definition",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
+	[NODE_TYPE_TYPE] = "type",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
 	[NODE_TYPE_ARRAY] = "array",
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
@@ -294,6 +320,7 @@ char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER] = "Expected an identifier.",
 	[PARSER_ERROR_TYPE_EXPECTED_EXPRESSION] = "Expected an expression.",
 	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS] = "Expected function arguments.",
+	[PARSER_ERROR_TYPE_EXPECTED_TYPE] = "Expected a type.",
 	[PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX] = "Expected an array index.",
 	[PARSER_ERROR_TYPE_EXPECTED_SEMICOLON] = "Expected a semicolon.",
 	[PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS] = "Unclosed parenthesis.",
