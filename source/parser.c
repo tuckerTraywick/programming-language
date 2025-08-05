@@ -226,7 +226,7 @@ static bool parse_expression(Parser *parser) {
 }
 
 static bool parse_assignment_body(Parser *parser) {
-	if (!parse_token(parser, TOKEN_TYPE_ASSIGN)) return true;
+	if (!parse_token(parser, TOKEN_TYPE_ASSIGN)) return false;
 	if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
 	return true;
 }
@@ -253,6 +253,20 @@ static bool parse_embed_statement(Parser *parser) {
 	return end_node(parser);
 }
 
+static bool parse_type_definition(Parser *parser);
+
+static bool parse_type_case(Parser *parser) {
+	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
+	if (peek_token(parser, TOKEN_TYPE_IMPL)) return parse_impl_statement(parser);
+	if (peek_token(parser, TOKEN_TYPE_TYPE)) return parse_type_definition(parser);
+	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
+	begin_node(parser, NODE_TYPE_TYPE_CASE);
+		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
+		if (peek_token(parser, TOKEN_TYPE_ASSIGN) && !parse_assignment_body(parser)) return false;
+		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(parser);
+}
+
 static bool parse_field_definition(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
 	if (peek_token(parser, TOKEN_TYPE_IMPL)) return parse_impl_statement(parser);
@@ -270,13 +284,23 @@ static bool parse_type_definition(Parser *parser) {
 	begin_node(parser, NODE_TYPE_TYPE);
 		parse_token(parser, TOKEN_TYPE_TYPE);
 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-		// parse generic parameters
+		// Parse generic parameters...
+		
+		// Parse fields.
 		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) {
 			if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 			return end_node(parser);
 		}
 		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
 			if (!parse_field_definition(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
+		}
+		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+
+		// Parse cases.
+		if (!parse_token(parser, TOKEN_TYPE_CASES)) return end_node(parser);
+		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_CASES);
+		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
+			if (!parse_type_case(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
 		}
 		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
 	return end_node(parser);
@@ -339,7 +363,7 @@ static bool parse_variable_definition(Parser *parser) {
 		parse_token(parser, TOKEN_TYPE_VAR);
 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
 		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-		if (!parse_assignment_body(parser)) return false;
+		if (peek_token(parser, TOKEN_TYPE_ASSIGN) && !parse_assignment_body(parser)) return false;
 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 	return end_node(parser);
 }
@@ -412,6 +436,7 @@ char *node_type_names[] = {
 	[NODE_TYPE_FIELD_DEFINITION] = "field definition",
 	[NODE_TYPE_EMBED_STATEMENT] = "embed statement",
 	[NODE_TYPE_IMPL_STATEMENT] = "impl statement",
+	[NODE_TYPE_TYPE_CASE] = "type case",
 	[NODE_TYPE_BLOCK] = "block",
 	[NODE_TYPE_TYPE] = "type",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
@@ -430,6 +455,8 @@ char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS] = "Expected function arguments.",
 	[PARSER_ERROR_TYPE_EXPECTED_BLOCK] = "Expected a brace-enclosed block.",
 	[PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION] = "Expected a field definition.",
+	[PARSER_ERROR_TYPE_EXPECTED_CASES] = "Expected cases.",
+	[PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE] = "Expected a type case.",
 	[PARSER_ERROR_TYPE_EXPECTED_TYPE] = "Expected a type.",
 	[PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX] = "Expected an array index.",
 	[PARSER_ERROR_TYPE_EXPECTED_SEMICOLON] = "Expected a semicolon.",

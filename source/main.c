@@ -54,7 +54,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 }
 
 int main(void) {
-	char *text = "type Dog {embed A; pub a int32; impl B;}";
+	char *text = "pub type Animal {pub a int32;} cases {embed a; b = 1; c = f(g);}";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 
