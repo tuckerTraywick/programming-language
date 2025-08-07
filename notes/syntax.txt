@@ -1,3 +1,17 @@
+&T
+[]T
+(T, U)
+func(T) U
+owned T
+weak T
+mut T
+
+T.U
+T<U>
+
+
+
+
 pub module animals
 import std.io
 
