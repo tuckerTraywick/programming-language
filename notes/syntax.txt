@@ -15,20 +15,20 @@ T<U>
 pub module animals
 import std.io
 
-pub type Animal {
+pub trait Animal {
 	pub name string
 	pub age uint32
 }
 
-pub func makeNoise(animal &Animal)
+pub method makeNoise(animal &Animal)
 
-pub type Dog {
-	impl Animal
+pub struct Dog {
+	embed Animal
 	pub tag string
 }
 
-pub type Cat {
-	impl Animal
+pub struct Cat {
+	embed Animal
 	pub breed string
 }
 
@@ -53,13 +53,13 @@ pub func main() {
 pub module shapes
 import std.math
 
-pub type Shape cases {
-	type Rectangle {pub length, width float64}
-	type Triangle {pub base, height float64}
-	type Circle {pub radius float64}
+pub struct Shape cases {
+	struct Rectangle {pub length, width float64}
+	struct Triangle {pub base, height float64}
+	struct Circle {pub radius float64}
 }
 
-pub func area(shape &Shape) float64
+pub method area(shape &Shape) float64
 
 pub func area(rectangle &Rectangle) {
 	return rectangle.width*rectangle.height
@@ -80,19 +80,19 @@ pub module physics
 import std.math
 import std.operators
 
-pub type Entity {
+pub struct Entity {
 	pub pos, vel, acc Vector
 } cases {
-	type Circle {pub radius float64}
-	type Mesh {pub vertices owned []Vector}
+	struct Circle {pub radius float64}
+	struct Mesh {pub vertices owned []Vector}
 }
 
-pub type Vector {
-	impl std.operators.To<string>, .Equality<This>, .Arithmetic<This>, .Arithmetic<float>
+pub struct Vector {
+	embed std.operators.To<string>, .Equality<This>, .Arithmetic<This>, .Arithmetic<float>
 	pub x, y, z float64
 }
 
-pub func collide(a, b &mut Entity)
+pub method collide(a, b &mut Entity)
 
 pub func collide(a, b &mut Circle) {}
 
@@ -109,10 +109,10 @@ pub func to<=string>(vector &Vector) {
 
 
 
-type Color {
+struct Color {
 	r, g, b uint8
 } cases {
-	default type Rgb
+	default struct Rgb
 	red = (255, 0, 0)
 	green = (0, 255, 0)
 	blue = (0, 0, 255)

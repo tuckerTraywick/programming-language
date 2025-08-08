@@ -237,14 +237,6 @@ static bool parse_type(Parser *parser) {
 	return end_node(parser);
 }
 
-static bool parse_impl_statement(Parser *parser) {
-	begin_node(parser, NODE_TYPE_IMPL_STATEMENT);
-		parse_token(parser, TOKEN_TYPE_IMPL);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
-}
-
 static bool parse_embed_statement(Parser *parser) {
 	begin_node(parser, NODE_TYPE_EMBED_STATEMENT);
 		parse_token(parser, TOKEN_TYPE_EMBED);
@@ -253,12 +245,14 @@ static bool parse_embed_statement(Parser *parser) {
 	return end_node(parser);
 }
 
-static bool parse_type_definition(Parser *parser);
+static bool parse_struct_definition(Parser *parser);
+
+static bool parse_trait_definition(Parser *parser);
 
 static bool parse_type_case(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
-	if (peek_token(parser, TOKEN_TYPE_IMPL)) return parse_impl_statement(parser);
-	if (peek_token(parser, TOKEN_TYPE_TYPE)) return parse_type_definition(parser);
+	if (peek_token(parser, TOKEN_TYPE_STRUCT)) return parse_struct_definition(parser);
+	if (peek_token(parser, TOKEN_TYPE_TRAIT)) return parse_trait_definition(parser);
 	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
 	begin_node(parser, NODE_TYPE_TYPE_CASE);
 		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
@@ -269,7 +263,6 @@ static bool parse_type_case(Parser *parser) {
 
 static bool parse_field_definition(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
-	if (peek_token(parser, TOKEN_TYPE_IMPL)) return parse_impl_statement(parser);
 	if (!(peek_token(parser, TOKEN_TYPE_IDENTIFIER) || peek_token(parser, TOKEN_TYPE_PUB))) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
 	begin_node(parser, NODE_TYPE_FIELD_DEFINITION);
 		parse_token(parser, TOKEN_TYPE_PUB);
@@ -279,10 +272,37 @@ static bool parse_field_definition(Parser *parser) {
 	return end_node(parser);
 }
 
-static bool parse_type_definition(Parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_TYPE)) return false;
-	begin_node(parser, NODE_TYPE_TYPE);
-		parse_token(parser, TOKEN_TYPE_TYPE);
+static bool parse_trait_definition(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_TRAIT)) return false;
+	begin_node(parser, NODE_TYPE_TRAIT_DEFINITION);
+		parse_token(parser, TOKEN_TYPE_TRAIT);
+		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+		// Parse generic parameters...
+		
+		// Parse fields.
+		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) {
+			if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+			return end_node(parser);
+		}
+		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
+			if (!parse_field_definition(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
+		}
+		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+
+		// Parse cases.
+		if (!parse_token(parser, TOKEN_TYPE_CASES)) return end_node(parser);
+		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_CASES);
+		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
+			if (!parse_type_case(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
+		}
+		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+	return end_node(parser);
+}
+
+static bool parse_struct_definition(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_STRUCT)) return false;
+	begin_node(parser, NODE_TYPE_STRUCT_DEFINITION);
+		parse_token(parser, TOKEN_TYPE_STRUCT);
 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
 		// Parse generic parameters...
 		
@@ -390,7 +410,8 @@ static bool parse_definition_body(Parser *parser) {
 	if (parse_module_definition(parser)) return true;
 	if (parse_variable_definition(parser)) return true;
 	if (parse_function_definition(parser)) return true;
-	if (parse_type_definition(parser)) return true;
+	if (parse_struct_definition(parser)) return true;
+	if (parse_trait_definition(parser)) return true;
 	return false;
 }
 
@@ -432,7 +453,8 @@ char *node_type_names[] = {
 	[NODE_TYPE_FUNCTION_PARAMETERS] = "function parameters",
 	[NODE_TYPE_FUNCTION_PARAMETER] = "function parameter",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
-	[NODE_TYPE_TYPE_DEFINITION] = "type definition",
+	[NODE_TYPE_STRUCT_DEFINITION] = "struct definition",
+	[NODE_TYPE_TRAIT_DEFINITION] = "trait definition",
 	[NODE_TYPE_FIELD_DEFINITION] = "field definition",
 	[NODE_TYPE_EMBED_STATEMENT] = "embed statement",
 	[NODE_TYPE_IMPL_STATEMENT] = "impl statement",
