@@ -366,6 +366,17 @@ static bool parse_function_parameters(Parser *parser) {
 	return end_node(parser);
 }
 
+static bool parse_method_definition(Parser *parser) {
+	if (!peek_token(parser, TOKEN_TYPE_METHOD)) return false;
+	begin_node(parser, NODE_TYPE_METHOD_DEFINITION);
+		parse_token(parser, TOKEN_TYPE_METHOD);
+		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+		if (!parse_function_parameters(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		if (!parse_block(parser) && !parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(parser);
+}
+
 static bool parse_function_definition(Parser *parser) {
 	if (!peek_token(parser, TOKEN_TYPE_FUNC)) return false;
 	begin_node(parser, NODE_TYPE_FUNCTION_DEFINITION);
@@ -410,6 +421,7 @@ static bool parse_definition_body(Parser *parser) {
 	if (parse_module_definition(parser)) return true;
 	if (parse_variable_definition(parser)) return true;
 	if (parse_function_definition(parser)) return true;
+	if (parse_method_definition(parser)) return true;
 	if (parse_struct_definition(parser)) return true;
 	if (parse_trait_definition(parser)) return true;
 	return false;
@@ -450,6 +462,7 @@ char *node_type_names[] = {
 	[NODE_TYPE_MODULE_DEFINITION] = "module definition",
 	[NODE_TYPE_VARIABLE_DEFINITION] = "variable definition",
 	[NODE_TYPE_FUNCTION_DEFINITION] = "function definition",
+	[NODE_TYPE_METHOD_DEFINITION] = "method definition",
 	[NODE_TYPE_FUNCTION_PARAMETERS] = "function parameters",
 	[NODE_TYPE_FUNCTION_PARAMETER] = "function parameter",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
@@ -457,7 +470,6 @@ char *node_type_names[] = {
 	[NODE_TYPE_TRAIT_DEFINITION] = "trait definition",
 	[NODE_TYPE_FIELD_DEFINITION] = "field definition",
 	[NODE_TYPE_EMBED_STATEMENT] = "embed statement",
-	[NODE_TYPE_IMPL_STATEMENT] = "impl statement",
 	[NODE_TYPE_TYPE_CASE] = "type case",
 	[NODE_TYPE_BLOCK] = "block",
 	[NODE_TYPE_TYPE] = "type",

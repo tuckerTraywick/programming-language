@@ -54,7 +54,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 }
 
 int main(void) {
-	char *text = "trait Animal {pub age uint32; name string; embed a; } cases {struct A{} struct B {x int32;}}";
+	char *text = "method f(a int32) int32; ";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 
