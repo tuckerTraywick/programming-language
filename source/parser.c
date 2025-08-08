@@ -328,8 +328,11 @@ static bool parse_struct_definition(Parser *parser) {
 
 static bool parse_definition(Parser *parser);
 
+static bool parse_block(Parser *parser);
+
 static bool parse_block_statement(Parser *parser) {
 	if (parse_definition(parser)) return true;
+	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACE)) return parse_block(parser);
 	if (parse_expression(parser)) {
 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 		return true;
