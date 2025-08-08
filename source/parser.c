@@ -231,9 +231,20 @@ static bool parse_assignment_body(Parser *parser) {
 	return true;
 }
 
+static bool parse_type(Parser *parser);
+
+static bool parse_pointer_type(Parser *parser) {
+	begin_node(parser, NODE_TYPE_POINTER_TYPE);
+		parse_token(parser, TOKEN_TYPE_BITWISE_AND);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(parser);
+}
+
 static bool parse_type(Parser *parser) {
+	if (peek_token(parser, TOKEN_TYPE_BITWISE_AND)) return parse_pointer_type(parser);
+	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
 	begin_node(parser, NODE_TYPE_TYPE);
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
+		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
 	return end_node(parser);
 }
 
