@@ -4,3 +4,5 @@
 - Add parsers for control flow statements
 - Add all operators to expression parser
 - Handle "as" operator
+
+X Fix bug where parser tries to keep parsing after invalid definition

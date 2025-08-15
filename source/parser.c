@@ -245,6 +245,14 @@ static bool parse_tuple_type(Parser *parser) {
 	return end_node(parser);
 }
 
+static bool parse_function_type(Parser *parser) {
+	begin_node(parser, NODE_TYPE_FUNCTION_TYPE);
+		parse_token(parser, TOKEN_TYPE_FUNC);
+		if (!parse_tuple_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(parser);
+}
+
 static bool parse_array_type(Parser *parser) {
 	begin_node(parser, NODE_TYPE_ARRAY_TYPE);
 		parse_token(parser, TOKEN_TYPE_LEFT_BRACKET);
@@ -265,6 +273,7 @@ static bool parse_type(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_BITWISE_AND)) return parse_pointer_type(parser);
 	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACKET)) return parse_array_type(parser);
 	if (peek_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return parse_tuple_type(parser);
+	if (peek_token(parser, TOKEN_TYPE_FUNC)) return parse_function_type(parser);
 	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
 	begin_node(parser, NODE_TYPE_TYPE);
 		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
@@ -455,12 +464,12 @@ static bool parse_module_definition(Parser *parser) {
 }
 
 static bool parse_definition_body(Parser *parser) {
-	if (parse_module_definition(parser)) return true;
-	if (parse_variable_definition(parser)) return true;
-	if (parse_function_definition(parser)) return true;
-	if (parse_method_definition(parser)) return true;
-	if (parse_struct_definition(parser)) return true;
-	if (parse_trait_definition(parser)) return true;
+	if (peek_token(parser, TOKEN_TYPE_MODULE)) return parse_module_definition(parser);
+	if (peek_token(parser, TOKEN_TYPE_VAR)) return parse_variable_definition(parser);
+	if (peek_token(parser, TOKEN_TYPE_FUNC)) return parse_function_definition(parser);
+	if (peek_token(parser, TOKEN_TYPE_METHOD)) return parse_method_definition(parser);
+	if (peek_token(parser, TOKEN_TYPE_STRUCT)) return parse_struct_definition(parser);
+	if (peek_token(parser, TOKEN_TYPE_TRAIT)) return parse_trait_definition(parser);
 	return false;
 }
 
