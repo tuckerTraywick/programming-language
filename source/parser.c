@@ -233,6 +233,15 @@ static bool parse_assignment_body(Parser *parser) {
 
 static bool parse_type(Parser *parser);
 
+static bool parse_array_type(Parser *parser) {
+	begin_node(parser, NODE_TYPE_ARRAY_TYPE);
+		parse_token(parser, TOKEN_TYPE_LEFT_BRACKET);
+		if (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACKET) && !parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACKET)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACKET);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(parser);
+}
+
 static bool parse_pointer_type(Parser *parser) {
 	begin_node(parser, NODE_TYPE_POINTER_TYPE);
 		parse_token(parser, TOKEN_TYPE_BITWISE_AND);
@@ -242,6 +251,7 @@ static bool parse_pointer_type(Parser *parser) {
 
 static bool parse_type(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_BITWISE_AND)) return parse_pointer_type(parser);
+	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACKET)) return parse_array_type(parser);
 	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
 	begin_node(parser, NODE_TYPE_TYPE);
 		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
@@ -487,6 +497,13 @@ char *node_type_names[] = {
 	[NODE_TYPE_TYPE_CASE] = "type case",
 	[NODE_TYPE_BLOCK] = "block",
 	[NODE_TYPE_TYPE] = "type",
+	[NODE_TYPE_POINTER_TYPE] = "pointer type",
+	[NODE_TYPE_ARRAY_TYPE] = "array type",
+	[NODE_TYPE_TUPLE_TYPE] = "tuple type",
+	[NODE_TYPE_FUNCTION_TYPE] = "function type",
+	[NODE_TYPE_OWNED_TYPE] = "owned type",
+	[NODE_TYPE_WEAK_TYPE] = "weak type",
+	[NODE_TYPE_BASIC_TYPE] = "basic type",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
 	[NODE_TYPE_ARRAY] = "array",
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",

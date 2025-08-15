@@ -1,0 +1,4 @@
+- Finish type parser
+- Add parsers for control flow statements
+- Add all operators to expression parser
+- Handle "as" operator
