@@ -397,23 +397,33 @@ static bool parse_definition(Parser *parser);
 
 static bool parse_block(Parser *parser);
 
+static bool parse_while_loop(Parser *parser) {
+	begin_node(parser, NODE_TYPE_WHILE_LOOP);
+		parse_token(parser, TOKEN_TYPE_WHILE);
+		if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
+	return end_node(parser);
+}
+
 static bool parse_block_statement(Parser *parser) {
 	if (parse_definition(parser)) return true;
 	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACE)) return parse_block(parser);
+	if (peek_token(parser, TOKEN_TYPE_WHILE)) return parse_while_loop(parser);
 	if (parse_expression(parser)) {
 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 		return true;
 	}
-	// tbc...
+	return false;
 }
 
 static bool parse_block(Parser *parser) {
 	if (!peek_token(parser, TOKEN_TYPE_LEFT_BRACE)) return false;
 	begin_node(parser, NODE_TYPE_BLOCK);
 		parse_token(parser, TOKEN_TYPE_LEFT_BRACE);
-		while (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
+		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
 			if (!parse_block_statement(parser)) break;
 		}
+		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
 	return end_node(parser);
 }
 
@@ -543,6 +553,12 @@ char *node_type_names[] = {
 	[NODE_TYPE_TYPE_CASE] = "type case",
 	[NODE_TYPE_BLOCK] = "block",
 	[NODE_TYPE_TYPE] = "type",
+	[NODE_TYPE_WHILE_LOOP] = "while loop",
+	[NODE_TYPE_FOR_LOOP] = "for loop",
+	[NODE_TYPE_IF_STATEMENT] = "if statement",
+	[NODE_TYPE_RETURN_STATEMENT] = "return statement",
+	[NODE_TYPE_BREAK_STATEMENT] = "break statement",
+	[NODE_TYPE_CONTINUE_STATEMENT] = "continue statement",
 	[NODE_TYPE_POINTER_TYPE] = "pointer type",
 	[NODE_TYPE_ARRAY_TYPE] = "array type",
 	[NODE_TYPE_TUPLE_TYPE] = "tuple type",
