@@ -233,6 +233,18 @@ static bool parse_assignment_body(Parser *parser) {
 
 static bool parse_type(Parser *parser);
 
+static bool parse_tuple_type(Parser *parser) {
+	begin_node(parser, NODE_TYPE_TUPLE_TYPE);
+		parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS);
+		// TODO: Fix this so it correctly distinguishes invalid types and unclosed parenthesis.
+		while (!peek_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) {
+			if (!parse_type(parser)) break;
+			parse_token(parser, TOKEN_TYPE_COMMA);
+		}
+		if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
+	return end_node(parser);
+}
+
 static bool parse_array_type(Parser *parser) {
 	begin_node(parser, NODE_TYPE_ARRAY_TYPE);
 		parse_token(parser, TOKEN_TYPE_LEFT_BRACKET);
@@ -252,6 +264,7 @@ static bool parse_pointer_type(Parser *parser) {
 static bool parse_type(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_BITWISE_AND)) return parse_pointer_type(parser);
 	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACKET)) return parse_array_type(parser);
+	if (peek_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return parse_tuple_type(parser);
 	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
 	begin_node(parser, NODE_TYPE_TYPE);
 		parse_token(parser, TOKEN_TYPE_IDENTIFIER);

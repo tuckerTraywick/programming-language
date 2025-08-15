@@ -1,3 +1,5 @@
+- Fix bug where function parameter parser tries to keep parsing even if a parameter fails to parse
+- Make tuple type parser distinguish between unclosed parenthesis after a type and an invalid type (impossible?)
 - Finish type parser
 - Add parsers for control flow statements
 - Add all operators to expression parser
