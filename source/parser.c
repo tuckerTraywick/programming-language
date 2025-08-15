@@ -233,6 +233,27 @@ static bool parse_assignment_body(Parser *parser) {
 
 static bool parse_type(Parser *parser);
 
+static bool parse_mut_type(Parser *parser) {
+	begin_node(parser, NODE_TYPE_MUT_TYPE);
+		parse_token(parser, TOKEN_TYPE_MUT);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(parser);
+}
+
+static bool parse_weak_type(Parser *parser) {
+	begin_node(parser, NODE_TYPE_WEAK_TYPE);
+		parse_token(parser, TOKEN_TYPE_WEAK);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(parser);
+}
+
+static bool parse_owned_type(Parser *parser) {
+	begin_node(parser, NODE_TYPE_OWNED_TYPE);
+		parse_token(parser, TOKEN_TYPE_OWNED);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(parser);
+}
+
 static bool parse_tuple_type(Parser *parser) {
 	begin_node(parser, NODE_TYPE_TUPLE_TYPE);
 		parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS);
@@ -274,6 +295,9 @@ static bool parse_type(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACKET)) return parse_array_type(parser);
 	if (peek_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return parse_tuple_type(parser);
 	if (peek_token(parser, TOKEN_TYPE_FUNC)) return parse_function_type(parser);
+	if (peek_token(parser, TOKEN_TYPE_OWNED)) return parse_owned_type(parser);
+	if (peek_token(parser, TOKEN_TYPE_WEAK)) return parse_weak_type(parser);
+	if (peek_token(parser, TOKEN_TYPE_MUT)) return parse_mut_type(parser);
 	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
 	begin_node(parser, NODE_TYPE_TYPE);
 		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
@@ -526,6 +550,7 @@ char *node_type_names[] = {
 	[NODE_TYPE_OWNED_TYPE] = "owned type",
 	[NODE_TYPE_WEAK_TYPE] = "weak type",
 	[NODE_TYPE_BASIC_TYPE] = "basic type",
+	[NODE_TYPE_MUT_TYPE] = "mut type",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
 	[NODE_TYPE_ARRAY] = "array",
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
