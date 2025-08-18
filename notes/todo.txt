@@ -1,3 +1,5 @@
+- Add generics to type parser
+- Add qualified identifiers to type parser
 - Fix bug where function parameter parser tries to keep parsing even if a parameter fails to parse
 - Make tuple type parser distinguish between unclosed parenthesis after a type and an invalid type (impossible?)
 - Add parsers for control flow statements

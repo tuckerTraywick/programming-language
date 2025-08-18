@@ -54,7 +54,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 }
 
 int main(void) {
-	char *text = "func f() none {var a int23; var a int32;";
+	char *text = "var a List<int32>";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 

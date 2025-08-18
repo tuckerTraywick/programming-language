@@ -233,6 +233,32 @@ static bool parse_assignment_body(Parser *parser) {
 
 static bool parse_type(Parser *parser);
 
+static bool parse_generic_arguments(Parser *parser) {
+	begin_node(parser, NODE_TYPE_GENERIC_ARGUMENTS);
+		parse_token(parser, TOKEN_TYPE_LEFT_ANGLE_BRACKET);
+		while (!peek_token(parser, TOKEN_TYPE_GREATER)) {
+			if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+			parse_token(parser, TOKEN_TYPE_COMMA);
+		}
+		if (!parse_token(parser, TOKEN_TYPE_GREATER)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_ANGLE_BRACKET);
+	return end_node(parser);
+}
+
+static bool parse_basic_type(Parser *parser) {
+	begin_node(parser, NODE_TYPE_BASIC_TYPE);
+		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
+		while (true) {
+			if (parse_token(parser, TOKEN_TYPE_DOT)) {
+				if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+			} else if (peek_token(parser, TOKEN_TYPE_LEFT_ANGLE_BRACKET)) {
+				if (!parse_generic_arguments(parser)) return false;
+			} else {
+				break;
+			}
+		}
+	return end_node(parser);
+}
+
 static bool parse_mut_type(Parser *parser) {
 	begin_node(parser, NODE_TYPE_MUT_TYPE);
 		parse_token(parser, TOKEN_TYPE_MUT);
@@ -298,10 +324,8 @@ static bool parse_type(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_OWNED)) return parse_owned_type(parser);
 	if (peek_token(parser, TOKEN_TYPE_WEAK)) return parse_weak_type(parser);
 	if (peek_token(parser, TOKEN_TYPE_MUT)) return parse_mut_type(parser);
-	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
-	begin_node(parser, NODE_TYPE_TYPE);
-		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
-	return end_node(parser);
+	if (peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return parse_basic_type(parser);
+	return false;
 }
 
 static bool parse_embed_statement(Parser *parser) {
@@ -397,6 +421,24 @@ static bool parse_definition(Parser *parser);
 
 static bool parse_block(Parser *parser);
 
+static bool parse_loop_variable(Parser *parser) {
+	begin_node(parser, NODE_TYPE_LOOP_VARIABLE);
+}
+
+static bool parse_for_loop(Parser *parser) {
+	begin_node(parser, NODE_TYPE_FOR_LOOP);
+		parse_token(parser, TOKEN_TYPE_FOR);
+		if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		// TODO: Make this parse either one variable without parenthesis or a tuple of variables in parenthesis like function parameters.
+		while (!peek_token(parser, TOKEN_TYPE_IN)) {
+			if (!parse_loop_variable(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_LOOP_VARIABLE);
+			parse_token(parser, TOKEN_TYPE_COMMA);
+		}
+		if (!parse_token(parser, TOKEN_TYPE_IN)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IN_STATEMENT);
+		
+	return end_node(parser);
+}
+
 static bool parse_while_loop(Parser *parser) {
 	begin_node(parser, NODE_TYPE_WHILE_LOOP);
 		parse_token(parser, TOKEN_TYPE_WHILE);
@@ -409,6 +451,7 @@ static bool parse_block_statement(Parser *parser) {
 	if (parse_definition(parser)) return true;
 	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACE)) return parse_block(parser);
 	if (peek_token(parser, TOKEN_TYPE_WHILE)) return parse_while_loop(parser);
+	if (peek_token(parser, TOKEN_TYPE_FOR)) return parse_for_loop(parser);
 	if (parse_expression(parser)) {
 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 		return true;
@@ -552,21 +595,23 @@ char *node_type_names[] = {
 	[NODE_TYPE_EMBED_STATEMENT] = "embed statement",
 	[NODE_TYPE_TYPE_CASE] = "type case",
 	[NODE_TYPE_BLOCK] = "block",
-	[NODE_TYPE_TYPE] = "type",
 	[NODE_TYPE_WHILE_LOOP] = "while loop",
 	[NODE_TYPE_FOR_LOOP] = "for loop",
+	[NODE_TYPE_LOOP_VARIABLE] = "loop variable",
 	[NODE_TYPE_IF_STATEMENT] = "if statement",
 	[NODE_TYPE_RETURN_STATEMENT] = "return statement",
 	[NODE_TYPE_BREAK_STATEMENT] = "break statement",
 	[NODE_TYPE_CONTINUE_STATEMENT] = "continue statement",
+	[NODE_TYPE_TYPE] = "type",
 	[NODE_TYPE_POINTER_TYPE] = "pointer type",
 	[NODE_TYPE_ARRAY_TYPE] = "array type",
 	[NODE_TYPE_TUPLE_TYPE] = "tuple type",
 	[NODE_TYPE_FUNCTION_TYPE] = "function type",
 	[NODE_TYPE_OWNED_TYPE] = "owned type",
 	[NODE_TYPE_WEAK_TYPE] = "weak type",
-	[NODE_TYPE_BASIC_TYPE] = "basic type",
 	[NODE_TYPE_MUT_TYPE] = "mut type",
+	[NODE_TYPE_BASIC_TYPE] = "basic type",
+	[NODE_TYPE_GENERIC_ARGUMENTS] = "generic arguments",
 	[NODE_TYPE_ARRAY_INDEX] = "array index",
 	[NODE_TYPE_ARRAY] = "array",
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
@@ -582,6 +627,8 @@ char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS] = "Expected function parameters.",
 	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS] = "Expected function arguments.",
 	[PARSER_ERROR_TYPE_EXPECTED_BLOCK] = "Expected a brace-enclosed block.",
+	[PARSER_ERROR_TYPE_EXPECTED_LOOP_VARIABLE] = "Expected a loop variable.",
+	[PARSER_ERROR_TYPE_EXPECTED_IN_STATEMENT] = "Expected an `in` statement.",
 	[PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION] = "Expected a field definition.",
 	[PARSER_ERROR_TYPE_EXPECTED_CASES] = "Expected cases.",
 	[PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE] = "Expected a type case.",
@@ -591,6 +638,7 @@ char *parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS] = "Unclosed parenthesis.",
 	[PARSER_ERROR_TYPE_UNCLOSED_BRACKET] = "Unclosed bracket.",
 	[PARSER_ERROR_TYPE_UNCLOSED_BRACE] = "Unclosed brace.",
+	[PARSER_ERROR_TYPE_UNCLOSED_ANGLE_BRACKET] = "Unclosed angle bracket.",
 };
 
 void Parser_Result_destroy(Parser_Result *result) {

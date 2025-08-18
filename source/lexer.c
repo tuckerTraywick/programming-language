@@ -100,7 +100,7 @@ char *reserved_words[] = {
 	[TOKEN_TYPE_GREATER] = ">",
 	[TOKEN_TYPE_LESS_EQUAL] = "<=",
 	[TOKEN_TYPE_LESS] = "<",
-	[TOKEN_TYPE_LEFT_ANGLE_BRACKET] = "<",
+	[TOKEN_TYPE_LEFT_ANGLE_BRACKET] = "< bracket",
 };
 
 char *lexer_error_messages[] = {
@@ -231,6 +231,11 @@ Lexer_Result lex(char *text) {
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
+			}
+
+			// Distinguish between less than operator and generic brackets.
+			if (current_token.type == TOKEN_TYPE_LESS && current_token.text_index > 0 && *(text - 2) != ' ') {
+				current_token.type = TOKEN_TYPE_LEFT_ANGLE_BRACKET;
 			}
 		}
 		// TODO: Handle null return value.

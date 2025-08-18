@@ -8,6 +8,10 @@ mut T
 T.U
 T<U>
 
+for i usize in 0 until length
+for (i, j string) in x
+for (a, b int32) in zip(array1, array2)
+
 
 
 
