@@ -1,4 +1,4 @@
-- Finish for loop parser
+- Extend for loop syntax with matching
 - Fix bug where function parameter parser tries to keep parsing even if a parameter fails to parse
 - Make tuple type parser distinguish between unclosed parenthesis after a type and an invalid type (impossible?)
 - Add parsers for control flow statements

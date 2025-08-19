@@ -423,19 +423,22 @@ static bool parse_block(Parser *parser);
 
 static bool parse_loop_variable(Parser *parser) {
 	begin_node(parser, NODE_TYPE_LOOP_VARIABLE);
+		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(parser);
 }
 
 static bool parse_for_loop(Parser *parser) {
 	begin_node(parser, NODE_TYPE_FOR_LOOP);
 		parse_token(parser, TOKEN_TYPE_FOR);
-		if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
 		// TODO: Make this parse either one variable without parenthesis or a tuple of variables in parenthesis like function parameters.
 		while (!peek_token(parser, TOKEN_TYPE_IN)) {
 			if (!parse_loop_variable(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_LOOP_VARIABLE);
 			parse_token(parser, TOKEN_TYPE_COMMA);
 		}
-		if (!parse_token(parser, TOKEN_TYPE_IN)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IN_STATEMENT);
-		
+		parse_token(parser, TOKEN_TYPE_IN);
+		if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
 	return end_node(parser);
 }
 
