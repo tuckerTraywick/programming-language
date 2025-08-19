@@ -5,7 +5,6 @@
 - Add all operators to expression parser
 - Handle "as" operator
 
-X Addgenerics to type parser
+X Add generics to type parser
 X Add qualified identifiers to type parser
-X Finish type parser
 X Fix bug where parser tries to keep parsing after invalid definition

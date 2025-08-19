@@ -120,3 +120,42 @@ struct Color {
 	green = (0, 255, 0)
 	blue = (0, 0, 255)
 }
+
+
+
+
+pub module interface
+
+pub trait Script {
+	pub state int32
+}
+
+pub method doSomething(script &mut Script)
+
+
+pub module myScript
+import std.io, .objects
+import interface
+
+pub struct MyScript {
+	embed interace.Script
+}
+
+pub func doSomething(myScript &mut MyScript) {
+	std.io.printLine("script loaded successfully")
+}
+
+// The entry point for the script.
+pub func load() MyScript {
+	return MyScript()
+}
+
+
+pub module program
+import std.objects
+import interface
+
+pub func main() {
+	var script Script = std.objects.load<Script>("myscript.so")
+	doSomething(&script)
+}
