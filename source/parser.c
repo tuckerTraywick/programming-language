@@ -421,6 +421,23 @@ static bool parse_definition(Parser *parser);
 
 static bool parse_block(Parser *parser);
 
+static bool parse_if_statement(Parser *parser) {
+	begin_node(parser, NODE_TYPE_IF_STATEMENT);
+		parse_token(parser, TOKEN_TYPE_IF);
+		if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
+		while (parse_token(parser, TOKEN_TYPE_ELSE)) {
+			bool encountered_if = false;
+			if (parse_token(parser, TOKEN_TYPE_IF)) {
+				if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+				encountered_if = true;
+			}
+			if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
+			if (!encountered_if) break;
+		}
+	return end_node(parser);
+}
+
 static bool parse_loop_variable(Parser *parser) {
 	begin_node(parser, NODE_TYPE_LOOP_VARIABLE);
 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
@@ -455,6 +472,7 @@ static bool parse_block_statement(Parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACE)) return parse_block(parser);
 	if (peek_token(parser, TOKEN_TYPE_WHILE)) return parse_while_loop(parser);
 	if (peek_token(parser, TOKEN_TYPE_FOR)) return parse_for_loop(parser);
+	if (peek_token(parser, TOKEN_TYPE_IF)) return parse_if_statement(parser);
 	if (parse_expression(parser)) {
 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 		return true;
