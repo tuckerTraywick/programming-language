@@ -54,7 +54,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 }
 
 int main(void) {
-	char *text = "func f() none {if a {} else if b {} else if c {} else {}}";
+	char *text = "var a int32 = 1 + 2 == 3 and not -1 + 2 == 3;";
 	Lexer_Result lexer_result = lex(text);
 	Lexer_Result_print(&lexer_result, text);
 
