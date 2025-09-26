@@ -159,3 +159,18 @@ pub func main() {
 	var script Script = std.objects.load<Script>("myscript.so")
 	doSomething(&script)
 }
+
+
+
+
+pub func main() {
+	var name mut string = "default"
+	var age mut int32 = 4
+	var required bool
+	addOptionalFlags(&name, &age)
+	addRequiredFlag(&bool)
+	if var error = parseFlags() {
+		printLine(error.message)
+		return
+	}
+}

@@ -36,13 +36,13 @@ static uint32_t infix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_DOT] = 1800,
 	[TOKEN_TYPE_ARROW] = 1800,
 	
+	[TOKEN_TYPE_AS] = 1750,
+
 	[TOKEN_TYPE_LEFT_ANGLE_BRACKET] = 1701,
 	[TOKEN_TYPE_LEFT_BRACKET] = 1702,
 	[TOKEN_TYPE_LEFT_PARENTHESIS] = 1703,
 
 	// unary operators
-
-	[TOKEN_TYPE_AS] = 1500,
 
 	[TOKEN_TYPE_MODULUS] = 1400,
 	[TOKEN_TYPE_DIVIDE] = 1400,
@@ -252,6 +252,8 @@ static bool parse_prefix_expression(Parser *parser) {
 	return end_node(parser);
 }
 
+static bool parse_type(Parser *parser);
+
 static bool parse_infix_expression(Parser *parser, uint32_t precedence) {
 	begin_node(parser, NODE_TYPE_INFIX_EXPRESSION);
 	if (!parse_prefix_expression(parser)) return false;
@@ -264,7 +266,9 @@ static bool parse_infix_expression(Parser *parser, uint32_t precedence) {
 		} else if (new_precedence == infix_precedences[TOKEN_TYPE_LEFT_BRACKET]) {
 			--parser->current_token_index;
 			if (!parse_array_index(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX);
-		}  else if (!parse_infix_expression(parser, new_precedence)) {
+		} else if (new_precedence == infix_precedences[TOKEN_TYPE_AS]) {
+			if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		} else if (!parse_infix_expression(parser, new_precedence)) {
 			return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
 		}
 	}

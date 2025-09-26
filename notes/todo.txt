@@ -1,8 +1,9 @@
+- Fix precedence of "as" operator
 - Extend for loop syntax with matching
 - Fix bug where function parameter parser tries to keep parsing even if a parameter fails to parse
-- Add all operators to expression parser
-- Handle "as" operator
 
+X Handle "as" operator
+X Add all operators to expression parser
 X Add parsers for basic control flow statements
 X Add generics to type parser
 X Add qualified identifiers to type parser
