@@ -1,3 +1,7 @@
+- Start making AST visitor
+- Create interpreter instruction set
+- Implement symbol trie
+- Figure out object file format
 - Fix precedence of "as" operator
 - Extend for loop syntax with matching
 - Fix bug where function parameter parser tries to keep parsing even if a parameter fails to parse
