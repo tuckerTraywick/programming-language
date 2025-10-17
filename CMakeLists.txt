@@ -9,6 +9,7 @@ add_executable(run
 	source/list.c
 	source/lexer.c
 	source/parser.c
+	source/symboltable.c
 	source/main.c
 )
 target_include_directories(run PUBLIC include)

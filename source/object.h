@@ -19,12 +19,11 @@ typedef struct Object_File_Header {
 } Object_File_Header;
 
 typedef struct Object {
-	void *file_contents; // NULL if object was created from `Object_initialize()`. Points to the beginning of an mmap()'d object file otherwise.
 	size_t size;
 	Symbol_Table symbol_table;
-	char *symbol_names;
 	char *data;
 	char *code;
+	void *file_contents; // NULL if object was created from `Object_initialize()`. Points to the beginning of an mmap()'d object file otherwise.
 } Object;
 
 // Returns true if intialization succeeded. Returns the object in `object`. Assumes `object` is

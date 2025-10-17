@@ -6,6 +6,7 @@
 #include "list.h"
 #include "lexer.h"
 #include "parser.h"
+#include "symboltable.h"
 
 static void Lexer_Result_print(Lexer_Result *result, char *text) {
 	printf("---- TOKENS ----\n");
@@ -53,15 +54,26 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 	}
 }
 
+// int main(void) {
+// 	char *text = "var a int32 = a->c.d->e().b;";
+// 	Lexer_Result lexer_result = lex(text);
+// 	Lexer_Result_print(&lexer_result, text);
+
+// 	Parser_Result parser_result = parse(lexer_result.tokens);
+// 	Parser_Result_print(&parser_result, lexer_result.tokens, text);
+
+// 	Lexer_Result_destroy(&lexer_result);
+// 	Parser_Result_destroy(&parser_result);
+// 	return 0;
+// }
+
 int main(void) {
-	char *text = "var a int32 = a->c.d->e().b;";
-	Lexer_Result lexer_result = lex(text);
-	Lexer_Result_print(&lexer_result, text);
+	Symbol_Table symbols = {0};
+	if (!Symbol_Table_initialize(&symbols)) {
+		fprintf(stderr, "Couldn't initialize symbol table.\n");
+		return 1;
+	}
 
-	Parser_Result parser_result = parse(lexer_result.tokens);
-	Parser_Result_print(&parser_result, lexer_result.tokens, text);
-
-	Lexer_Result_destroy(&lexer_result);
-	Parser_Result_destroy(&parser_result);
+	Symbol_Table_destroy(&symbols);
 	return 0;
 }

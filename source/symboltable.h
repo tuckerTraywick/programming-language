@@ -25,7 +25,7 @@ typedef enum Symbol_Visibility {
 	PRIVATE,
 } Symbol_Visibility;
 
-typedef struct Symbol_Header {
+typedef struct Symbol_Bucket {
 	size_t name_offset;
 	union {
 		Variable_Symbol variable;
@@ -33,10 +33,11 @@ typedef struct Symbol_Header {
 	};
 	Symbol_Type type;
 	Symbol_Visibility visibility;
-} Symbol_Header;
+} Symbol_Bucket;
 
 typedef struct Symbol_Table {
-	Symbol_Header *buckets;
+	Symbol_Bucket *buckets;
+	char *names;
 } Symbol_Table;
 
 // Returns true if initialization succeeded. Assumes `symbol_table` is empty.
