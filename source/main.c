@@ -4,9 +4,9 @@
 #include <string.h>
 
 #include "list.h"
+#include "map.h"
 #include "lexer.h"
 #include "parser.h"
-#include "symboltable.h"
 
 static void Lexer_Result_print(Lexer_Result *result, char *text) {
 	printf("---- TOKENS ----\n");
@@ -68,12 +68,9 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 // }
 
 int main(void) {
-	Symbol_Table symbols = {0};
-	if (!Symbol_Table_initialize(&symbols)) {
-		fprintf(stderr, "Couldn't initialize symbol table.\n");
-		return 1;
-	}
-
-	Symbol_Table_destroy(&symbols);
+	int *map = map_create(10, sizeof *map);
+	map[0] = 1;
+	printf("map[0] = %d\n", map[0]);
+	map_destroy(map);
 	return 0;
 }

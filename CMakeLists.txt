@@ -7,9 +7,9 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -g3")
 
 add_executable(run
 	source/list.c
+	source/map.c
 	source/lexer.c
 	source/parser.c
-	source/symboltable.c
 	source/main.c
 )
 target_include_directories(run PUBLIC include)

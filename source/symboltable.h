@@ -1,10 +1,3 @@
-#ifndef SYMBOL_TABLE_H
-#define SYMBOL_TABLE_H
-
-#include <stddef.h>
-#include <stdbool.h>
-#include <stdint.h>
-
 typedef struct Variable_Symbol {
 	size_t data_offset;
 } Variable_Symbol;
@@ -14,6 +7,7 @@ typedef struct Function_Symbol {
 } Function_Symbol;
 
 typedef enum Symbol_Type {
+	EMPTY, // Used to identify when symbol buckets are empty.
 	SYMBOL_TYPE_VARIABLE,
 	SYMBOL_TYPE_FUNCTION,
 	// SYMBOL_TYPE_STRUCT,
@@ -25,7 +19,7 @@ typedef enum Symbol_Visibility {
 	PRIVATE,
 } Symbol_Visibility;
 
-typedef struct Symbol_Bucket {
+typedef struct Symbol {
 	size_t name_offset;
 	union {
 		Variable_Symbol variable;
@@ -33,16 +27,9 @@ typedef struct Symbol_Bucket {
 	};
 	Symbol_Type type;
 	Symbol_Visibility visibility;
-} Symbol_Bucket;
+} Symbol;
 
 typedef struct Symbol_Table {
-	Symbol_Bucket *buckets;
 	char *names;
+	Symbol *buckets;
 } Symbol_Table;
-
-// Returns true if initialization succeeded. Assumes `symbol_table` is empty.
-bool Symbol_Table_initialize(Symbol_Table *symbol_table);
-
-void Symbol_Table_destroy(Symbol_Table *Symbol_Table);
-
-#endif // SYMBOL_TABLE_H

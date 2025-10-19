@@ -1,6 +1,7 @@
+- Make symbol table a trie instead of a hash table so it can be used for name suggestions in errors?
 - Start making AST visitor
 - Create interpreter instruction set
-- Implement symbol trie
+- Implement symbol table
 - Figure out object file format
 - Fix precedence of "as" operator
 - Extend for loop syntax with matching
