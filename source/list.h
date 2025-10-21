@@ -3,8 +3,15 @@
 
 #include <stddef.h>
 
+typedef struct List {
+	size_t capacity;
+	size_t length;
+	size_t element_size;
+	void *elements;
+} List;
+
 // Returns a pointer to the last element of a list. Returns null if the list is empty.
-#define list_get_last(list) ((list_get_size(list)) ? list + list_get_size(list) - 1 : NULL)
+// #define list_get_last(list) ((list_get_size(list)) ? list + list_get_size(list) - 1 : NULL)
 
 void *list_create(size_t capacity, size_t element_size);
 

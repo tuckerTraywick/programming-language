@@ -1,4 +1,5 @@
-- Make symbol table a trie instead of a hash table so it can be used for name suggestions in errors?
+- Refactor list to be a plain struct with no weird pointer stuff
+- Create map type
 - Start making AST visitor
 - Create interpreter instruction set
 - Implement symbol table

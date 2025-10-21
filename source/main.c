@@ -70,7 +70,7 @@ static void Parser_Result_print(Parser_Result *result, Token *tokens, char *text
 int main(void) {
 	int *map = map_create(10, sizeof *map);
 	map[0] = 1;
-	printf("map[0] = %d\n", map[0]);
+	printf("capacity = %d\n", map_get_capacity(map));
 	map_destroy(map);
 	return 0;
 }
