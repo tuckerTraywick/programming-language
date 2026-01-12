@@ -30,6 +30,10 @@ type IntOrString cases {int32, string}
 
 type File {Readable, Writeable}
 
+type Product<T..> {T}
+
+type Sum<T..> cases {T}
+
 
 
 
@@ -39,7 +43,7 @@ import std.io
 pub type Animal {
 	pub name string
 	pub age uint32
-	pub func makeNoise(&this)
+	pub makeNoise(&this)
 }
 
 pub type Dog {
@@ -75,7 +79,7 @@ import std.math
 
 pub type Shape {
 	pub color string
-	pub func area(&this) float64
+	pub area(&this) float64
 } cases {
 	type Rectangle {pub width, height float64}
 	type Triangle {pub base, height float64}
@@ -119,7 +123,7 @@ import std.operators
 
 pub type Entity {
 	pub pos, vel, acc Vector
-	pub func collide(a, b &mut This)
+	pub collide(a, b &mut This)
 } cases {
 	type Circle {pub radius float64}
 	type Mesh {pub vertices owned []Vector}
@@ -138,7 +142,7 @@ pub func collide(a &mut Circle, b &mut Mesh) {}
 
 pub func collide(a &mut Mesh, b &mut Circle) {}
 
-pub func to<string>(vector &Vector) {
+pub func to<string>(vector &Vector) string {
 	return f"({vector.x}, {vector.y}, {vector.z})"
 }
 
@@ -162,7 +166,7 @@ pub module interface
 
 pub type Script {
 	pub publicState int32
-	pub func doSomething(&mut this)
+	pub doSomething(&mut this)
 }
 
 
@@ -190,7 +194,7 @@ import std.objects
 import interface
 
 pub func main() {
-	var script &Script = std.objects.load<&Script>("myscript.so")
+	var script &mut Script = std.objects.load<&mut Script>("myscript.so")
 	doSomething(script)
 }
 

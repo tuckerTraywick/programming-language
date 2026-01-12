@@ -73,7 +73,7 @@ void *list_get_back_impl(void **list) {
 	if (header->buckets_count == 0) {
 		return NULL;
 	}
-	return (char*)*list + header->buckets_count*header->bucket_size;
+	return (char*)*list + (header->buckets_count - 1)*header->bucket_size;
 }
 
 bool list_is_empty_impl(void **list) {

@@ -62,7 +62,7 @@ static void print_lexer_errors(char *text, struct lexer_error *errors) {
 }
 
 int main(void) {
-	char *text = "'123";
+	char *text = "123";
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
 	if (!lex(text, &tokens, &lexer_errors)) {
@@ -83,8 +83,9 @@ int main(void) {
 		return 1;
 	}
 	
-
 	list_destroy(&tokens);
 	list_destroy(&lexer_errors);
+	list_destroy(&nodes);
+	list_destroy(&parser_errors);
 	return 0;
 }
