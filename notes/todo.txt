@@ -1,3 +1,4 @@
+- Handle false return values from list functions in lexer and parser
 - Make lexer recognize open <
 - Start making AST visitor
 - Create interpreter instruction set
