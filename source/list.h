@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define list_destroy(list) (list_destroy_impl((void**)list))
+#define list_destroy(list) (list_destroy_impl((void**)(list)))
 
 #define list_get_buckets_capacity(list) (list_get_buckets_capacity_impl((void**)(list)))
 
@@ -20,6 +20,8 @@
 #define list_set_buckets_count(list, count) (list_set_buckets_count_impl((void**)(list), (count)))
 
 // #define list_set_buckets_count_zero(list, count) (list_set_buckets_count_zero_impl((void**)(list), (count)))
+
+#define list_get_back(list) (list_get_back_impl((void**)(list)))
 
 #define list_is_empty(list) (list_is_empty_impl((void**)(list)))
 
@@ -41,7 +43,7 @@ size_t list_get_buckets_count_impl(void **list);
 
 bool list_set_buckets_count_impl(void **list, size_t count);
 
-// bool list_set_buckets_count_zero_impl(void **list, size_t count);
+void *list_get_back_impl(void **list);
 
 bool list_is_empty_impl(void **list);
 

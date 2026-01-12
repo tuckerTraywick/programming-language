@@ -68,18 +68,13 @@ bool list_set_buckets_count_impl(void **list, size_t count) {
 	return true;
 }
 
-// bool list_set_buckets_count_zero_impl(void **list, size_t count) {
-// 	struct list_header *header = get_header(list);
-// 	size_t amount_to_zero = 0;
-// 	if (count > header->buckets_capacity) {
-// 		amount_to_zero = count - header->buckets_capacity;
-// 	} else {
-// 		amount_to_zero = header->buckets_capacity - count;
-// 	}
-// 	memset(header->buckets + header->buckets_count, 0, amount_to_zero);
-// 	header->buckets_count = count;
-// 	return true;
-// }
+void *list_get_back_impl(void **list) {
+	struct list_header *header = get_header(list);
+	if (header->buckets_count == 0) {
+		return NULL;
+	}
+	return (char*)*list + header->buckets_count*header->bucket_size;
+}
 
 bool list_is_empty_impl(void **list) {
 	struct list_header *header = get_header(list);
