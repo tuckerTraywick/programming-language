@@ -108,12 +108,13 @@ const char *const lexer_error_messages[] = {
 
 bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
 	*tokens = list_create(initial_tokens_capacity, sizeof (struct token));
-	if (!tokens) {
+	if (!*tokens) {
 		return false;
 	}
 	*errors = list_create(initial_lexer_errors_capacity, sizeof (struct lexer_error));
-	if (!errors) {
+	if (!*errors) {
 		list_destroy(tokens);
+		*tokens = NULL;
 		return false;
 	}
 
