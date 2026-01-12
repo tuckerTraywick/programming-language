@@ -11,7 +11,7 @@ struct list_header {
 	char buckets[];
 };
 
-static const int buckets_growth_factor = 2;
+static const size_t buckets_growth_factor = 2;
 
 static struct list_header *get_header(void **list) {
 	return (struct list_header*)*list - 1;
@@ -103,6 +103,6 @@ bool list_pop_back_impl(void **list, void *result) {
 	}
 	memcpy(result, (char*)*list + (header->buckets_count - 1)*header->bucket_size, header->bucket_size);
 	--header->buckets_count;
-	// TODO: Maybe shrink here if needed? Maybe make shrink a separate function you have to call?
+	// TODO: Maybe shrink here if needed? Maybe make shrink in a separate function you have to call?
 	return true;
 }

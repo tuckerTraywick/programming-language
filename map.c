@@ -25,7 +25,7 @@ enum probe_result {
 	PROBE_RESULT_MAP_FULL,
 };
 
-static size_t keys_growth_factor = 2;
+static const size_t keys_growth_factor = 2;
 
 static struct map *get_header(void **map) {
 	return (struct map*)*map - 1;

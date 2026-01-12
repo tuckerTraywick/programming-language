@@ -5,21 +5,7 @@
 #include "list.h"
 // #include "map.h"
 #include "lexer.h"
-// #include "parser.h"
-
-// static void Lexer_Result_print(Lexer_Result *result, char *text) {
-// 	printf("---- TOKENS ----\n");
-// 	for (size_t i = 0; i < list_get_size(result->tokens); ++i) {
-// 		Token *token = result->tokens + i;
-// 		printf("%zu %s `%.*s`\n", i, reserved_words[token->type], token->text_length, text + token->text_index);
-// 	}
-
-// 	printf("\n---- LEXER ERRORS ----\n");
-// 	for (size_t i = 0; i < list_get_size(result->errors); ++i) {
-// 		Lexer_Error *error = result->errors + i;
-// 		printf("%s `%.*s`\n", lexer_error_messages[error->type], error->text_length, text + error->text_index);
-// 	}
-// }
+#include "parser.h"
 
 // static void print_node(Node *nodes, Token *tokens, char *text, uint32_t node_index, uint32_t depth) {
 // 	Node *node = nodes + node_index;
@@ -51,19 +37,6 @@
 // 		Parser_Error *error = result->errors + i;
 // 		printf("%s (starting at token %d)\n", parser_error_messages[error->type], error->token_index);
 // 	}
-// }
-
-// int main(void) {
-// 	char *text = "var a int32 = a->c.d->e().b;";
-// 	Lexer_Result lexer_result = lex(text);
-// 	Lexer_Result_print(&lexer_result, text);
-
-// 	Parser_Result parser_result = parse(lexer_result.tokens);
-// 	Parser_Result_print(&parser_result, lexer_result.tokens, text);
-
-// 	Lexer_Result_destroy(&lexer_result);
-// 	Parser_Result_destroy(&parser_result);
-// 	return 0;
 // }
 
 static void print_token(char *text, struct token *token) {
@@ -100,6 +73,16 @@ int main(void) {
 	print_tokens(text, tokens);
 	printf("\nlexer errors:\n");
 	print_lexer_errors(text, lexer_errors);
+
+	struct node *nodes = NULL;
+	struct parser_error *parser_errors = NULL;
+	if (!parse(tokens, &nodes, &parser_errors)) {
+		printf("Failed parsing.\n");
+		list_destroy(&tokens);
+		list_destroy(&lexer_errors);
+		return 1;
+	}
+	
 
 	list_destroy(&tokens);
 	list_destroy(&lexer_errors);

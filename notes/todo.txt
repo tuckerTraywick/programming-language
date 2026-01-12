@@ -1,4 +1,3 @@
-- Reformat code to use new list implementation
 - Make lexer recognize open <
 - Start making AST visitor
 - Create interpreter instruction set
@@ -8,6 +7,7 @@
 - Extend for loop syntax with matching
 - Fix bug where function parameter parser tries to keep parsing even if a parameter fails to parse
 
+X Reformat code to use new list implementation
 X Create map type
 X Handle "as" operator
 X Add all operators to expression parser
