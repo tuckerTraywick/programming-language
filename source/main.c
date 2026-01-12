@@ -54,7 +54,7 @@ static void print_node(char *text, struct token *tokens, struct node *nodes, str
 }
 
 int main(void) {
-	char *text = "";
+	char *text = "module a; import std.io;";
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
 	if (!lex(text, &tokens, &lexer_errors)) {

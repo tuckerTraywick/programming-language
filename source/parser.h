@@ -94,6 +94,8 @@ extern char *node_type_names[];
 // A map of parser error types to their messages. Indexed by the type of an error.
 extern char *parser_error_messages[];
 
+// Parses `tokens` and returns a list of nodes in a syntax tree in `nodes` and a list of errors
+// encountered in `errors`. Returns true if no memory errors occurred, false otherwise.
 bool parse(struct token *tokens, struct node **nodes, struct parser_error **errors);
 
 #endif // PARSER_H

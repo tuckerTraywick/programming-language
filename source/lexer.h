@@ -121,7 +121,7 @@ extern const char *const reserved_words[];
 // A map from lexer error types to their error messages. Indexed by the type of an error.
 extern const char *const lexer_error_messages[];
 
-// Lexes `text` and returns a list of tokens in `tokens` and alist of errors in `errors`. Returns
+// Lexes `text` and returns a list of tokens in `tokens` and a list of errors in `errors`. Returns
 // true if no memory errors occurred, false otherwise.
 bool lex(char *text, struct token **tokens, struct lexer_error **errors);
 
