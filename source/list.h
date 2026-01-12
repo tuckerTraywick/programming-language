@@ -2,41 +2,53 @@
 #define LIST_H
 
 #include <stddef.h>
+#include <stdbool.h>
 
-typedef struct List {
-	size_t capacity;
-	size_t length;
-	size_t element_size;
-	void *elements;
-} List;
+#define list_destroy(list) (list_destroy_impl((void**)list))
 
-// Returns a pointer to the last element of a list. Returns null if the list is empty.
-// #define list_get_last(list) ((list_get_size(list)) ? list + list_get_size(list) - 1 : NULL)
+#define list_get_buckets_capacity(list) (list_get_buckets_capacity_impl((void**)(list)))
 
-void *list_create(size_t capacity, size_t element_size);
+// Returns true if successful, false if memory error. If you pass a capacity smaller than the list's
+// count, the count of the list shrinks to the new capacity.
+#define list_set_buckets_capacity(list, capacity) (list_set_buckets_capacity_impl((void**)(list), (capacity)))
 
-void list_destroy(void *list);
+#define list_get_buckets_count(list) (list_get_buckets_count_impl((void**)(list)))
 
-// Returns the maximum capacity of a list.
-size_t list_get_capacity(void *list);
+// Does not zero new buckets added to the list if given a count greater than the list's current
+// count. Returns true if the new count was <= the list's capacity, returns false and does nothing
+// otherwise.
+#define list_set_buckets_count(list, count) (list_set_buckets_count_impl((void**)(list), (count)))
 
-// Sets the maximum capacity of a list. Returns a pointer to the list. May reallocate the list.
-void *list_set_capacity(void *list, size_t capacity);
+// #define list_set_buckets_count_zero(list, count) (list_set_buckets_count_zero_impl((void**)(list), (count)))
 
-// Returns the number of elements in the list.
-size_t list_get_size(void *list);
+#define list_is_empty(list) (list_is_empty_impl((void**)(list)))
 
-// Sets the number of elements used in a list. DOES NOT ZERO ELEMENTS. Returns a pointer to the
-// list. May reallocate the list.
-void *list_set_size(void *list, size_t size);
+#define list_is_not_empty(list) (list_is_not_empty_impl((void**)(list)))
 
-// Returns the size of each element in a list.
-size_t list_get_element_size(void *list);
+#define list_push_back(list, value) (list_push_back_impl((void**)(list), (value)))
 
-// Pushes an element on the end of a list. Returns the list. May reallocate the list.
-void *list_push(void *list, void *element);
+#define list_pop_back(list, result) (list_pop_back_impl((void**)(list), (result)))
 
-// Pops an element off the end of a list. Returns the list. May reallocate the list.
-void *list_pop(void *list, void *destination);
+void *list_create(size_t buckets_capacity, size_t bucket_size);
+
+void list_destroy_impl(void **list);
+
+size_t list_get_buckets_capacity_impl(void **list);
+
+bool list_set_buckets_capacity_impl(void **list, size_t capacity);
+
+size_t list_get_buckets_count_impl(void **list);
+
+bool list_set_buckets_count_impl(void **list, size_t count);
+
+// bool list_set_buckets_count_zero_impl(void **list, size_t count);
+
+bool list_is_empty_impl(void **list);
+
+bool list_is_not_empty_impl(void **list);
+
+bool list_push_back_impl(void **list, void *value);
+
+bool list_pop_back_impl(void **list, void *result);
 
 #endif // LIST_H

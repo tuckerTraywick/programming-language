@@ -12,26 +12,43 @@ for i usize in 0 until length
 for (i, j string) in x
 for (a, b int32) in zip(array1, array2)
 
+need type vs type distinction to avoid impl vs extend vs abstract -> actually don't care, just use
+  the methods to distinguish
+need cases to avoid open vs closed and to distinguish between embedding a single case vs all
+put method inside type for convnience and consistency with cases
+everything in module scope besides enum value cases, which are in type scope
+extending a case type in the body of another type DOES export the cases of that type
+abstracting a case type in the case part of another type only exports the cases included in 
+  the new type
+
+
+
+
+type UserId = uint64
+
+type IntOrString cases {int32, string}
+
+type File {Readable, Writeable}
+
 
 
 
 pub module animals
 import std.io
 
-pub trait Animal {
+pub type Animal {
 	pub name string
 	pub age uint32
+	pub func makeNoise(&this)
 }
 
-pub method makeNoise(animal &Animal)
-
-pub struct Dog {
-	embed Animal
+pub type Dog {
+	Animal
 	pub tag string
 }
 
-pub struct Cat {
-	embed Animal
+pub type Cat {
+	Animal
 	pub breed string
 }
 
@@ -56,13 +73,30 @@ pub func main() {
 pub module shapes
 import std.math
 
-pub struct Shape cases {
-	struct Rectangle {pub length, width float64}
-	struct Triangle {pub base, height float64}
-	struct Circle {pub radius float64}
+pub type Shape {
+	pub color string
+	pub func area(&this) float64
+} cases {
+	type Rectangle {pub width, height float64}
+	type Triangle {pub base, height float64}
+	type Circle {pub radius float64}
 }
 
-pub method area(shape &Shape) float64
+// data.txt
+pub type MoreShapeData {
+	shapes.Shape // embeds all fields
+	pub extraData float64
+} cases {
+	Triangle // only embeds Triangle. if this wasnt here all cases would be included
+}
+
+// cases.txt
+pub type MoreShapeCases {
+	pub color string // only embeds color, not area().
+} cases {
+	shapes.Shape // embeds all cases.
+	type Rhombus {}
+}
 
 pub func area(rectangle &Rectangle) {
 	return rectangle.width*rectangle.height
@@ -83,19 +117,18 @@ pub module physics
 import std.math
 import std.operators
 
-pub struct Entity {
+pub type Entity {
 	pub pos, vel, acc Vector
+	pub func collide(a, b &mut This)
 } cases {
-	struct Circle {pub radius float64}
-	struct Mesh {pub vertices owned []Vector}
+	type Circle {pub radius float64}
+	type Mesh {pub vertices owned []Vector}
 }
 
-pub struct Vector {
-	embed std.operators.To<string>, .Equality<This>, .Arithmetic<This>, .Arithmetic<float>
+pub type Vector {
+	std.operators.To<string>
 	pub x, y, z float64
 }
-
-pub method collide(a, b &mut Entity)
 
 pub func collide(a, b &mut Circle) {}
 
@@ -105,17 +138,17 @@ pub func collide(a &mut Circle, b &mut Mesh) {}
 
 pub func collide(a &mut Mesh, b &mut Circle) {}
 
-pub func to<=string>(vector &Vector) {
+pub func to<string>(vector &Vector) {
 	return f"({vector.x}, {vector.y}, {vector.z})"
 }
 
 
 
 
-struct Color {
+type Color {
 	r, g, b uint8
 } cases {
-	default struct Rgb
+	type Rgb
 	red = (255, 0, 0)
 	green = (0, 255, 0)
 	blue = (0, 0, 255)
@@ -124,21 +157,22 @@ struct Color {
 
 
 
+// interface.txt
 pub module interface
 
-pub trait Script {
-	pub state int32
+pub type Script {
+	pub publicState int32
+	pub func doSomething(&mut this)
 }
 
-pub method doSomething(script &mut Script)
 
-
+// myscript.txt -> myscript.so
 pub module myScript
-import std.io, .objects
+import std.io
 import interface
 
-pub struct MyScript {
-	embed interace.Script
+pub type MyScript {
+	interace.Script
 }
 
 pub func doSomething(myScript &mut MyScript) {
@@ -156,8 +190,8 @@ import std.objects
 import interface
 
 pub func main() {
-	var script Script = std.objects.load<Script>("myscript.so")
-	doSomething(&script)
+	var script &Script = std.objects.load<&Script>("myscript.so")
+	doSomething(script)
 }
 
 

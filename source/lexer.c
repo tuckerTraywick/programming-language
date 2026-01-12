@@ -1,22 +1,19 @@
-// TODO: Recgonize open <.
-
-#include <assert.h>
 #include <stdio.h>
 
-#include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
 #include "lexer.h"
 #include "list.h"
 
-#define STARTING_TOKEN_CAPACITY 1000
-
-#define STARTING_LEXER_ERROR_CAPACITY 100
-
 #define max(a, b) (((a) >= (b)) ? (a) : (b))
 
-char *reserved_words[] = {
+static const size_t initial_tokens_capacity = 1000;
+
+static const size_t initial_lexer_errors_capacity = 100;
+
+const char *const reserved_words[] = {
 	// Literals
 	[TOKEN_TYPE_NUMBER] = "number",
 	[TOKEN_TYPE_CHARACTER] = "character",
@@ -103,26 +100,24 @@ char *reserved_words[] = {
 	[TOKEN_TYPE_LEFT_ANGLE_BRACKET] = "< bracket",
 };
 
-char *lexer_error_messages[] = {
+const char *const lexer_error_messages[] = {
 	[LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN] = "Unrecognized token.",
 	[LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
 	[LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
 };
 
-void Lexer_Result_destroy(Lexer_Result *result) {
-	list_destroy(result->tokens);
-	list_destroy(result->errors);
-	*result = (Lexer_Result){0};
-}
+bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
+	*tokens = list_create(initial_tokens_capacity, sizeof (struct token));
+	if (!tokens) {
+		return false;
+	}
+	*errors = list_create(initial_lexer_errors_capacity, sizeof (struct lexer_error));
+	if (!errors) {
+		list_destroy(tokens);
+		return false;
+	}
 
-Lexer_Result lex(char *text) {
-	Lexer_Result result = {
-		.tokens = list_create(STARTING_TOKEN_CAPACITY, sizeof (Token)),
-		.errors = list_create(STARTING_LEXER_ERROR_CAPACITY, sizeof (Lexer_Error)),
-	};
-	assert(result.tokens && result.errors && "Failed malloc.");
-
-	Token current_token = {0};
+	struct token current_token = {0};
 	while (*text != '\0') {
 		// Skip whitespace.
 		if (isspace(*text)) {
@@ -151,13 +146,13 @@ Lexer_Result lex(char *text) {
 				// TODO: Handle escape characters and check length.
 			} while (*text && *text != '\'' && *text != '\r' && *text != '\n');
 			if (*text != '\'') {
-				Lexer_Error error = {
+				struct lexer_error error = {
 					.text_index = current_token.text_index,
 					.text_length = current_token.text_length,
 					.type = LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
 				};
 				// TODO: Handle null return value.
-				result.errors = list_push(result.errors, &error);
+				list_push_back(errors, &error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -173,13 +168,13 @@ Lexer_Result lex(char *text) {
 				// TODO: Handle escape characters and check length.
 			} while (*text && *text != '"' && *text != '\r' && *text != '\n');
 			if (*text != '"') {
-				Lexer_Error error = {
+				struct lexer_error error = {
 					.text_index = current_token.text_index,
 					.text_length = current_token.text_length,
 					.type = LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
 				};
 				// TODO: Handle null return value.
-				result.errors = list_push(result.errors, &error);
+				list_push_back(errors, &error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -194,7 +189,7 @@ Lexer_Result lex(char *text) {
 				++current_token.text_length;
 			} while (isalnum(*text) || *text == '_');
 			current_token.type = TOKEN_TYPE_IDENTIFIER;
-			for (uint32_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
+			for (size_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
 				if (strncmp(reserved_words[i], text - current_token.text_length, max(strlen(reserved_words[i]), current_token.text_length)) == 0) {
 					current_token.type = i;
@@ -204,7 +199,7 @@ Lexer_Result lex(char *text) {
 		// Lex operators.
 		} else {
 			bool found_operator = false;
-			for (uint32_t i = TOKEN_TYPE_DOT; i < TOKEN_TYPE_LEFT_ANGLE_BRACKET; ++i) {
+			for (size_t i = TOKEN_TYPE_DOT; i < TOKEN_TYPE_LEFT_ANGLE_BRACKET; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
 				if (strncmp(reserved_words[i], text, strlen(reserved_words[i])) == 0) {
 					current_token.type = i;
@@ -216,7 +211,7 @@ Lexer_Result lex(char *text) {
 			}
 
 			if (!found_operator) {
-				Lexer_Error error = {
+				struct lexer_error error = {
 					.text_index = current_token.text_index,
 					.text_length = 0,
 					.type = LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN,
@@ -227,7 +222,7 @@ Lexer_Result lex(char *text) {
 					++error.text_length;
 				}
 				// TODO: Handle null return value.
-				result.errors = list_push(result.errors, &error);
+				list_push_back(errors, &error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -239,9 +234,11 @@ Lexer_Result lex(char *text) {
 			}
 		}
 		// TODO: Handle null return value.
-		result.tokens = list_push(result.tokens, &current_token);
+		list_push_back(tokens, &current_token);
 		current_token.text_index += current_token.text_length;
 		current_token.text_length = 0;
 	}
-	return result;
+	return true;
 }
+
+#undef max

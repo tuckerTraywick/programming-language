@@ -1,10 +1,11 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
 // The type of thing a token represents.
-typedef enum Token_Type {
+enum token_type {
 	// Literals
 	TOKEN_TYPE_NUMBER,
 	TOKEN_TYPE_CHARACTER,
@@ -90,47 +91,38 @@ typedef enum Token_Type {
 	TOKEN_TYPE_LESS,
 	TOKEN_TYPE_LEFT_ANGLE_BRACKET,
 	TOKEN_TYPE_COUNT,
-} Token_Type;
+};
 
 // A span of characters in the input text.
-typedef struct Token {
-	uint32_t text_index;
-	uint32_t text_length;
-	Token_Type type;
-} Token;
+struct token {
+	size_t text_index;
+	size_t text_length;
+	enum token_type type;
+};
 
 // The type of an error encountered during lexing.
-typedef enum Lexer_Error_Type {
+enum lexer_error_type {
 	LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN,
 	LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
 	LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
 	LEXER_ERROR_TYPE_COUNT,
-} Lexer_Error_Type;
+};
 
 // An error encountered during lexing.
-typedef struct Lexer_Error {
-	uint32_t text_index;
-	uint32_t text_length;
-	Lexer_Error_Type type;
-} Lexer_Error;
-
-// The result of lexing a string. Must be destroyed with `Lexer_Result_destroy()`.
-typedef struct Lexer_Result {
-	Token *tokens; // Points to an arena. Owned by this struct.
-	Lexer_Error *errors; // Points to an arena. Owned by this struct.
-} Lexer_Result;
+struct lexer_error {
+	size_t text_index;
+	size_t text_length;
+	enum lexer_error_type type;
+};
 
 // A map from token types to their string values. Indexed by the type of a token.
-extern char *reserved_words[];
+extern const char *const reserved_words[];
 
 // A map from lexer error types to their error messages. Indexed by the type of an error.
-extern char *lexer_error_messages[];
+extern const char *const lexer_error_messages[];
 
-// Destroys a `Lexer_Result` and frees its arenas.
-void Lexer_Result_destroy(Lexer_Result *result);
-
-// Splits a string into tokens and reports any errors. Return value must be destroyed with
-// `Lexer_Result_destroy()`.
-Lexer_Result lex(char *text);
+// Lexes `text` and returns a list of tokens in `tokens` and alist of errors in `errors`. Returns
+// true if no memory errors occurred, false otherwise.
+bool lex(char *text, struct token **tokens, struct lexer_error **errors);
 
 #endif // LEXER_H

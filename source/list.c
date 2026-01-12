@@ -1,94 +1,113 @@
-#include <assert.h>
-#include <stdio.h>
-
 #include <stddef.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include "list.h"
 
-#define min(a, b) (((a) <= (b)) ? (a) : (b))
+struct list_header {
+	size_t buckets_capacity;
+	size_t buckets_count;
+	size_t bucket_size;
+	char buckets[];
+};
 
-#define max(a, b) (((a) >= (b)) ? (a) : (b))
+static const int buckets_growth_factor = 2;
 
-typedef struct List_Header {
-	size_t capacity;
-	size_t size;
-	size_t element_size;
-	size_t pad;
-	char data[];
-} List_Header;
-
-static List_Header *list_get_header(void *list) {
-	return (List_Header*)list - 1;
+static struct list_header *get_header(void **list) {
+	return (struct list_header*)*list - 1;
 }
 
-void *list_create(size_t capacity, size_t element_size) {
-	List_Header *list = malloc(sizeof (List_Header) + capacity*element_size);
-	if (!list) {
+void *list_create(size_t buckets_capacity, size_t bucket_size) {
+	struct list_header *header = malloc(sizeof *header + buckets_capacity*bucket_size);
+	if (!header) {
 		return NULL;
 	}
-	*list = (List_Header){
-		.capacity = capacity,
-		.element_size = element_size,
+	*header = (struct list_header){
+		.buckets_capacity = buckets_capacity,
+		.bucket_size = bucket_size,
 	};
-	return list + 1;
+	return &header->buckets;
 }
 
-void list_destroy(void *list) {
-	free((List_Header*)list - 1);
+void list_destroy_impl(void **list) {
+	struct list_header *header = get_header(list);
+	free(header);
+	*list = NULL;
 }
 
-size_t list_get_capacity(void *list) {
-	List_Header *header = list_get_header(list);
-	return header->capacity;
+size_t list_get_buckets_capacity_impl(void **list) {
+	struct list_header *header = get_header(list);
+	return header->buckets_capacity;
 }
 
-void *list_set_capacity(void *list, size_t capacity) {
-	List_Header *new_list = realloc(list_get_header(list), sizeof (List_Header) + capacity*list_get_element_size(list));
-	if (!new_list) {
-		return NULL;
+bool list_set_buckets_capacity_impl(void **list, size_t capacity) {
+	struct list_header *header = get_header(list);
+	header = realloc(header, sizeof *header + capacity*header->bucket_size);
+	if (!header) {
+		return false;
 	}
-	new_list->capacity = capacity;
-	return new_list + 1;
-}
-
-size_t list_get_size(void *list) {
-	List_Header *header = list_get_header(list);
-	return header->size;
-}
-
-void *list_set_size(void *list, size_t size) {
-	if (size >= list_get_capacity(list)) {
-		list = list_set_capacity(list, max(list_get_capacity(list)*2, size));
-		if (!list) {
-			return NULL;
-		}
+	*list = &header->buckets;
+	header->buckets_capacity = capacity;
+	if (capacity < header->buckets_count) {
+		header->buckets_count = capacity;
 	}
-	List_Header *header = list_get_header(list);
-	header->size = size;
-	return list;
+	return true;
 }
 
-size_t list_get_element_size(void *list) {
-	List_Header *header = list_get_header(list);
-	return header->element_size;
+size_t list_get_buckets_count_impl(void **list) {
+	struct list_header *header = get_header(list);
+	return header->buckets_count;
 }
 
-void *list_push(void *list, void *element) {
-	list = list_set_size(list, list_get_size(list) + 1);
-	if (list) {
-		memcpy((char*)list + (list_get_size(list) - 1)*list_get_element_size(list), element, list_get_element_size(list));
+bool list_set_buckets_count_impl(void **list, size_t count) {
+	struct list_header *header = get_header(list);
+	if (count > header->buckets_capacity) {
+		return false;
 	}
-	return list;
+	header->buckets_count = count;
+	return true;
 }
 
-void *list_pop(void *list, void *destination) {
-	list = list_set_size(list, list_get_size(list) - 1);
-	if (list) {
-		memcpy(destination, (char*)list + (list_get_size(list) + 1)*list_get_element_size(list), list_get_element_size(list));
+// bool list_set_buckets_count_zero_impl(void **list, size_t count) {
+// 	struct list_header *header = get_header(list);
+// 	size_t amount_to_zero = 0;
+// 	if (count > header->buckets_capacity) {
+// 		amount_to_zero = count - header->buckets_capacity;
+// 	} else {
+// 		amount_to_zero = header->buckets_capacity - count;
+// 	}
+// 	memset(header->buckets + header->buckets_count, 0, amount_to_zero);
+// 	header->buckets_count = count;
+// 	return true;
+// }
+
+bool list_is_empty_impl(void **list) {
+	struct list_header *header = get_header(list);
+	return header->buckets_count == 0;
+}
+
+bool list_is_not_empty_impl(void **list) {
+	struct list_header *header = get_header(list);
+	return header->buckets_count != 0;
+}
+
+bool list_push_back_impl(void **list, void *value) {
+	struct list_header *header = get_header(list);
+	if (header->buckets_count == header->buckets_capacity && !list_set_buckets_capacity_impl(list, buckets_growth_factor*header->buckets_capacity)) {
+		return false;
 	}
-	return list;
+	memcpy((char*)*list + header->buckets_count*header->bucket_size, value, header->bucket_size);
+	++header->buckets_count;
+	return true;
 }
 
-#undef min
-#undef max
+bool list_pop_back_impl(void **list, void *result) {
+	struct list_header *header = get_header(list);
+	if (header->buckets_count == 0) {
+		return false;
+	}
+	memcpy(result, (char*)*list + (header->buckets_count - 1)*header->bucket_size, header->bucket_size);
+	--header->buckets_count;
+	// TODO: Maybe shrink here if needed? Maybe make shrink a separate function you have to call?
+	return true;
+}
