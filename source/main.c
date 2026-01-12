@@ -40,7 +40,7 @@
 // }
 
 static void print_token(char *text, struct token *token) {
-	printf("`%.*s`", (int)token->text_length, text + token->text_index);
+	printf("%s `%.*s`", reserved_words[token->type], (int)token->text_length, text + token->text_index);
 }
 
 static void print_tokens(char *text, struct token *tokens) {
@@ -61,8 +61,32 @@ static void print_lexer_errors(char *text, struct lexer_error *errors) {
 	}
 }
 
+static void print_node(char *text, struct token *tokens, struct node *nodes, struct node *node, size_t depth) {
+	for (size_t i = 0; i < depth; ++i) {
+		printf("| ");
+	}
+
+	if (node->type == NODE_TYPE_TOKEN) {
+		struct token *token = tokens + node->child_index;
+		print_token(text, token);
+		printf("\n");
+		return;
+	}
+
+	printf("%s\n", node_type_names[node->type]);
+	if (node->child_index == 0) {
+		return;
+	}
+
+	size_t node_index = node->child_index;
+	do {
+		print_node(text, tokens, nodes, nodes + node_index, depth + 1);
+		node_index = nodes[node_index].next_index;
+	} while (node_index);
+}
+
 int main(void) {
-	char *text = "123";
+	char *text = "var a int32;";
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
 	if (!lex(text, &tokens, &lexer_errors)) {
@@ -73,6 +97,7 @@ int main(void) {
 	print_tokens(text, tokens);
 	printf("\nlexer errors:\n");
 	print_lexer_errors(text, lexer_errors);
+	printf("\n");
 
 	struct node *nodes = NULL;
 	struct parser_error *parser_errors = NULL;
@@ -82,6 +107,9 @@ int main(void) {
 		list_destroy(&lexer_errors);
 		return 1;
 	}
+	printf("nodes:\n");
+	print_node(text, tokens, nodes, nodes, 0);
+	printf("\n");
 	
 	list_destroy(&tokens);
 	list_destroy(&lexer_errors);
