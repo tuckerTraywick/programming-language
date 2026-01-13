@@ -19,7 +19,7 @@ static void print_tokens(char *text, struct token *tokens) {
 }
 
 static void print_lexer_error(char *text, struct lexer_error *error) {
-	printf("%s `%.*s`", lexer_error_messages[error->type], (int)error->text_length, text + error->text_index);
+	printf("%s [Character %zu `%.*s`]", lexer_error_messages[error->type], error->text_index, (int)error->text_length, text + error->text_index);
 }
 
 static void print_lexer_errors(char *text, struct lexer_error *errors) {
@@ -53,8 +53,21 @@ static void print_node(char *text, struct token *tokens, struct node *nodes, str
 	} while (node_index);
 }
 
+static void print_parser_error(char *text, struct token *tokens, struct parser_error *error) {
+	printf("%s [Token %zu ", parser_error_messages[error->type], error->token_index - 1);
+	print_token(text, tokens + error->token_index - 1);
+	printf("]");
+}
+
+static void print_parser_errors(char *text, struct token *tokens, struct parser_error *errors) {
+	for (size_t i = 0; i < list_get_buckets_count(&errors); ++i) {
+		print_parser_error(text, tokens, errors + i);
+		printf("\n");
+	}
+}
+
 int main(void) {
-	char *text = "module a; import std.io;";
+	char *text = "module a; import std.";
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
 	if (!lex(text, &tokens, &lexer_errors)) {
@@ -77,6 +90,8 @@ int main(void) {
 	}
 	printf("NODES:\n");
 	print_node(text, tokens, nodes, nodes, 0);
+	printf("\nPARSER ERRORS:\n");
+	print_parser_errors(text, tokens, parser_errors);
 	printf("\n");
 	
 	list_destroy(&tokens);
