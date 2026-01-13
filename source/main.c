@@ -13,6 +13,7 @@ static void print_token(char *text, struct token *token) {
 
 static void print_tokens(char *text, struct token *tokens) {
 	for (size_t i = 0; i < list_get_buckets_count(&tokens); ++i) {
+		printf("%zu ", i);
 		print_token(text, tokens + i);
 		printf("\n");
 	}
@@ -67,7 +68,7 @@ static void print_parser_errors(char *text, struct token *tokens, struct parser_
 }
 
 int main(void) {
-	char *text = "module a; import std.";
+	char *text = "module a; import 'std.;\nj";
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
 	if (!lex(text, &tokens, &lexer_errors)) {
