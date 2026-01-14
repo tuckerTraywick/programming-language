@@ -20,7 +20,7 @@ struct parser {
 	bool current_node_is_parent;
 };
 
-static size_t prefix_precedences[TOKEN_TYPE_COUNT] = {
+static const size_t prefix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_LEFT_PARENTHESIS] = 1601,
 	[TOKEN_TYPE_LEFT_BRACKET] = 1602,
 	
@@ -32,7 +32,7 @@ static size_t prefix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_BOOLEAN_NOT] = 600,
 };
 
-static size_t infix_precedences[TOKEN_TYPE_COUNT] = {
+static const size_t infix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_DOT] = 1800,
 	[TOKEN_TYPE_ARROW] = 1800,
 	
@@ -383,94 +383,90 @@ static bool parse_type(struct parser *parser) {
 	return false;
 }
 
-static bool parse_embed_statement(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_EMBED_STATEMENT);
-		parse_token(parser, TOKEN_TYPE_EMBED);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
-}
+// static bool parse_embed_statement(struct parser *parser) {
+// 	begin_node(parser, NODE_TYPE_EMBED_STATEMENT);
+// 		parse_token(parser, TOKEN_TYPE_EMBED);
+// 		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+// 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+// 	return end_node(parser);
+// }
 
-static bool parse_struct_definition(struct parser *parser);
+// static bool parse_type_case(struct parser *parser) {
+// 	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
+// 	if (peek_token(parser, TOKEN_TYPE_STRUCT)) return parse_struct_definition(parser);
+// 	if (peek_token(parser, TOKEN_TYPE_TRAIT)) return parse_trait_definition(parser);
+// 	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
+// 	begin_node(parser, NODE_TYPE_TYPE_CASE);
+// 		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
+// 		if (peek_token(parser, TOKEN_TYPE_ASSIGN) && !parse_assignment_body(parser)) return false;
+// 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+// 	return end_node(parser);
+// }
 
-static bool parse_trait_definition(struct parser *parser);
+// static bool parse_field_definition(struct parser *parser) {
+// 	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
+// 	if (!(peek_token(parser, TOKEN_TYPE_IDENTIFIER) || peek_token(parser, TOKEN_TYPE_PUB))) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
+// 	begin_node(parser, NODE_TYPE_FIELD_DEFINITION);
+// 		parse_token(parser, TOKEN_TYPE_PUB);
+// 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+// 		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+// 		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+// 	return end_node(parser);
+// }
 
-static bool parse_type_case(struct parser *parser) {
-	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
-	if (peek_token(parser, TOKEN_TYPE_STRUCT)) return parse_struct_definition(parser);
-	if (peek_token(parser, TOKEN_TYPE_TRAIT)) return parse_trait_definition(parser);
-	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
-	begin_node(parser, NODE_TYPE_TYPE_CASE);
-		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
-		if (peek_token(parser, TOKEN_TYPE_ASSIGN) && !parse_assignment_body(parser)) return false;
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
-}
-
-static bool parse_field_definition(struct parser *parser) {
-	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
-	if (!(peek_token(parser, TOKEN_TYPE_IDENTIFIER) || peek_token(parser, TOKEN_TYPE_PUB))) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
-	begin_node(parser, NODE_TYPE_FIELD_DEFINITION);
-		parse_token(parser, TOKEN_TYPE_PUB);
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
-}
-
-static bool parse_trait_definition(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_TRAIT)) return false;
-	begin_node(parser, NODE_TYPE_TRAIT_DEFINITION);
-		parse_token(parser, TOKEN_TYPE_TRAIT);
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-		// Parse generic parameters...
+// static bool parse_trait_definition(struct parser *parser) {
+// 	if (!peek_token(parser, TOKEN_TYPE_TRAIT)) return false;
+// 	begin_node(parser, NODE_TYPE_TRAIT_DEFINITION);
+// 		parse_token(parser, TOKEN_TYPE_TRAIT);
+// 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+// 		// Parse generic parameters...
 		
-		// Parse fields.
-		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) {
-			if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-			return end_node(parser);
-		}
-		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
-			if (!parse_field_definition(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
-		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+// 		// Parse fields.
+// 		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) {
+// 			if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+// 			return end_node(parser);
+// 		}
+// 		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
+// 			if (!parse_field_definition(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
+// 		}
+// 		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
 
-		// Parse cases.
-		if (!parse_token(parser, TOKEN_TYPE_CASES)) return end_node(parser);
-		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_CASES);
-		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
-			if (!parse_type_case(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
-		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
-	return end_node(parser);
-}
+// 		// Parse cases.
+// 		if (!parse_token(parser, TOKEN_TYPE_CASES)) return end_node(parser);
+// 		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_CASES);
+// 		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
+// 			if (!parse_type_case(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
+// 		}
+// 		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+// 	return end_node(parser);
+// }
 
-static bool parse_struct_definition(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_STRUCT)) return false;
-	begin_node(parser, NODE_TYPE_STRUCT_DEFINITION);
-		parse_token(parser, TOKEN_TYPE_STRUCT);
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-		// Parse generic parameters...
+// static bool parse_struct_definition(struct parser *parser) {
+// 	if (!peek_token(parser, TOKEN_TYPE_STRUCT)) return false;
+// 	begin_node(parser, NODE_TYPE_STRUCT_DEFINITION);
+// 		parse_token(parser, TOKEN_TYPE_STRUCT);
+// 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+// 		// Parse generic parameters...
 		
-		// Parse fields.
-		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) {
-			if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-			return end_node(parser);
-		}
-		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
-			if (!parse_field_definition(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
-		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+// 		// Parse fields.
+// 		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) {
+// 			if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+// 			return end_node(parser);
+// 		}
+// 		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
+// 			if (!parse_field_definition(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
+// 		}
+// 		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
 
-		// Parse cases.
-		if (!parse_token(parser, TOKEN_TYPE_CASES)) return end_node(parser);
-		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_CASES);
-		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
-			if (!parse_type_case(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
-		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
-	return end_node(parser);
-}
+// 		// Parse cases.
+// 		if (!parse_token(parser, TOKEN_TYPE_CASES)) return end_node(parser);
+// 		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_CASES);
+// 		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
+// 			if (!parse_type_case(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
+// 		}
+// 		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+// 	return end_node(parser);
+// }
 
 static bool parse_definition(struct parser *parser);
 
@@ -565,16 +561,16 @@ static bool parse_function_parameters(struct parser *parser) {
 	return end_node(parser);
 }
 
-static bool parse_method_definition(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_METHOD)) return false;
-	begin_node(parser, NODE_TYPE_METHOD_DEFINITION);
-		parse_token(parser, TOKEN_TYPE_METHOD);
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-		if (!parse_function_parameters(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-		if (!parse_block(parser) && !parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
-}
+// static bool parse_method_definition(struct parser *parser) {
+// 	if (!peek_token(parser, TOKEN_TYPE_METHOD)) return false;
+// 	begin_node(parser, NODE_TYPE_METHOD_DEFINITION);
+// 		parse_token(parser, TOKEN_TYPE_METHOD);
+// 		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+// 		if (!parse_function_parameters(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS);
+// 		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+// 		if (!parse_block(parser) && !parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+// 	return end_node(parser);
+// }
 
 static bool parse_function_definition(struct parser *parser) {
 	if (!peek_token(parser, TOKEN_TYPE_FUNC)) return false;
@@ -620,9 +616,9 @@ static bool parse_definition_body(struct parser *parser) {
 	if (peek_token(parser, TOKEN_TYPE_MODULE)) return parse_module_definition(parser);
 	if (peek_token(parser, TOKEN_TYPE_VAR)) return parse_variable_definition(parser);
 	if (peek_token(parser, TOKEN_TYPE_FUNC)) return parse_function_definition(parser);
-	if (peek_token(parser, TOKEN_TYPE_METHOD)) return parse_method_definition(parser);
-	if (peek_token(parser, TOKEN_TYPE_STRUCT)) return parse_struct_definition(parser);
-	if (peek_token(parser, TOKEN_TYPE_TRAIT)) return parse_trait_definition(parser);
+	// if (peek_token(parser, TOKEN_TYPE_METHOD)) return parse_method_definition(parser);
+	// if (peek_token(parser, TOKEN_TYPE_STRUCT)) return parse_struct_definition(parser);
+	// if (peek_token(parser, TOKEN_TYPE_TRAIT)) return parse_trait_definition(parser);
 	return false;
 }
 
@@ -653,7 +649,7 @@ static bool parse_program(struct parser *parser) {
 	return true;
 }
 
-char *node_type_names[] = {
+const char *const node_type_names[] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
 	[NODE_TYPE_IMPORT_STATEMENT] = "import statement",
@@ -661,14 +657,11 @@ char *node_type_names[] = {
 	[NODE_TYPE_MODULE_DEFINITION] = "module definition",
 	[NODE_TYPE_VARIABLE_DEFINITION] = "variable definition",
 	[NODE_TYPE_FUNCTION_DEFINITION] = "function definition",
-	[NODE_TYPE_METHOD_DEFINITION] = "method definition",
 	[NODE_TYPE_FUNCTION_PARAMETERS] = "function parameters",
 	[NODE_TYPE_FUNCTION_PARAMETER] = "function parameter",
 	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
-	[NODE_TYPE_STRUCT_DEFINITION] = "struct definition",
-	[NODE_TYPE_TRAIT_DEFINITION] = "trait definition",
 	[NODE_TYPE_FIELD_DEFINITION] = "field definition",
-	[NODE_TYPE_EMBED_STATEMENT] = "embed statement",
+	// [NODE_TYPE_EMBED_STATEMENT] = "embed statement",
 	[NODE_TYPE_TYPE_CASE] = "type case",
 	[NODE_TYPE_BLOCK] = "block",
 	[NODE_TYPE_WHILE_LOOP] = "while loop",
@@ -694,7 +687,7 @@ char *node_type_names[] = {
 	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
 };
 
-char *parser_error_messages[] = {
+const char *const parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
 	[PARSER_ERROR_TYPE_EXPECTED_DEFINITION] = "Expected a definition.",
 	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",

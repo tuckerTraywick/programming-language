@@ -1,3 +1,4 @@
+- Update lexer to recognize new lines as tokens
 - Update parser to handle new grammar
 - Handle false return values from list functions in lexer and parser
 - Make lexer recognize open <

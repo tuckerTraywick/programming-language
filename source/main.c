@@ -68,7 +68,7 @@ static void print_parser_errors(char *text, struct token *tokens, struct parser_
 }
 
 int main(void) {
-	char *text = "module a; import 'std.;\nj";
+	char *text = "module a; pub var a int32; pub func f(x int32) int32 {}";
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
 	if (!lex(text, &tokens, &lexer_errors)) {

@@ -14,14 +14,12 @@ enum node_type {
 	NODE_TYPE_MODULE_DEFINITION,
 	NODE_TYPE_VARIABLE_DEFINITION,
 	NODE_TYPE_FUNCTION_DEFINITION,
-	NODE_TYPE_METHOD_DEFINITION,
 	NODE_TYPE_FUNCTION_PARAMETERS,
 	NODE_TYPE_FUNCTION_PARAMETER,
 	NODE_TYPE_FUNCTION_ARGUMENTS,
-	NODE_TYPE_STRUCT_DEFINITION,
-	NODE_TYPE_TRAIT_DEFINITION,
+	NODE_TYPE_TYPE_DEFIINITION,
 	NODE_TYPE_FIELD_DEFINITION,
-	NODE_TYPE_EMBED_STATEMENT,
+	// NODE_TYPE_EMBED_STATEMENT,
 	NODE_TYPE_TYPE_CASE,
 	NODE_TYPE_BLOCK,
 	NODE_TYPE_WHILE_LOOP,
@@ -89,10 +87,10 @@ struct parser_error {
 };
 
 // A map of node types to their names. Indexed by the type of a node.
-extern char *node_type_names[];
+extern const char *const node_type_names[];
 
 // A map of parser error types to their messages. Indexed by the type of an error.
-extern char *parser_error_messages[];
+extern const char *const parser_error_messages[];
 
 // Parses `tokens` and returns a list of nodes in a syntax tree in `nodes` and a list of errors
 // encountered in `errors`. Returns true if no memory errors occurred, false otherwise.
