@@ -68,7 +68,7 @@ static void print_parser_errors(char *text, struct token *tokens, struct parser_
 }
 
 int main(void) {
-	char *text = "type A {x int32; embed B;}";
+	char *text = "type A {func x(a int32) int32; embed B; x int32;}";
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
 	if (!lex(text, &tokens, &lexer_errors)) {
