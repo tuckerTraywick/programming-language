@@ -92,7 +92,7 @@ static const size_t infix_precedences[TOKEN_TYPE_COUNT] = {
 };
 
 static struct token *current_token(struct parser *parser) {
-	if (parser->current_token_index >= list_get_buckets_count(&parser->tokens)) {
+	if (parser->current_token_index >= list_get_count(&parser->tokens)) {
 		return NULL;
 	}
 	return parser->tokens + parser->current_token_index;
@@ -103,7 +103,7 @@ static struct node *current_node(struct parser *parser) {
 }
 
 static size_t last_node_index(struct parser *parser) {
-	return list_get_buckets_count(&parser->nodes) - 1;
+	return list_get_count(&parser->nodes) - 1;
 }
 
 // Appends a node to the list of nodes without modifying the current parent index.
@@ -657,7 +657,7 @@ static bool parse_import_statement(struct parser *parser) {
 }
 
 static bool parse_program(struct parser *parser) {
-	while (parser->current_token_index < list_get_buckets_count(&parser->tokens)) {
+	while (parser->current_token_index < list_get_count(&parser->tokens)) {
 		if (parse_import_statement(parser)) continue;
 		if (!parse_definition(parser)) return false;
 	}

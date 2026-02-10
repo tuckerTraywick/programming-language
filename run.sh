@@ -1,5 +1,15 @@
-CFLAGS="-std=c99 -Wall -Wpedantic -Wextra -g3"
-LIBRARIES=""
+set -e
 clear
-echo "---- BUILDING ----"
-gcc $CFLAGS -Iinclude -Isource $LIBRARIES source/* -o build/run && echo && echo "---- RUNNING ----" && build/run
+make clean
+
+echo "---- BUILDING SOURCE ----"
+make build/run
+
+echo -e "\n---- BUILDING TESTS ----"
+make build/test
+
+echo -e "\n---- RUNNING TESTS ----"
+build/test
+
+echo -e "\n---- RUNNING SOURCE ----"
+build/run
