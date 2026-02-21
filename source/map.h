@@ -43,8 +43,6 @@ extern const size_t buckets_growth_factor;
 
 extern const size_t keys_growth_factor;
 
-extern const size_t initial_keys_capacity;
-
 void *map_create(size_t buckets_capacity, size_t bucket_size, size_t keys_capacity);
 
 void map_destroy_impl(void **map);

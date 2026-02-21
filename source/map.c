@@ -25,11 +25,11 @@ enum probe_result {
 	PROBE_RESULT_MAP_FULL,
 };
 
+static const size_t initial_keys_capacity = 1024;
+
 const size_t buckets_growth_factor = 2;
 
 const size_t keys_growth_factor = 2;
-
-const size_t initial_keys_capacity = 1024;
 
 static struct map_header *get_header(void **map) {
 	return (struct map_header*)*map - 1;

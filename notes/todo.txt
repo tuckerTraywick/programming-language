@@ -1,5 +1,4 @@
-- Update lexer to recognize new lines as tokens
-- Update parser to handle new grammar
+- Update lexer to recognize newlines as tokens
 - Handle false return values from list functions in lexer and parser
 - Make lexer recognize open <
 - Start making AST visitor
@@ -10,6 +9,7 @@
 - Extend for loop syntax with matching
 - Fix bug where function parameter parser tries to keep parsing even if a parameter fails to parse
 
+X Update parser to handle new grammar
 X Reformat code to use new list implementation
 X Create map type
 X Handle "as" operator

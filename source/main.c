@@ -55,7 +55,7 @@ static void print_node(char *text, struct token *tokens, struct node *nodes, str
 }
 
 static void print_parser_error(char *text, struct token *tokens, struct parser_error *error) {
-	printf("%s [Token %zu ", parser_error_messages[error->type], error->token_index - 1);
+	printf("%s [Token %zu: ", parser_error_messages[error->type], error->token_index - 1);
 	print_token(text, tokens + error->token_index - 1);
 	printf("]");
 }
@@ -68,7 +68,7 @@ static void print_parser_errors(char *text, struct token *tokens, struct parser_
 }
 
 int main(void) {
-	char *text = "type A {func x(a int32) int32; embed B; x int32;}";
+	char *text = "";
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
 	if (!lex(text, &tokens, &lexer_errors)) {
