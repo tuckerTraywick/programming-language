@@ -26,13 +26,13 @@ abstracting a case type in the case part of another type only exports the cases 
 
 type UserId = uint64
 
-type IntOrString cases {int32, string}
+type IntOrString = Sum<int32, string>
 
-type File {Readable, Writeable}
+type File = Product<Readable, Writeable>
 
-type Product<T..> {T}
+type Product<T..> {embed T}
 
-type Sum<T..> cases {T}
+type Sum<T..> cases {embed T}
 
 
 
@@ -43,16 +43,16 @@ import std.io
 pub type Animal {
 	pub name string
 	pub age uint32
-	pub makeNoise(&this)
+	pub func makeNoise(&this)
 }
 
 pub type Dog {
-	Animal
+	embed Animal
 	pub tag string
 }
 
 pub type Cat {
-	Animal
+	embed Animal
 	pub breed string
 }
 
@@ -79,26 +79,27 @@ import std.math
 
 pub type Shape {
 	pub color string
-	pub area(&this) float64
+	pub func area(&this) float64
 } cases {
 	type Rectangle {pub width, height float64}
 	type Triangle {pub base, height float64}
 	type Circle {pub radius float64}
 }
 
+
 // data.txt
 pub type MoreShapeData {
-	shapes.Shape // embeds all fields
+	embed shapes.Shape // embeds all fields
 	pub extraData float64
 } cases {
-	Triangle // only embeds Triangle. if this wasnt here all cases would be included
+	embed Triangle // only embeds Triangle. if this wasnt here all cases would be included
 }
 
 // cases.txt
 pub type MoreShapeCases {
 	pub color string // only embeds color, not area().
 } cases {
-	shapes.Shape // embeds all cases.
+	embed shapes.Shape // embeds all cases.
 	type Rhombus {}
 }
 
@@ -123,14 +124,15 @@ import std.operators
 
 pub type Entity {
 	pub pos, vel, acc Vector
-	pub collide(a, b &mut This)
+	pub func collide(a, b &mut This)
 } cases {
 	type Circle {pub radius float64}
-	type Mesh {pub vertices owned []Vector}
+	type Mesh {pub vertices []Vector}
 }
 
+
 pub type Vector {
-	std.operators.To<string>
+	embed std.operators.To<string>
 	pub x, y, z float64
 }
 
@@ -166,7 +168,7 @@ pub module interface
 
 pub type Script {
 	pub publicState int32
-	pub doSomething(&mut this)
+	pub func doSomething(&mut this)
 }
 
 
@@ -176,7 +178,7 @@ import std.io
 import interface
 
 pub type MyScript {
-	interace.Script
+	embed interace.Script
 }
 
 pub func doSomething(myScript &mut MyScript) {

@@ -1,9 +1,8 @@
-#include <stdio.h>
-
 #include <stddef.h>
 #include <stdbool.h>
 #include "parser.h"
-#include "lexer.h"
+#include "token.h"
+#include "node.h"
 #include "list.h"
 
 static const size_t initial_nodes_capacity = 1000;
@@ -630,47 +629,6 @@ static bool parse_program(struct parser *parser) {
 	}
 	return true;
 }
-
-const char *const node_type_names[] = {
-	[NODE_TYPE_TOKEN] = "token",
-	[NODE_TYPE_PROGRAM] = "program",
-	[NODE_TYPE_IMPORT_STATEMENT] = "import statement",
-	[NODE_TYPE_DEFINITION] = "definition",
-	[NODE_TYPE_MODULE_DEFINITION] = "module definition",
-	[NODE_TYPE_VARIABLE_DEFINITION] = "variable definition",
-	[NODE_TYPE_FUNCTION_DEFINITION] = "function definition",
-	[NODE_TYPE_FUNCTION_PARAMETERS] = "function parameters",
-	[NODE_TYPE_FUNCTION_PARAMETER] = "function parameter",
-	[NODE_TYPE_FUNCTION_ARGUMENTS] = "function arguments",
-	[NODE_TYPE_TYPE_DEFINITION] = "type definition",
-	[NODE_TYPE_FIELD_DEFINITION] = "field definition",
-	[NODE_TYPE_MEMBER_DEFINITION] = "member definition",
-	[NODE_TYPE_METHOD_DEFINITION] = "method definition",
-	[NODE_TYPE_EMBED_STATEMENT] = "embed statement",
-	[NODE_TYPE_TYPE_CASE] = "type case",
-	[NODE_TYPE_BLOCK] = "block",
-	[NODE_TYPE_WHILE_LOOP] = "while loop",
-	[NODE_TYPE_FOR_LOOP] = "for loop",
-	[NODE_TYPE_LOOP_VARIABLE] = "loop variable",
-	[NODE_TYPE_IF_STATEMENT] = "if statement",
-	[NODE_TYPE_RETURN_STATEMENT] = "return statement",
-	[NODE_TYPE_BREAK_STATEMENT] = "break statement",
-	[NODE_TYPE_CONTINUE_STATEMENT] = "continue statement",
-	[NODE_TYPE_TYPE] = "type",
-	[NODE_TYPE_POINTER_TYPE] = "pointer type",
-	[NODE_TYPE_ARRAY_TYPE] = "array type",
-	[NODE_TYPE_TUPLE_TYPE] = "tuple type",
-	[NODE_TYPE_FUNCTION_TYPE] = "function type",
-	[NODE_TYPE_OWNED_TYPE] = "owned type",
-	[NODE_TYPE_WEAK_TYPE] = "weak type",
-	[NODE_TYPE_MUT_TYPE] = "mut type",
-	[NODE_TYPE_BASIC_TYPE] = "basic type",
-	[NODE_TYPE_GENERIC_ARGUMENTS] = "generic arguments",
-	[NODE_TYPE_ARRAY_INDEX] = "array index",
-	[NODE_TYPE_ARRAY] = "array",
-	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
-	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
-};
 
 const char *const parser_error_messages[] = {
 	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",

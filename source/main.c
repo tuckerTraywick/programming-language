@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "token.h"
+#include "node.h"
 #include "list.h"
-// #include "map.h"
 #include "lexer.h"
 #include "parser.h"
 
