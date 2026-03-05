@@ -2,43 +2,44 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "object.h"
 #include "token.h"
 #include "node.h"
 #include "list.h"
 #include "lexer.h"
 #include "parser.h"
 
-static void print_token(char *text, struct token *token) {
-	printf("%s `%.*s`", reserved_words[token->type], (int)token->text_length, text + token->text_index);
+static void print_token(struct object *object, struct token *token) {
+	printf("%s `%.*s`", token_type_names[token->type], (int)token->text_length, object->text + token->text_index);
 }
 
-static void print_tokens(char *text, struct token *tokens) {
-	for (size_t i = 0; i < list_get_count(&tokens); ++i) {
+static void print_tokens(struct object *object) {
+	for (size_t i = 0; i < list_get_count(&object->tokens); ++i) {
 		printf("%zu ", i);
-		print_token(text, tokens + i);
+		print_token(object, object->tokens + i);
 		printf("\n");
 	}
 }
 
-static void print_lexer_error(char *text, struct lexer_error *error) {
-	printf("%s [Character %zu `%.*s`]", lexer_error_messages[error->type], error->text_index, (int)error->text_length, text + error->text_index);
+static void print_lexer_error(struct object *object, struct lexer_error *error) {
+	printf("%s [Character %zu `%.*s`]", lexer_error_messages[error->type], error->text_index, (int)error->text_length, object->text + error->text_index);
 }
 
-static void print_lexer_errors(char *text, struct lexer_error *errors) {
-	for (size_t i = 0; i < list_get_count(&errors); ++i) {
-		print_lexer_error(text, errors + i);
+static void print_lexer_errors(struct object *object) {
+	for (size_t i = 0; i < list_get_count(&object->lexer_errors); ++i) {
+		print_lexer_error(object, object->lexer_errors + i);
 		printf("\n");
 	}
 }
 
-static void print_node(char *text, struct token *tokens, struct node *nodes, struct node *node, size_t depth) {
+static void print_node(struct object *object, struct node *node, size_t depth) {
 	for (size_t i = 0; i < depth; ++i) {
 		printf("| ");
 	}
 
 	if (node->type == NODE_TYPE_TOKEN) {
-		struct token *token = tokens + node->child_index;
-		print_token(text, token);
+		struct token *token = object->tokens + node->child_index;
+		print_token(object, token);
 		printf("\n");
 		return;
 	}
@@ -50,55 +51,55 @@ static void print_node(char *text, struct token *tokens, struct node *nodes, str
 
 	size_t node_index = node->child_index;
 	do {
-		print_node(text, tokens, nodes, nodes + node_index, depth + 1);
-		node_index = nodes[node_index].next_index;
+		print_node(object, object->nodes + node_index, depth + 1);
+		node_index = object->nodes[node_index].next_index;
 	} while (node_index);
 }
 
-static void print_parser_error(char *text, struct token *tokens, struct parser_error *error) {
+static void print_parser_error(struct object *object, struct parser_error *error) {
 	printf("%s [Token %zu: ", parser_error_messages[error->type], error->token_index - 1);
-	print_token(text, tokens + error->token_index - 1);
+	print_token(object, object->tokens + error->token_index - 1);
 	printf("]");
 }
 
-static void print_parser_errors(char *text, struct token *tokens, struct parser_error *errors) {
-	for (size_t i = 0; i < list_get_count(&errors); ++i) {
-		print_parser_error(text, tokens, errors + i);
+static void print_parser_errors(struct object *object) {
+	for (size_t i = 0; i < list_get_count(&object->parser_errors); ++i) {
+		print_parser_error(object, object->parser_errors + i);
 		printf("\n");
 	}
 }
 
 int main(void) {
-	char *text = "";
-	struct token *tokens = NULL;
-	struct lexer_error *lexer_errors = NULL;
-	if (!lex(text, &tokens, &lexer_errors)) {
+	struct object *object = object_create();
+	if (!object) {
+		printf("FAILED TO CREATE OBJECT\n");
+		return 1;
+	}
+	
+	char *text = "module hi;";
+	if (!lex(object)) {
+		object_destroy(object);
 		printf("FAILED LEXING\n");
 		return 1;
 	}
 	printf("TOKENS:\n");
-	print_tokens(text, tokens);
+	print_tokens(object);
 	printf("\nLEXER ERRORS:\n");
-	print_lexer_errors(text, lexer_errors);
+	print_lexer_errors(object);
 	printf("\n");
 
-	struct node *nodes = NULL;
-	struct parser_error *parser_errors = NULL;
-	if (!parse(tokens, &nodes, &parser_errors)) {
+	if (!parse(object)) {
 		printf("FAILED PARSING\n");
-		list_destroy(&tokens);
-		list_destroy(&lexer_errors);
+		object_destroy(object);
 		return 1;
 	}
 	printf("NODES:\n");
-	print_node(text, tokens, nodes, nodes, 0);
+	print_node(object, object->nodes, 0);
 	printf("\nPARSER ERRORS:\n");
-	print_parser_errors(text, tokens, parser_errors);
+	print_parser_errors(object);
 	printf("\n");
 	
-	list_destroy(&tokens);
-	list_destroy(&lexer_errors);
-	list_destroy(&nodes);
-	list_destroy(&parser_errors);
+	object_destroy(object);
 	return 0;
 }
+

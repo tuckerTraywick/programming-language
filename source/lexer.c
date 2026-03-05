@@ -1,37 +1,16 @@
-#include <stdio.h>
-
 #include <stddef.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
 #include "lexer.h"
 #include "token.h"
+#include "object.h"
 #include "list.h"
 
 #define max(a, b) (((a) >= (b)) ? (a) : (b))
 
-static const size_t initial_tokens_capacity = 1000;
-
-static const size_t initial_lexer_errors_capacity = 100;
-
-const char *const lexer_error_messages[] = {
-	[LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN] = "Unrecognized token.",
-	[LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
-	[LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
-};
-
-bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
-	*tokens = list_create(initial_tokens_capacity, sizeof (struct token));
-	if (!*tokens) {
-		return false;
-	}
-	*errors = list_create(initial_lexer_errors_capacity, sizeof (struct lexer_error));
-	if (!*errors) {
-		list_destroy(tokens);
-		*tokens = NULL;
-		return false;
-	}
-
+bool lex(struct object *object) {
+	char *text = object->text;
 	struct token current_token = {0};
 	while (*text != '\0') {
 		// Skip whitespace.
@@ -67,7 +46,7 @@ bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
 					.type = LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
 				};
 				// TODO: Handle null return value.
-				list_push_back(errors, &error);
+				list_push_back(&object->lexer_errors, &error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -89,7 +68,7 @@ bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
 					.type = LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
 				};
 				// TODO: Handle null return value.
-				list_push_back(errors, &error);
+				list_push_back(&object->lexer_errors, &error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -106,7 +85,7 @@ bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
 			current_token.type = TOKEN_TYPE_IDENTIFIER;
 			for (size_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
-				if (strncmp(reserved_words[i], text - current_token.text_length, max(strlen(reserved_words[i]), current_token.text_length)) == 0) {
+				if (strncmp(token_type_names[i], text - current_token.text_length, max(strlen(token_type_names[i]), current_token.text_length)) == 0) {
 					current_token.type = i;
 					break;
 				}
@@ -116,9 +95,9 @@ bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
 			bool found_operator = false;
 			for (size_t i = TOKEN_TYPE_DOT; i < TOKEN_TYPE_LEFT_ANGLE_BRACKET; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
-				if (strncmp(reserved_words[i], text, strlen(reserved_words[i])) == 0) {
+				if (strncmp(token_type_names[i], text, strlen(token_type_names[i])) == 0) {
 					current_token.type = i;
-					current_token.text_length = strlen(reserved_words[i]);
+					current_token.text_length = strlen(token_type_names[i]);
 					text += current_token.text_length;
 					found_operator = true;
 					break;
@@ -137,7 +116,7 @@ bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
 					++error.text_length;
 				}
 				// TODO: Handle null return value.
-				list_push_back(errors, &error);
+				list_push_back(&object->lexer_errors, &error);
 				current_token.text_index += error.text_length;
 				current_token.text_length = 0;
 				continue;
@@ -149,7 +128,7 @@ bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
 			}
 		}
 		// TODO: Handle null return value.
-		list_push_back(tokens, &current_token);
+		list_push_back(&object->tokens, &current_token);
 		current_token.text_index += current_token.text_length;
 		current_token.text_length = 0;
 	}

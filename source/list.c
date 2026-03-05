@@ -43,7 +43,7 @@ size_t list_get_capacity_impl(void **list) {
 bool list_set_capacity_impl(void **list, size_t capacity) {
 	struct list_header *header = get_header(list);
 	if (capacity < header->buckets_count) {
-		return false;
+		header->buckets_count = capacity;
 	}
 	header = realloc(header, sizeof *header + capacity*header->bucket_size);
 	if (!header) {

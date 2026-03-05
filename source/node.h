@@ -50,10 +50,45 @@ struct node {
 	size_t parent_index;
 	size_t child_index; // Holds the index of a token if `type` is `NODE_TYPE_TOKEN`.
 	enum node_type type;
-	size_t type_index; // Index of the type description of the node. Used for type checking.
+	size_t type_description_index; // Index of the type description of the node. Used for type checking.
 };
 
-// A map of node types to their names. Indexed by the type of a node.
+enum parser_error_type {
+	PARSER_ERROR_TYPE_INVALID_SYNTAX,
+	PARSER_ERROR_TYPE_EXPECTED_DEFINITION,
+	PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME,
+	PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER,
+	PARSER_ERROR_TYPE_EXPECTED_EXPRESSION,
+	PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS,
+	PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS,
+	PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION,
+	PARSER_ERROR_TYPE_EXPECTED_MEMBER_DEFINITION,
+	PARSER_ERROR_TYPE_EXPECTED_METHOD_DEFINITION,
+	PARSER_ERROR_TYPE_EXPECTED_CASES,
+	PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE,
+	PARSER_ERROR_TYPE_EXPECTED_BLOCK,
+	PARSER_ERROR_TYPE_EXPECTED_LOOP_VARIABLE,
+	PARSER_ERROR_TYPE_EXPECTED_IN_STATEMENT,
+	PARSER_ERROR_TYPE_EXPECTED_TYPE,
+	PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX,
+	PARSER_ERROR_TYPE_EXPECTED_SEMICOLON,
+	PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS,
+	PARSER_ERROR_TYPE_UNCLOSED_BRACKET,
+	PARSER_ERROR_TYPE_UNCLOSED_BRACE,
+	PARSER_ERROR_TYPE_UNCLOSED_ANGLE_BRACKET,
+	PARSER_ERROR_TYPE_COUNT,
+};
+
+struct parser_error {
+	size_t token_index;
+	size_t token_count;
+	enum parser_error_type type;
+};
+
+// A map of node types to names.
 extern const char *const node_type_names[];
+
+// A map of parser error types to error messages.
+extern const char *const parser_error_messages[];
 
 #endif // NODE_H

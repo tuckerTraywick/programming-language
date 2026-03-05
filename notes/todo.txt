@@ -1,3 +1,5 @@
+- Make function to consolidate only the tokens that occur in the object file's stored syntax trees
+  into one list of tokens and characters
 - Update lexer to recognize newlines as tokens
 - Handle false return values from list functions in lexer and parser
 - Make lexer recognize open <

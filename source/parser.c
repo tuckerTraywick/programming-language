@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "parser.h"
+#include "object.h"
 #include "token.h"
 #include "node.h"
 #include "list.h"
@@ -9,11 +10,8 @@ static const size_t initial_nodes_capacity = 1000;
 
 static const size_t initial_parser_errors_capacity = 100;
 
-// The state passed between parsing functions.
+// The state kept between parsing functions.
 struct parser {
-	struct token *tokens;
-	struct node *nodes;
-	struct parser_error *errors;
 	size_t current_token_index;
 	size_t current_node_index;
 	bool current_node_is_parent;
@@ -90,51 +88,51 @@ static const size_t infix_precedences[TOKEN_TYPE_COUNT] = {
 	[TOKEN_TYPE_ASSIGN] = 100,
 };
 
-static struct token *current_token(struct parser *parser) {
-	if (parser->current_token_index >= list_get_count(&parser->tokens)) {
+static struct token *current_token(struct object *object, struct parser *parser) {
+	if (parser->current_token_index >= list_get_count(&object->tokens)) {
 		return NULL;
 	}
-	return parser->tokens + parser->current_token_index;
+	return object->tokens + parser->current_token_index;
 }
 
-static struct node *current_node(struct parser *parser) {
-	return parser->nodes + parser->current_node_index;
+static struct node *current_node(struct object *object, struct parser *parser) {
+	return object->nodes + parser->current_node_index;
 }
 
-static size_t last_node_index(struct parser *parser) {
-	return list_get_count(&parser->nodes) - 1;
+static size_t last_node_index(struct object *object, struct parser *parser) {
+	return list_get_count(&object->nodes) - 1;
 }
 
 // Appends a node to the list of nodes without modifying the current parent index.
-static struct node *add_node(struct parser *parser, enum node_type type) {
+static struct node *add_node(struct object *object, struct parser *parser, enum node_type type) {
 	struct node new_node = {
 		.type = type,
 	};
 	// TODO: Handle null return value.
-	list_push_back(&parser->nodes, &new_node);
+	list_push_back(&object->nodes, &new_node);
 	if (parser->current_node_is_parent) {
-		current_node(parser)->child_index = last_node_index(parser);
-		((struct node*)list_get_back(&parser->nodes))->parent_index = parser->current_node_index;
+		current_node(object, parser)->child_index = last_node_index(object, parser);
+		((struct node*)list_get_back(&object->nodes))->parent_index = parser->current_node_index;
 		parser->current_node_is_parent = false;
 	} else {
-		current_node(parser)->next_index = last_node_index(parser);
-		((struct node*)list_get_back(&parser->nodes))->parent_index = current_node(parser)->parent_index;
+		current_node(object, parser)->next_index = last_node_index(object, parser);
+		((struct node*)list_get_back(&object->nodes))->parent_index = current_node(object, parser)->parent_index;
 	}
-	parser->current_node_index = last_node_index(parser);
-	return (struct node*)list_get_back(&parser->nodes);
+	parser->current_node_index = last_node_index(object, parser);
+	return (struct node*)list_get_back(&object->nodes);
 }
 
-static void begin_node(struct parser *parser, enum node_type type) {
-	add_node(parser, type);
+static void begin_node(struct object *object, struct parser *parser, enum node_type type) {
+	add_node(object, parser, type);
 	parser->current_node_is_parent = true;
 }
 
-static bool end_node(struct parser *parser) {
-	parser->current_node_index = current_node(parser)->parent_index;
+static bool end_node(struct object *object, struct parser *parser) {
+	parser->current_node_index = current_node(object, parser)->parent_index;
 	return true;
 }
 
-static bool emit_error(struct parser *parser, enum parser_error_type type) {
+static bool emit_error(struct object *object, struct parser *parser, enum parser_error_type type) {
 	// TODO: Count error tokens.
 	struct parser_error error = {
 		.type = type,
@@ -142,543 +140,502 @@ static bool emit_error(struct parser *parser, enum parser_error_type type) {
 		.token_count = 0,
 	};
 	// TODO: Handle null return value.
-	list_push_back(&parser->errors, &error);
+	list_push_back(&object->parser_errors, &error);
 	return false;
 }
 
-static bool peek_token(struct parser *parser, enum token_type type) {
-	struct token *token = current_token(parser);
+static bool peek_token(struct object *object, struct parser *parser, enum token_type type) {
+	struct token *token = current_token(object, parser);
 	return token && token->type == type;
 }
 
-static bool parse_token(struct parser *parser, enum token_type type) {
-	if (!peek_token(parser, type)) {
+static bool parse_token(struct object *object, struct parser *parser, enum token_type type) {
+	if (!peek_token(object, parser, type)) {
 		return false;
 	}
-	struct node *new_node = add_node(parser, NODE_TYPE_TOKEN);
+	struct node *new_node = add_node(object, parser, NODE_TYPE_TOKEN);
 	new_node->child_index = parser->current_token_index;
 	++parser->current_token_index;
 	return true;
 }
 
-static size_t peek_prefix_operator(struct parser *parser) {
-	struct token *token = current_token(parser);
+static size_t peek_prefix_operator(struct object *object, struct parser *parser) {
+	struct token *token = current_token(object, parser);
 	if (token) {
 		return prefix_precedences[token->type];
 	}
 	return 0;
 }
 
-static size_t parse_prefix_operator(struct parser *parser) {
-	size_t precedence = peek_prefix_operator(parser);
+static size_t parse_prefix_operator(struct object *object, struct parser *parser) {
+	size_t precedence = peek_prefix_operator(object, parser);
 	if (precedence) {
-		parse_token(parser, current_token(parser)->type);
+		parse_token(object, parser, current_token(object, parser)->type);
 		return precedence;
 	}
 	return 0;
 }
 
-static size_t peek_infix_operator(struct parser *parser) {
-	struct token *token = current_token(parser);
+static size_t peek_infix_operator(struct object *object, struct parser *parser) {
+	struct token *token = current_token(object, parser);
 	if (token) {
 		return infix_precedences[token->type];
 	}
 	return 0;
 }
 
-static size_t parse_infix_operator(struct parser *parser) {
-	size_t precedence = peek_infix_operator(parser);
+static size_t parse_infix_operator(struct object *object, struct parser *parser) {
+	size_t precedence = peek_infix_operator(object, parser);
 	if (precedence) {
-		parse_token(parser, current_token(parser)->type);
+		parse_token(object, parser, current_token(object, parser)->type);
 		return precedence;
 	}
 	return 0;
 }
 
-static bool parse_expression(struct parser *parser);
+static bool parse_expression(struct object *object, struct parser *parser);
 
-static bool parse_function_arguments(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
-	begin_node(parser, NODE_TYPE_FUNCTION_ARGUMENTS);
-		parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS);
-		while (!peek_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) {
-			if (!parse_expression(parser)) return false;
-			if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
+static bool parse_function_arguments(struct object *object, struct parser *parser) {
+	if (!peek_token(object, parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
+	begin_node(object, parser, NODE_TYPE_FUNCTION_ARGUMENTS);
+		parse_token(object, parser, TOKEN_TYPE_LEFT_PARENTHESIS);
+		while (!peek_token(object, parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) {
+			if (!parse_expression(object, parser)) return false;
+			if (!parse_token(object, parser, TOKEN_TYPE_COMMA)) break;
 		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
-	return end_node(parser);
+		if (!parse_token(object, parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
+	return end_node(object, parser);
 }
 
-static bool parse_array_index(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_ARRAY_INDEX);
-	if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACKET)) return false;
-	if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
-	if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACKET)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACKET);
-	return end_node(parser);
+static bool parse_array_index(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_ARRAY_INDEX);
+	if (!parse_token(object, parser, TOKEN_TYPE_LEFT_BRACKET)) return false;
+	if (!parse_expression(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+	if (!parse_token(object, parser, TOKEN_TYPE_RIGHT_BRACKET)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_BRACKET);
+	return end_node(object, parser);
 }
 
-static bool parse_array(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_ARRAY);
-	if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACKET)) return false;
-	while (parse_expression(parser)) {
-		if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
+static bool parse_array(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_ARRAY);
+	if (!parse_token(object, parser, TOKEN_TYPE_LEFT_BRACKET)) return false;
+	while (parse_expression(object, parser)) {
+		if (!parse_token(object, parser, TOKEN_TYPE_COMMA)) break;
 	}
-	if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACKET)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACKET);
-	return end_node(parser);
+	if (!parse_token(object, parser, TOKEN_TYPE_RIGHT_BRACKET)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_BRACKET);
+	return end_node(object, parser);
 }
 
-static bool parse_basic_expression(struct parser *parser) {
-	return parse_token(parser, TOKEN_TYPE_NUMBER) || parse_token(parser, TOKEN_TYPE_IDENTIFIER);
+static bool parse_basic_expression(struct object *object, struct parser *parser) {
+	return parse_token(object, parser, TOKEN_TYPE_NUMBER) || parse_token(object, parser, TOKEN_TYPE_IDENTIFIER);
 }
 
-static bool parse_infix_expression(struct parser *parser, size_t precedence);
+static bool parse_infix_expression(struct object *object, struct parser *parser, size_t precedence);
 
-static bool parse_prefix_expression(struct parser *parser) {
-	size_t precedence = peek_prefix_operator(parser);
+static bool parse_prefix_expression(struct object *object, struct parser *parser) {
+	size_t precedence = peek_prefix_operator(object, parser);
 	if (!precedence) {
-		return parse_basic_expression(parser);
+		return parse_basic_expression(object, parser);
 	}
 	if (precedence == prefix_precedences[TOKEN_TYPE_LEFT_PARENTHESIS]) {
-		return parse_function_arguments(parser);
+		return parse_function_arguments(object, parser);
 	}
 	if (precedence == prefix_precedences[TOKEN_TYPE_LEFT_BRACKET]) {
-		return parse_array(parser);
+		return parse_array(object, parser);
 	}
 
-	begin_node(parser, NODE_TYPE_PREFIX_EXPRESSION);
-		parse_prefix_operator(parser);
-		if (!parse_infix_expression(parser, precedence)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
-	return end_node(parser);
+	begin_node(object, parser, NODE_TYPE_PREFIX_EXPRESSION);
+		parse_prefix_operator(object, parser);
+		if (!parse_infix_expression(object, parser, precedence)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+	return end_node(object, parser);
 }
 
-static bool parse_type(struct parser *parser);
+static bool parse_type(struct object *object, struct parser *parser);
 
-static bool parse_infix_expression(struct parser *parser, size_t precedence) {
-	begin_node(parser, NODE_TYPE_INFIX_EXPRESSION);
-	if (!parse_prefix_expression(parser)) return false;
+static bool parse_infix_expression(struct object *object, struct parser *parser, size_t precedence) {
+	begin_node(object, parser, NODE_TYPE_INFIX_EXPRESSION);
+	if (!parse_prefix_expression(object, parser)) return false;
 	size_t new_precedence = 0;
-	while ((new_precedence = peek_infix_operator(parser)) > precedence) {
-		parse_infix_operator(parser);
+	while ((new_precedence = peek_infix_operator(object, parser)) > precedence) {
+		parse_infix_operator(object, parser);
 		if (new_precedence == infix_precedences[TOKEN_TYPE_LEFT_PARENTHESIS]) {
 			--parser->current_token_index;
-			if (!parse_function_arguments(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS);
+			if (!parse_function_arguments(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS);
 		} else if (new_precedence == infix_precedences[TOKEN_TYPE_LEFT_BRACKET]) {
 			--parser->current_token_index;
-			if (!parse_array_index(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX);
+			if (!parse_array_index(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX);
 		} else if (new_precedence == infix_precedences[TOKEN_TYPE_AS]) {
-			if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-		} else if (!parse_infix_expression(parser, new_precedence)) {
-			return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+			if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		} else if (!parse_infix_expression(object, parser, new_precedence)) {
+			return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
 		}
 	}
 	// TODO: Maybe tidy up tree by removing unnecessary parent node if it only has one child.
-	return end_node(parser);
+	return end_node(object, parser);
 }
 
-static bool parse_expression(struct parser *parser) {
-	return parse_infix_expression(parser, 0);
+static bool parse_expression(struct object *object, struct parser *parser) {
+	return parse_infix_expression(object, parser, 0);
 }
 
-static bool parse_assignment_body(struct parser *parser) {
-	if (!parse_token(parser, TOKEN_TYPE_ASSIGN)) return false;
-	if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+static bool parse_assignment_body(struct object *object, struct parser *parser) {
+	if (!parse_token(object, parser, TOKEN_TYPE_ASSIGN)) return false;
+	if (!parse_expression(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
 	return true;
 }
 
-static bool parse_type(struct parser *parser);
+static bool parse_type(struct object *object, struct parser *parser);
 
-static bool parse_generic_arguments(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_GENERIC_ARGUMENTS);
-		parse_token(parser, TOKEN_TYPE_LEFT_ANGLE_BRACKET);
-		while (!peek_token(parser, TOKEN_TYPE_GREATER)) {
-			if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-			parse_token(parser, TOKEN_TYPE_COMMA);
+static bool parse_generic_arguments(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_GENERIC_ARGUMENTS);
+		parse_token(object, parser, TOKEN_TYPE_LEFT_ANGLE_BRACKET);
+		while (!peek_token(object, parser, TOKEN_TYPE_GREATER)) {
+			if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+			parse_token(object, parser, TOKEN_TYPE_COMMA);
 		}
-		if (!parse_token(parser, TOKEN_TYPE_GREATER)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_ANGLE_BRACKET);
-	return end_node(parser);
+		if (!parse_token(object, parser, TOKEN_TYPE_GREATER)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_ANGLE_BRACKET);
+	return end_node(object, parser);
 }
 
-static bool parse_basic_type(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_BASIC_TYPE);
-		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
+static bool parse_basic_type(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_BASIC_TYPE);
+		parse_token(object, parser, TOKEN_TYPE_IDENTIFIER);
 		while (true) {
-			if (parse_token(parser, TOKEN_TYPE_DOT)) {
-				if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-			} else if (peek_token(parser, TOKEN_TYPE_LEFT_ANGLE_BRACKET)) {
-				if (!parse_generic_arguments(parser)) return false;
+			if (parse_token(object, parser, TOKEN_TYPE_DOT)) {
+				if (!parse_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+			} else if (peek_token(object, parser, TOKEN_TYPE_LEFT_ANGLE_BRACKET)) {
+				if (!parse_generic_arguments(object, parser)) return false;
 			} else {
 				break;
 			}
 		}
-	return end_node(parser);
+	return end_node(object, parser);
 }
 
-static bool parse_mut_type(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_MUT_TYPE);
-		parse_token(parser, TOKEN_TYPE_MUT);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-	return end_node(parser);
+static bool parse_mut_type(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_MUT_TYPE);
+		parse_token(object, parser, TOKEN_TYPE_MUT);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(object, parser);
 }
 
-static bool parse_weak_type(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_WEAK_TYPE);
-		parse_token(parser, TOKEN_TYPE_WEAK);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-	return end_node(parser);
+static bool parse_weak_type(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_WEAK_TYPE);
+		parse_token(object, parser, TOKEN_TYPE_WEAK);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(object, parser);
 }
 
-static bool parse_owned_type(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_OWNED_TYPE);
-		parse_token(parser, TOKEN_TYPE_OWNED);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-	return end_node(parser);
+static bool parse_owned_type(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_OWNED_TYPE);
+		parse_token(object, parser, TOKEN_TYPE_OWNED);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(object, parser);
 }
 
-static bool parse_tuple_type(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_TUPLE_TYPE);
-		parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS);
+static bool parse_tuple_type(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_TUPLE_TYPE);
+		parse_token(object, parser, TOKEN_TYPE_LEFT_PARENTHESIS);
 		// TODO: Fix this so it correctly distinguishes invalid types and unclosed parenthesis.
-		while (!peek_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) {
-			if (!parse_type(parser)) break;
-			parse_token(parser, TOKEN_TYPE_COMMA);
+		while (!peek_token(object, parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) {
+			if (!parse_type(object, parser)) break;
+			parse_token(object, parser, TOKEN_TYPE_COMMA);
 		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
-	return end_node(parser);
+		if (!parse_token(object, parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
+	return end_node(object, parser);
 }
 
-static bool parse_function_type(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_FUNCTION_TYPE);
-		parse_token(parser, TOKEN_TYPE_FUNC);
-		if (!parse_tuple_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-	return end_node(parser);
+static bool parse_function_type(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_FUNCTION_TYPE);
+		parse_token(object, parser, TOKEN_TYPE_FUNC);
+		if (!parse_tuple_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(object, parser);
 }
 
-static bool parse_array_type(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_ARRAY_TYPE);
-		parse_token(parser, TOKEN_TYPE_LEFT_BRACKET);
-		if (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACKET) && !parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACKET)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACKET);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-	return end_node(parser);
+static bool parse_array_type(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_ARRAY_TYPE);
+		parse_token(object, parser, TOKEN_TYPE_LEFT_BRACKET);
+		if (!peek_token(object, parser, TOKEN_TYPE_RIGHT_BRACKET) && !parse_expression(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		if (!parse_token(object, parser, TOKEN_TYPE_RIGHT_BRACKET)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_BRACKET);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(object, parser);
 }
 
-static bool parse_pointer_type(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_POINTER_TYPE);
-		parse_token(parser, TOKEN_TYPE_BITWISE_AND);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-	return end_node(parser);
+static bool parse_pointer_type(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_POINTER_TYPE);
+		parse_token(object, parser, TOKEN_TYPE_BITWISE_AND);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(object, parser);
 }
 
-static bool parse_type(struct parser *parser) {
-	if (peek_token(parser, TOKEN_TYPE_BITWISE_AND)) return parse_pointer_type(parser);
-	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACKET)) return parse_array_type(parser);
-	if (peek_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return parse_tuple_type(parser);
-	if (peek_token(parser, TOKEN_TYPE_FUNC)) return parse_function_type(parser);
-	if (peek_token(parser, TOKEN_TYPE_OWNED)) return parse_owned_type(parser);
-	if (peek_token(parser, TOKEN_TYPE_WEAK)) return parse_weak_type(parser);
-	if (peek_token(parser, TOKEN_TYPE_MUT)) return parse_mut_type(parser);
-	if (peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return parse_basic_type(parser);
+static bool parse_type(struct object *object, struct parser *parser) {
+	if (peek_token(object, parser, TOKEN_TYPE_BITWISE_AND)) return parse_pointer_type(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_LEFT_BRACKET)) return parse_array_type(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return parse_tuple_type(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_FUNC)) return parse_function_type(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_OWNED)) return parse_owned_type(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_WEAK)) return parse_weak_type(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_MUT)) return parse_mut_type(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return parse_basic_type(object, parser);
 	return false;
 }
 
-static bool parse_embed_statement(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_EMBED_STATEMENT);
-		parse_token(parser, TOKEN_TYPE_EMBED);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
+static bool parse_embed_statement(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_EMBED_STATEMENT);
+		parse_token(object, parser, TOKEN_TYPE_EMBED);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(object, parser);
 }
 
-static bool parse_type_definition(struct parser *parser);
+static bool parse_type_definition(struct object *object, struct parser *parser);
 
-static bool parse_type_case(struct parser *parser) {
-	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
-	if (peek_token(parser, TOKEN_TYPE_TYPE)) return parse_type_definition(parser);
-	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
-	begin_node(parser, NODE_TYPE_TYPE_CASE);
-		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
-		if (peek_token(parser, TOKEN_TYPE_ASSIGN) && !parse_assignment_body(parser)) return false;
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
+static bool parse_type_case(struct object *object, struct parser *parser) {
+	if (peek_token(object, parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_TYPE)) return parse_type_definition(object, parser);
+	if (!peek_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
+	begin_node(object, parser, NODE_TYPE_TYPE_CASE);
+		parse_token(object, parser, TOKEN_TYPE_IDENTIFIER);
+		if (peek_token(object, parser, TOKEN_TYPE_ASSIGN) && !parse_assignment_body(object, parser)) return false;
+		if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(object, parser);
 }
 
-static bool parse_function_header(struct parser *parser);
+static bool parse_function_header(struct object *object, struct parser *parser);
 
-static bool parse_method_definition(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_METHOD_DEFINITION);
-		if (!parse_function_header(parser)) return false;
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
+static bool parse_method_definition(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_METHOD_DEFINITION);
+		if (!parse_function_header(object, parser)) return false;
+		if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(object, parser);
 }
 
-static bool parse_member_definition(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_MEMBER_DEFINITION);
-		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
+static bool parse_member_definition(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_MEMBER_DEFINITION);
+		parse_token(object, parser, TOKEN_TYPE_IDENTIFIER);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(object, parser);
 }
 
-static bool parse_field_definition(struct parser *parser) {
-	if (peek_token(parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(parser);
-	if (!(peek_token(parser, TOKEN_TYPE_PUB) || peek_token(parser, TOKEN_TYPE_IDENTIFIER) || peek_token(parser, TOKEN_TYPE_FUNC))) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
-	begin_node(parser, NODE_TYPE_FIELD_DEFINITION);
-		parse_token(parser, TOKEN_TYPE_PUB);
-		if (peek_token(parser, TOKEN_TYPE_IDENTIFIER) && !parse_member_definition(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MEMBER_DEFINITION);
-		if (peek_token(parser, TOKEN_TYPE_FUNC) && !parse_method_definition(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_METHOD_DEFINITION); 
-	return end_node(parser);
+static bool parse_field_definition(struct object *object, struct parser *parser) {
+	if (peek_token(object, parser, TOKEN_TYPE_EMBED)) return parse_embed_statement(object, parser);
+	if (!(peek_token(object, parser, TOKEN_TYPE_PUB) || peek_token(object, parser, TOKEN_TYPE_IDENTIFIER) || peek_token(object, parser, TOKEN_TYPE_FUNC))) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
+	begin_node(object, parser, NODE_TYPE_FIELD_DEFINITION);
+		parse_token(object, parser, TOKEN_TYPE_PUB);
+		if (peek_token(object, parser, TOKEN_TYPE_IDENTIFIER) && !parse_member_definition(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_MEMBER_DEFINITION);
+		if (peek_token(object, parser, TOKEN_TYPE_FUNC) && !parse_method_definition(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_METHOD_DEFINITION); 
+	return end_node(object, parser);
 }
 
-static bool parse_type_definition(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_TYPE)) return false;
-	begin_node(parser, NODE_TYPE_TYPE_DEFINITION);
-		parse_token(parser, TOKEN_TYPE_TYPE);
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+static bool parse_type_definition(struct object *object, struct parser *parser) {
+	if (!peek_token(object, parser, TOKEN_TYPE_TYPE)) return false;
+	begin_node(object, parser, NODE_TYPE_TYPE_DEFINITION);
+		parse_token(object, parser, TOKEN_TYPE_TYPE);
+		if (!parse_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
 		// Parse generic parameters...
 		
 		// Parse fields.
-		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) {
-			if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-			return end_node(parser);
+		if (!parse_token(object, parser, TOKEN_TYPE_LEFT_BRACE)) {
+			if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+			return end_node(object, parser);
 		}
-		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
-			if (!parse_field_definition(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
+		while (!peek_token(object, parser, TOKEN_TYPE_RIGHT_BRACE)) {
+			if (!parse_field_definition(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION);
 		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+		if (!parse_token(object, parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
 
 		// Parse cases.
-		if (!parse_token(parser, TOKEN_TYPE_CASES)) return end_node(parser);
-		if (!parse_token(parser, TOKEN_TYPE_LEFT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_CASES);
-		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
-			if (!parse_type_case(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
+		if (!parse_token(object, parser, TOKEN_TYPE_CASES)) return end_node(object, parser);
+		if (!parse_token(object, parser, TOKEN_TYPE_LEFT_BRACE)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_CASES);
+		while (!peek_token(object, parser, TOKEN_TYPE_RIGHT_BRACE)) {
+			if (!parse_type_case(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE);
 		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
-	return end_node(parser);
+		if (!parse_token(object, parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+	return end_node(object, parser);
 }
 
-static bool parse_definition(struct parser *parser);
+static bool parse_definition(struct object *object, struct parser *parser);
 
-static bool parse_block(struct parser *parser);
+static bool parse_block(struct object *object, struct parser *parser);
 
-static bool parse_if_statement(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_IF_STATEMENT);
-		parse_token(parser, TOKEN_TYPE_IF);
-		if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
-		if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
-		while (parse_token(parser, TOKEN_TYPE_ELSE)) {
+static bool parse_if_statement(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_IF_STATEMENT);
+		parse_token(object, parser, TOKEN_TYPE_IF);
+		if (!parse_expression(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		if (!parse_block(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
+		while (parse_token(object, parser, TOKEN_TYPE_ELSE)) {
 			bool encountered_if = false;
-			if (parse_token(parser, TOKEN_TYPE_IF)) {
-				if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+			if (parse_token(object, parser, TOKEN_TYPE_IF)) {
+				if (!parse_expression(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
 				encountered_if = true;
 			}
-			if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
+			if (!parse_block(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
 			if (!encountered_if) break;
 		}
-	return end_node(parser);
+	return end_node(object, parser);
 }
 
-static bool parse_loop_variable(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_LOOP_VARIABLE);
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-	return end_node(parser);
+static bool parse_loop_variable(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_LOOP_VARIABLE);
+		if (!parse_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(object, parser);
 }
 
-static bool parse_for_loop(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_FOR_LOOP);
-		parse_token(parser, TOKEN_TYPE_FOR);
+static bool parse_for_loop(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_FOR_LOOP);
+		parse_token(object, parser, TOKEN_TYPE_FOR);
 		// TODO: Make this parse either one variable without parenthesis or a tuple of variables in parenthesis like function parameters.
-		while (!peek_token(parser, TOKEN_TYPE_IN)) {
-			if (!parse_loop_variable(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_LOOP_VARIABLE);
-			parse_token(parser, TOKEN_TYPE_COMMA);
+		while (!peek_token(object, parser, TOKEN_TYPE_IN)) {
+			if (!parse_loop_variable(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_LOOP_VARIABLE);
+			parse_token(object, parser, TOKEN_TYPE_COMMA);
 		}
-		parse_token(parser, TOKEN_TYPE_IN);
-		if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
-		if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
-	return end_node(parser);
+		parse_token(object, parser, TOKEN_TYPE_IN);
+		if (!parse_expression(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		if (!parse_block(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
+	return end_node(object, parser);
 }
 
-static bool parse_while_loop(struct parser *parser) {
-	begin_node(parser, NODE_TYPE_WHILE_LOOP);
-		parse_token(parser, TOKEN_TYPE_WHILE);
-		if (!parse_expression(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
-		if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
-	return end_node(parser);
+static bool parse_while_loop(struct object *object, struct parser *parser) {
+	begin_node(object, parser, NODE_TYPE_WHILE_LOOP);
+		parse_token(object, parser, TOKEN_TYPE_WHILE);
+		if (!parse_expression(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_EXPRESSION);
+		if (!parse_block(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
+	return end_node(object, parser);
 }
 
-static bool parse_block_statement(struct parser *parser) {
-	if (parse_definition(parser)) return true;
-	if (peek_token(parser, TOKEN_TYPE_LEFT_BRACE)) return parse_block(parser);
-	if (peek_token(parser, TOKEN_TYPE_WHILE)) return parse_while_loop(parser);
-	if (peek_token(parser, TOKEN_TYPE_FOR)) return parse_for_loop(parser);
-	if (peek_token(parser, TOKEN_TYPE_IF)) return parse_if_statement(parser);
-	if (parse_expression(parser)) {
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+static bool parse_block_statement(struct object *object, struct parser *parser) {
+	if (parse_definition(object, parser)) return true;
+	if (peek_token(object, parser, TOKEN_TYPE_LEFT_BRACE)) return parse_block(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_WHILE)) return parse_while_loop(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_FOR)) return parse_for_loop(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_IF)) return parse_if_statement(object, parser);
+	if (parse_expression(object, parser)) {
+		if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 		return true;
 	}
 	return false;
 }
 
-static bool parse_block(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_LEFT_BRACE)) return false;
-	begin_node(parser, NODE_TYPE_BLOCK);
-		parse_token(parser, TOKEN_TYPE_LEFT_BRACE);
-		while (!peek_token(parser, TOKEN_TYPE_RIGHT_BRACE)) {
-			if (!parse_block_statement(parser)) break;
+static bool parse_block(struct object *object, struct parser *parser) {
+	if (!peek_token(object, parser, TOKEN_TYPE_LEFT_BRACE)) return false;
+	begin_node(object, parser, NODE_TYPE_BLOCK);
+		parse_token(object, parser, TOKEN_TYPE_LEFT_BRACE);
+		while (!peek_token(object, parser, TOKEN_TYPE_RIGHT_BRACE)) {
+			if (!parse_block_statement(object, parser)) break;
 		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
-	return end_node(parser);
+		if (!parse_token(object, parser, TOKEN_TYPE_RIGHT_BRACE)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_BRACE);
+	return end_node(object, parser);
 }
 
-static bool parse_function_parameter(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
-	begin_node(parser, NODE_TYPE_FUNCTION_PARAMETER);
-		parse_token(parser, TOKEN_TYPE_IDENTIFIER);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-	return end_node(parser);
+static bool parse_function_parameter(struct object *object, struct parser *parser) {
+	if (!peek_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return false;
+	begin_node(object, parser, NODE_TYPE_FUNCTION_PARAMETER);
+		parse_token(object, parser, TOKEN_TYPE_IDENTIFIER);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+	return end_node(object, parser);
 }
 
-static bool parse_function_parameters(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
-	begin_node(parser, NODE_TYPE_FUNCTION_PARAMETERS);
-		parse_token(parser, TOKEN_TYPE_LEFT_PARENTHESIS);
-		while (parse_function_parameter(parser)) {
-			if (!parse_token(parser, TOKEN_TYPE_COMMA)) break;
+static bool parse_function_parameters(struct object *object, struct parser *parser) {
+	if (!peek_token(object, parser, TOKEN_TYPE_LEFT_PARENTHESIS)) return false;
+	begin_node(object, parser, NODE_TYPE_FUNCTION_PARAMETERS);
+		parse_token(object, parser, TOKEN_TYPE_LEFT_PARENTHESIS);
+		while (parse_function_parameter(object, parser)) {
+			if (!parse_token(object, parser, TOKEN_TYPE_COMMA)) break;
 		}
-		if (!parse_token(parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
-	return end_node(parser);
+		if (!parse_token(object, parser, TOKEN_TYPE_RIGHT_PARENTHESIS)) return emit_error(object, parser, PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS);
+	return end_node(object, parser);
 }
 
-static bool parse_function_header(struct parser *parser) {
-	parse_token(parser, TOKEN_TYPE_FUNC);
-	if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-	if (!parse_function_parameters(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS);
-	if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+static bool parse_function_header(struct object *object, struct parser *parser) {
+	parse_token(object, parser, TOKEN_TYPE_FUNC);
+	if (!parse_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+	if (!parse_function_parameters(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS);
+	if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
 	return true;
 }
 
-static bool parse_function_definition(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_FUNC)) return false;
-	begin_node(parser, NODE_TYPE_FUNCTION_DEFINITION);
-		if (!parse_function_header(parser)) return false;
-		if (!parse_block(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
-	return end_node(parser);
+static bool parse_function_definition(struct object *object, struct parser *parser) {
+	if (!peek_token(object, parser, TOKEN_TYPE_FUNC)) return false;
+	begin_node(object, parser, NODE_TYPE_FUNCTION_DEFINITION);
+		if (!parse_function_header(object, parser)) return false;
+		if (!parse_block(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_BLOCK);
+	return end_node(object, parser);
 }
 
-static bool parse_variable_definition(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_VAR)) return false;
-	begin_node(parser, NODE_TYPE_VARIABLE_DEFINITION);
-		parse_token(parser, TOKEN_TYPE_VAR);
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-		if (!parse_type(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
-		if (peek_token(parser, TOKEN_TYPE_ASSIGN) && !parse_assignment_body(parser)) return false;
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
+static bool parse_variable_definition(struct object *object, struct parser *parser) {
+	if (!peek_token(object, parser, TOKEN_TYPE_VAR)) return false;
+	begin_node(object, parser, NODE_TYPE_VARIABLE_DEFINITION);
+		parse_token(object, parser, TOKEN_TYPE_VAR);
+		if (!parse_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+		if (!parse_type(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_TYPE);
+		if (peek_token(object, parser, TOKEN_TYPE_ASSIGN) && !parse_assignment_body(object, parser)) return false;
+		if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(object, parser);
 }
 
-static bool parse_module_name(struct parser *parser) {
-	if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return false;
-	while (parse_token(parser, TOKEN_TYPE_DOT)) {
-		if (parse_token(parser, TOKEN_TYPE_TIMES)) break;
-		if (!parse_token(parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
+static bool parse_module_name(struct object *object, struct parser *parser) {
+	if (!parse_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return false;
+	while (parse_token(object, parser, TOKEN_TYPE_DOT)) {
+		if (parse_token(object, parser, TOKEN_TYPE_TIMES)) break;
+		if (!parse_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
 	}
 	return true;
 }
 
-static bool parse_module_definition(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_MODULE)) return false;
-	begin_node(parser, NODE_TYPE_MODULE_DEFINITION);
-		parse_token(parser, TOKEN_TYPE_MODULE);
-		if (!parse_module_name(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
+static bool parse_module_definition(struct object *object, struct parser *parser) {
+	if (!peek_token(object, parser, TOKEN_TYPE_MODULE)) return false;
+	begin_node(object, parser, NODE_TYPE_MODULE_DEFINITION);
+		parse_token(object, parser, TOKEN_TYPE_MODULE);
+		if (!parse_module_name(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
+		if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(object, parser);
 }
 
-static bool parse_definition_body(struct parser *parser) {
-	if (peek_token(parser, TOKEN_TYPE_MODULE)) return parse_module_definition(parser);
-	if (peek_token(parser, TOKEN_TYPE_VAR)) return parse_variable_definition(parser);
-	if (peek_token(parser, TOKEN_TYPE_FUNC)) return parse_function_definition(parser);
-	if (peek_token(parser, TOKEN_TYPE_TYPE)) return parse_type_definition(parser);
+static bool parse_definition_body(struct object *object, struct parser *parser) {
+	if (peek_token(object, parser, TOKEN_TYPE_MODULE)) return parse_module_definition(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_VAR)) return parse_variable_definition(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_FUNC)) return parse_function_definition(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_TYPE)) return parse_type_definition(object, parser);
 	return false;
 }
 
-static bool parse_definition(struct parser *parser) {
-	if (peek_token(parser, TOKEN_TYPE_PUB)) {
-		begin_node(parser, NODE_TYPE_DEFINITION);
-			parse_token(parser, TOKEN_TYPE_PUB);
-			if (!parse_definition_body(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_DEFINITION);
-		return end_node(parser);
+static bool parse_definition(struct object *object, struct parser *parser) {
+	if (peek_token(object, parser, TOKEN_TYPE_PUB)) {
+		begin_node(object, parser, NODE_TYPE_DEFINITION);
+			parse_token(object, parser, TOKEN_TYPE_PUB);
+			if (!parse_definition_body(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_DEFINITION);
+		return end_node(object, parser);
 	}
-	return parse_definition_body(parser);
+	return parse_definition_body(object, parser);
 }
 
-static bool parse_import_statement(struct parser *parser) {
-	if (!peek_token(parser, TOKEN_TYPE_IMPORT)) return false;
-	begin_node(parser, NODE_TYPE_IMPORT_STATEMENT);
-		parse_token(parser, TOKEN_TYPE_IMPORT);
-		if (!parse_module_name(parser)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
-		if (!parse_token(parser, TOKEN_TYPE_SEMICOLON)) return emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
-	return end_node(parser);
+static bool parse_import_statement(struct object *object, struct parser *parser) {
+	if (!peek_token(object, parser, TOKEN_TYPE_IMPORT)) return false;
+	begin_node(object, parser, NODE_TYPE_IMPORT_STATEMENT);
+		parse_token(object, parser, TOKEN_TYPE_IMPORT);
+		if (!parse_module_name(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME);
+		if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
+	return end_node(object, parser);
 }
 
-static bool parse_program(struct parser *parser) {
-	while (parser->current_token_index < list_get_count(&parser->tokens)) {
-		if (parse_import_statement(parser)) continue;
-		if (!parse_definition(parser)) return false;
+static bool parse_program(struct object *object, struct parser *parser) {
+	while (parser->current_token_index < list_get_count(&object->tokens)) {
+		if (parse_import_statement(object, parser)) continue;
+		if (!parse_definition(object, parser)) return false;
 	}
 	return true;
 }
 
-const char *const parser_error_messages[] = {
-	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
-	[PARSER_ERROR_TYPE_EXPECTED_DEFINITION] = "Expected a definition.",
-	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",
-	[PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER] = "Expected an identifier.",
-	[PARSER_ERROR_TYPE_EXPECTED_EXPRESSION] = "Expected an expression.",
-	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS] = "Expected function parameters.",
-	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS] = "Expected function arguments.",
-	[PARSER_ERROR_TYPE_EXPECTED_BLOCK] = "Expected a brace-enclosed block.",
-	[PARSER_ERROR_TYPE_EXPECTED_LOOP_VARIABLE] = "Expected a loop variable.",
-	[PARSER_ERROR_TYPE_EXPECTED_IN_STATEMENT] = "Expected an `in` statement.",
-	[PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION] = "Expected a field definition.",
-	[PARSER_ERROR_TYPE_EXPECTED_MEMBER_DEFINITION] = "Expected a member definition.",
-	[PARSER_ERROR_TYPE_EXPECTED_METHOD_DEFINITION] = "Expected a method definition.",
-	[PARSER_ERROR_TYPE_EXPECTED_CASES] = "Expected cases.",
-	[PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE] = "Expected a type case.",
-	[PARSER_ERROR_TYPE_EXPECTED_TYPE] = "Expected a type.",
-	[PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX] = "Expected an array index.",
-	[PARSER_ERROR_TYPE_EXPECTED_SEMICOLON] = "Expected a semicolon.",
-	[PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS] = "Unclosed parenthesis.",
-	[PARSER_ERROR_TYPE_UNCLOSED_BRACKET] = "Unclosed bracket.",
-	[PARSER_ERROR_TYPE_UNCLOSED_BRACE] = "Unclosed brace.",
-	[PARSER_ERROR_TYPE_UNCLOSED_ANGLE_BRACKET] = "Unclosed angle bracket.",
-};
-
-bool parse(struct token *tokens, struct node **nodes, struct parser_error **errors) {
-	struct parser parser = {
-		.tokens = tokens,
-	};
-	parser.nodes = list_create(initial_nodes_capacity, sizeof (struct node));
-	if (!parser.nodes) {
-		return false;
-	}
-	parser.errors = list_create(initial_parser_errors_capacity, sizeof (struct parser_error));
-	if (!parser.errors) {
-		list_destroy(&parser.nodes);
-		return false;
-	}
-
+bool parse(struct object *object) {
+	struct parser parser = {0};
 	struct node node = {
 		.type = NODE_TYPE_PROGRAM,
 	};
 	// TODO: Handle null return value.
-	list_push_back(&parser.nodes, &node);
+	list_push_back(&object->nodes, &node);
 	parser.current_node_is_parent = true;
-
-	parse_program(&parser);
-
-	*nodes = parser.nodes;
-	*errors = parser.errors;
+	parse_program(object, &parser);
 	return true;
 }

@@ -1,6 +1,6 @@
 #include "token.h"
 
-const char *const reserved_words[] = {
+const char *const token_type_names[] = {
 	// Literals
 	[TOKEN_TYPE_NUMBER] = "number",
 	[TOKEN_TYPE_CHARACTER] = "character",
@@ -82,4 +82,10 @@ const char *const reserved_words[] = {
 	[TOKEN_TYPE_LESS_EQUAL] = "<=",
 	[TOKEN_TYPE_LESS] = "<",
 	[TOKEN_TYPE_LEFT_ANGLE_BRACKET] = "< bracket",
+};
+
+const char *const lexer_error_messages[] = {
+	[LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN] = "Unrecognized token.",
+	[LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
+	[LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
 };

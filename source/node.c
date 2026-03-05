@@ -40,3 +40,28 @@ const char *const node_type_names[] = {
 	[NODE_TYPE_PREFIX_EXPRESSION] = "prefix expression",
 	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
 };
+
+const char *const parser_error_messages[] = {
+	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
+	[PARSER_ERROR_TYPE_EXPECTED_DEFINITION] = "Expected a definition.",
+	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",
+	[PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER] = "Expected an identifier.",
+	[PARSER_ERROR_TYPE_EXPECTED_EXPRESSION] = "Expected an expression.",
+	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_PARAMETERS] = "Expected function parameters.",
+	[PARSER_ERROR_TYPE_EXPECTED_FUNCTION_ARGUMENTS] = "Expected function arguments.",
+	[PARSER_ERROR_TYPE_EXPECTED_BLOCK] = "Expected a brace-enclosed block.",
+	[PARSER_ERROR_TYPE_EXPECTED_LOOP_VARIABLE] = "Expected a loop variable.",
+	[PARSER_ERROR_TYPE_EXPECTED_IN_STATEMENT] = "Expected an `in` statement.",
+	[PARSER_ERROR_TYPE_EXPECTED_FIELD_DEFINITION] = "Expected a field definition.",
+	[PARSER_ERROR_TYPE_EXPECTED_MEMBER_DEFINITION] = "Expected a member definition.",
+	[PARSER_ERROR_TYPE_EXPECTED_METHOD_DEFINITION] = "Expected a method definition.",
+	[PARSER_ERROR_TYPE_EXPECTED_CASES] = "Expected cases.",
+	[PARSER_ERROR_TYPE_EXPECTED_TYPE_CASE] = "Expected a type case.",
+	[PARSER_ERROR_TYPE_EXPECTED_TYPE] = "Expected a type.",
+	[PARSER_ERROR_TYPE_EXPECTED_ARRAY_INDEX] = "Expected an array index.",
+	[PARSER_ERROR_TYPE_EXPECTED_SEMICOLON] = "Expected a semicolon.",
+	[PARSER_ERROR_TYPE_UNCLOSED_PARENTHESIS] = "Unclosed parenthesis.",
+	[PARSER_ERROR_TYPE_UNCLOSED_BRACKET] = "Unclosed bracket.",
+	[PARSER_ERROR_TYPE_UNCLOSED_BRACE] = "Unclosed brace.",
+	[PARSER_ERROR_TYPE_UNCLOSED_ANGLE_BRACKET] = "Unclosed angle bracket.",
+};

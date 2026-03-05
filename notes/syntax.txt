@@ -1,44 +1,69 @@
-&T
-[]T
-(T, U)
-func(T) U
-owned T
-weak T
-mut T
-T.U
-T<U>
-
-for i usize in 0 until length
-for (i, j string) in x
-for (a, b int32) in zip(array1, array2)
-
-need type vs type distinction to avoid impl vs extend vs abstract -> actually don't care, just use
-  the methods to distinguish
-need cases to avoid open vs closed and to distinguish between embedding a single case vs all
-put method inside type for convnience and consistency with cases
-everything in module scope besides enum value cases, which are in type scope
-extending a case type in the body of another type DOES export the cases of that type
-abstracting a case type in the case part of another type only exports the cases included in 
-  the new type
+simple vs complete
+nested vs flat namespaces
+how to handle tuples and anonymous unions?
+how to distinguish structural typing and not structural?
 
 
 
 
-type UserId = uint64
-
+type UserId = uint32
 type IntOrString = Sum<int32, string>
-
 type File = Product<Readable, Writeable>
+type Direction = uint32 cases {n, s, e, w}
+type MyTuple {_ int32, _ string}
+func returnMultipleValues() type {a int32, b string}
+func maybeInt() Optional<int32>
+func mayFail() Result<int32, MyError>
 
-type Product<T..> {embed T}
 
-type Sum<T..> cases {embed T}
+
+
+var heap owned &BlockAllocator = new BlockAllocator(1024)
+var a owned &int32 = new 1 in heap
+var b weak &int32 = a
+drop heap
+
+var stack owned &StackAllocator = new StackAllocator(1024)
+var a owned &int32 = new 1 in stack
+drop stack
+
+// You can use the value of drop to move things.
+var a owned &int32 = new 1
+var b owned &int32 = drop a
+// a is no longer valid and set to null so it will segfault if dereferenced.
+
+func foo() {
+	var x = new 1 // Uses implicit allocator parameter.
+}
+
+func main() {
+	var a = new 1 // Uses global allocator.
+	var heap = new BlockAllocator(1024)
+	foo(allocator=heap) // Make foo use a different allocator.
+}
+
+
+
+
+type Interface {
+	func &x(&mut this) &mut int32 
+}
+
+type Implementation {
+	embed Interface
+	x int32
+}
+
+func main() {
+	var foo &mut Interface = &Implementation()
+	foo.x = 1 // Works just fine.
+}
 
 
 
 
 pub module animals
-import std.io
+from std.io import printLine
 
 pub type Animal {
 	pub name string
@@ -56,96 +81,15 @@ pub type Cat {
 	pub breed string
 }
 
-pub func makeNoise(dog &Dog) {
-	printLine("woof")
-}
+pub func makeNoise(dog &Dog) {printLine("woof")}
 
-pub func makeNoise(cat &Cat) {
-	printLine("meow")
-}
+pub func makeNoise(cat &Cat) {printLine("meow")}
 
-pub func main() {
+func main() {
 	var pet mut &Animal = &Dog()
 	makeNoise(pet)
 	pet = &Cat()
 	pet->makeNoise()
-}
-
-
-
-
-pub module shapes
-import std.math
-
-pub type Shape {
-	pub color string
-	pub func area(&this) float64
-} cases {
-	type Rectangle {pub width, height float64}
-	type Triangle {pub base, height float64}
-	type Circle {pub radius float64}
-}
-
-
-// data.txt
-pub type MoreShapeData {
-	embed shapes.Shape // embeds all fields
-	pub extraData float64
-} cases {
-	embed Triangle // only embeds Triangle. if this wasnt here all cases would be included
-}
-
-// cases.txt
-pub type MoreShapeCases {
-	pub color string // only embeds color, not area().
-} cases {
-	embed shapes.Shape // embeds all cases.
-	type Rhombus {}
-}
-
-pub func area(rectangle &Rectangle) {
-	return rectangle.width*rectangle.height
-}
-
-pub func area(triangle &Triangle) {
-	return 0.5*triangle.base*triangle.height
-}
-
-pub func area(circle &Circle) {
-	return std.math.pi*circle.radius*circle.radius
-}
-
-
-
-
-pub module physics
-import std.math
-import std.operators
-
-pub type Entity {
-	pub pos, vel, acc Vector
-	pub func collide(a, b &mut This)
-} cases {
-	type Circle {pub radius float64}
-	type Mesh {pub vertices []Vector}
-}
-
-
-pub type Vector {
-	embed std.operators.To<string>
-	pub x, y, z float64
-}
-
-pub func collide(a, b &mut Circle) {}
-
-pub func collide(a, b &mut Mesh) {}
-
-pub func collide(a &mut Circle, b &mut Mesh) {}
-
-pub func collide(a &mut Mesh, b &mut Circle) {}
-
-pub func to<string>(vector &Vector) string {
-	return f"({vector.x}, {vector.y}, {vector.z})"
 }
 
 
@@ -163,54 +107,38 @@ type Color {
 
 
 
-// interface.txt
-pub module interface
+pub module physics
+import std.math
+import std.operators
 
-pub type Script {
-	pub publicState int32
-	pub func doSomething(&mut this)
-}
+pub type Entity {
+	pub pos, vel, acc Vector
+	pub func update(a, b &mut This)
+} cases {
+	type Circle {
+		pub radius float64
+	}
 
-
-// myscript.txt -> myscript.so
-pub module myScript
-import std.io
-import interface
-
-pub type MyScript {
-	embed interace.Script
-}
-
-pub func doSomething(myScript &mut MyScript) {
-	std.io.printLine("script loaded successfully")
-}
-
-// The entry point for the script.
-pub func load() MyScript {
-	return MyScript()
-}
-
-
-pub module program
-import std.objects
-import interface
-
-pub func main() {
-	var script &mut Script = std.objects.load<&mut Script>("myscript.so")
-	doSomething(script)
-}
-
-
-
-
-pub func main() {
-	var name mut string = "default"
-	var age mut int32 = 4
-	var required bool
-	addOptionalFlags(&name, &age)
-	addRequiredFlag(&bool)
-	if var error = parseFlags() {
-		printLine(error.message)
-		return
+	type Mesh {
+		pub vertices owned []Vector
 	}
 }
+
+pub type Vector {
+	embed std.operators.Equality<This>, std.operators.To<string>, .Arithmetic<This>, .Arithmetic<float64>
+	x, y, z float64
+}
+
+pub func collide(a, b &mut Circle) {}
+
+pub func collide(a, b &mut Mesh) {}
+
+pub func collide(a &mut Circle, b &mut Mesh) {}
+
+pub func collide(a &mut Mesh, b &mut Circle) {}
+
+pub func to<string>(vector &Vector) {
+	return f"({vector.x}, {vector.y})"
+}
+
+
