@@ -105,12 +105,12 @@ bool object_read_text_from_file(struct object *object, FILE *file) {
 		return false;
 	}
 	// `+ 1` because `get_file_length()` does not account for the file terminator.
-	if (length + 1 > list_get_capacity(&object->text) && !list_set_capacity(&object->text, length + 1)) {
+	if (length + 1 > (long)list_get_capacity(&object->text) && !list_set_capacity(&object->text, (size_t)length + 1)) {
 		return false;
 	}
 	
 	size_t bytes_read = fread(object->text, 1, length, file);
-	if (ferror(file) || bytes_read != length) {
+	if (ferror(file) || (long)bytes_read != length) {
 		clearerr(file);
 		return false;
 	}

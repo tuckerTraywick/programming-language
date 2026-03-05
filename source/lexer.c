@@ -30,7 +30,7 @@ bool lex(struct object *object) {
 			do {
 				++text;
 				++current_token.text_length;
-			} while (*text && isdigit(*text));
+			} while (isdigit(*text));
 			current_token.type = TOKEN_TYPE_NUMBER;
 		// Lex characters.
 		} else if (*text == '\'') {
@@ -81,7 +81,7 @@ bool lex(struct object *object) {
 			do {
 				++text;
 				++current_token.text_length;
-			} while (*text && isalnum(*text) || *text == '_');
+			} while (isalnum(*text) || *text == '_');
 			current_token.type = TOKEN_TYPE_IDENTIFIER;
 			for (size_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
