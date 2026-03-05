@@ -95,16 +95,16 @@ int main(void) {
 	print_lexer_errors(object);
 	printf("\n");
 
-	// if (!parse(object)) {
-	// 	printf("FAILED PARSING\n");
-	// 	object_destroy(object);
-	// 	return 1;
-	// }
-	// printf("NODES:\n");
-	// print_node(object, object->nodes, 0);
-	// printf("\nPARSER ERRORS:\n");
-	// print_parser_errors(object);
-	// printf("\n");
+	if (!parse(object)) {
+		printf("FAILED PARSING\n");
+		object_destroy(object);
+		return 1;
+	}
+	printf("NODES:\n");
+	print_node(object, object->nodes, 0);
+	printf("\nPARSER ERRORS:\n");
+	print_parser_errors(object);
+	printf("\n");
 	
 	object_destroy(object);
 	return 0;

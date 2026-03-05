@@ -6,10 +6,6 @@
 #include "node.h"
 #include "list.h"
 
-static const size_t initial_nodes_capacity = 1000;
-
-static const size_t initial_parser_errors_capacity = 100;
-
 // The state kept between parsing functions.
 struct parser {
 	size_t current_token_index;
