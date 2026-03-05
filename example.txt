@@ -1,1 +1,2 @@
-module foo;
+module foo.bar;
+module baz;

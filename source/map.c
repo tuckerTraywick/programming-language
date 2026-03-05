@@ -205,11 +205,6 @@ bool map_is_empty_impl(void **map) {
 	return header->buckets_count == 0;
 }
 
-bool map_is_not_empty_impl(void **map) {
-	struct map_header *header = get_header(map);
-	return header->buckets_count != 0;
-}
-
 void *map_get_impl(void **map, char *key) {
 	struct map_header *header = get_header(map);
 	size_t bucket_index = 0;
@@ -282,6 +277,11 @@ char *map_get_key_impl(void **map, void *bucket) {
 		return NULL;
 	}
 	return header->keys + key_index - 1; // Subtracting 1 because key indices are offset by +1.
+}
+
+bool map_index_is_full_impl(void **map, size_t bucket_index) {
+	struct map_header *header = get_header(map);
+	return bucket_index < header->buckets_capacity && header->key_indices[bucket_index];
 }
 
 #undef max

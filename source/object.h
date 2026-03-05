@@ -15,6 +15,7 @@ enum compiler_error_type {
 };
 
 struct compiler_error {
+	size_t node_index;
 	enum compiler_error_type type;
 };
 

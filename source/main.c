@@ -6,8 +6,10 @@
 #include "token.h"
 #include "node.h"
 #include "list.h"
+#include "map.h"
 #include "lexer.h"
 #include "parser.h"
+#include "visitor.h"
 
 static void print_token(struct object *object, struct token *token) {
 	printf("%s `%.*s`", token_type_names[token->type], (int)token->text_length, object->text + token->text_index);
@@ -69,6 +71,20 @@ static void print_parser_errors(struct object *object) {
 	}
 }
 
+static void print_object(struct object *object) {
+	if (object->header) {
+
+	}
+	printf("smybols:\n");
+	for (size_t i = 0; i < map_get_buckets_capacity(&object->symbols); ++i) {
+		if (map_index_is_full(&object->symbols, i)) {
+			char *name = map_get_key(&object->symbols, object->symbols + i);
+			struct symbol_handle *symbol = map_get(&object->symbols, name);
+			printf("`%s`: %zu\n", name, symbol->offset);
+		}
+	}
+}
+
 int main(void) {
 	struct object *object = object_create();
 	if (!object) {
@@ -105,8 +121,11 @@ int main(void) {
 	printf("\nPARSER ERRORS:\n");
 	print_parser_errors(object);
 	printf("\n");
-	
+
+	initialize_symbols(object);
+	printf("OBJECT:\n");
+	print_object(object);
+
 	object_destroy(object);
 	return 0;
 }
-
