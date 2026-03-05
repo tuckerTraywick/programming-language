@@ -75,8 +75,15 @@ int main(void) {
 		printf("FAILED TO CREATE OBJECT\n");
 		return 1;
 	}
+	FILE *file = fopen("example.txt", "r");
+	if (!file) {
+		printf("FAILED TO OPEN FILE\n");
+		object_destroy(object);
+		return 1;
+	}
+	object_read_text_from_file(object, file);
+	fclose(file);
 	
-	char *text = "module hi;";
 	if (!lex(object)) {
 		object_destroy(object);
 		printf("FAILED LEXING\n");
@@ -88,16 +95,16 @@ int main(void) {
 	print_lexer_errors(object);
 	printf("\n");
 
-	if (!parse(object)) {
-		printf("FAILED PARSING\n");
-		object_destroy(object);
-		return 1;
-	}
-	printf("NODES:\n");
-	print_node(object, object->nodes, 0);
-	printf("\nPARSER ERRORS:\n");
-	print_parser_errors(object);
-	printf("\n");
+	// if (!parse(object)) {
+	// 	printf("FAILED PARSING\n");
+	// 	object_destroy(object);
+	// 	return 1;
+	// }
+	// printf("NODES:\n");
+	// print_node(object, object->nodes, 0);
+	// printf("\nPARSER ERRORS:\n");
+	// print_parser_errors(object);
+	// printf("\n");
 	
 	object_destroy(object);
 	return 0;

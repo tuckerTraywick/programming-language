@@ -1,6 +1,9 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include "token.h"
 #include "node.h"
 
@@ -84,6 +87,9 @@ struct object_file_header {
 extern const char *const compiler_error_messages[];
 
 struct object *object_create(void);
+
+// Assumes `file` is open for reading text. Returns true if no errors occurred.
+bool object_read_text_from_file(struct object *object, FILE *file);
 
 void object_destroy(struct object *object);
 

@@ -1,5 +1,8 @@
 #include <stddef.h>
+#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include "object.h"
 #include "list.h"
 #include "map.h"
@@ -7,6 +10,15 @@
 static const size_t initial_bucket_capacity = 1000;
 
 static const size_t initial_section_capacity = 10*1024;
+
+static long get_file_length(FILE *file) {
+	if (fseek(file, 0, SEEK_END) != 0) {
+		return -1;
+	}
+	long size = ftell(file);
+	fseek(file, 0, SEEK_SET);
+	return size;
+}
 
 const char *const compiler_error_messages[] = {
 	[COMPILER_ERROR_TYPE_ALREADY_DEFINED] = "Symbol has already been defined.",
@@ -43,8 +55,20 @@ struct object *object_create(void) {
 	if (!object->mutable_values) goto error13;
 	object->code = list_create(initial_section_capacity, sizeof *object->code);
 	if (!object->code) goto error14;
+	object->lexer_errors = list_create(initial_bucket_capacity, sizeof *object->lexer_errors);
+	if (!object->lexer_errors) goto error15;
+	object->parser_errors = list_create(initial_bucket_capacity, sizeof *object->parser_errors);
+	if (!object->parser_errors) goto error16;
+	object->compiler_errors = list_create(initial_bucket_capacity, sizeof *object->compiler_errors);
+	if (!object->compiler_errors) goto error17;
 	return object;
 
+	error17:
+		list_destroy(&object->parser_errors);
+	error16:
+		list_destroy(&object->lexer_errors);
+	error15:
+		list_destroy(&object->code);
 	error14:
 		list_destroy(&object->mutable_values);
 	error13:
@@ -75,6 +99,24 @@ struct object *object_create(void) {
 		return NULL;
 }
 
+bool object_read_text_from_file(struct object *object, FILE *file) {
+	long length = get_file_length(file);
+	if (length == -1) {
+		return false;
+	}
+	// `+ 1` because `get_file_length()` does not account for the file terminator.
+	if (length + 1> list_get_capacity(&object->text) && !list_set_capacity(&object->text, length + 1)) {
+		return false;
+	}
+	
+	size_t bytes_read = fread(object->text, 1, length, file);
+	if (ferror(file) || bytes_read != length) {
+		clearerr(file);
+		return false;
+	}
+	return true;
+}
+
 void object_destroy(struct object *object) {
 	map_destroy(&object->symbols);
 	list_destroy(&object->modules);
@@ -89,5 +131,8 @@ void object_destroy(struct object *object) {
 	list_destroy(&object->immutable_values);
 	list_destroy(&object->mutable_values);
 	list_destroy(&object->code);
+	list_destroy(&object->lexer_errors);
+	list_destroy(&object->parser_errors);
+	list_destroy(&object->compiler_errors);
 	free(object);
 }
