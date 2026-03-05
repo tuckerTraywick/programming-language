@@ -1,2 +1,3 @@
-module foo.bar;
+pub module foo.bar;
 module baz;
+pub module pluh;

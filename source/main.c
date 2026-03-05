@@ -17,7 +17,7 @@ static void print_token(struct object *object, struct token *token) {
 
 static void print_tokens(struct object *object) {
 	for (size_t i = 0; i < list_get_count(&object->tokens); ++i) {
-		printf("%zu ", i);
+		printf("%-5zu ", i);
 		print_token(object, object->tokens + i);
 		printf("\n");
 	}
@@ -35,6 +35,7 @@ static void print_lexer_errors(struct object *object) {
 }
 
 static void print_node(struct object *object, struct node *node, size_t depth) {
+	printf("%-5zu", node - object->nodes);
 	for (size_t i = 0; i < depth; ++i) {
 		printf("| ");
 	}
@@ -80,8 +81,16 @@ static void print_object(struct object *object) {
 		if (map_index_is_full(&object->symbols, i)) {
 			char *name = map_get_key(&object->symbols, object->symbols + i);
 			struct symbol_handle *symbol = map_get(&object->symbols, name);
-			printf("`%s`: %zu\n", name, symbol->offset);
+			printf("%-5zu%s\n", symbol->offset, name);
 		}
+	}
+}
+
+static void print_compiler_errors(struct object *object) {
+	for (size_t i = 0; i < list_get_count(&object->compiler_errors); ++i) {
+		struct compiler_error *error = object->compiler_errors + i;
+		struct node *node = object->nodes + error->node_index;
+		printf("%s [Node %zu: %s]\n", compiler_error_messages[error->type], error->node_index, node_type_names[node->type]);
 	}
 }
 
@@ -122,9 +131,15 @@ int main(void) {
 	print_parser_errors(object);
 	printf("\n");
 
+	if (!list_is_empty(&object->lexer_errors) || !list_is_empty(&object->parser_errors)) {
+		object_destroy(object);
+		return 1;
+	}
 	initialize_symbols(object);
 	printf("OBJECT:\n");
 	print_object(object);
+	printf("\nCOMPILER ERRORS:\n");
+	print_compiler_errors(object);
 
 	object_destroy(object);
 	return 0;

@@ -31,22 +31,21 @@ char *get_module_name(struct object *object, struct node *module_definition) {
 }
 
 bool initialize_symbols(struct object *object) {
-	struct node *current_node = object->nodes; // program(statement, statment, ...)
-	if (!current_node->child_index) {
-		return false;
-	}
-	current_node = object->nodes + current_node->child_index; // statement, statement, ...
-
 	char *module_name = NULL;
+	size_t next_node_index = object->nodes->child_index;
 	bool error_occurred = false;
-	while (true) {
-		struct node *next_node = NULL;
+	while (next_node_index) {
+		// Get the current node and get ready to visit the next node.
+		struct node *current_node = object->nodes + next_node_index;
+		next_node_index = current_node->next_index;
+
 		// Set the visibility of the definition.
 		enum symbol_visibility visibility = SYMBOL_VISIBILITY_PRIVATE;
 		if (current_node->type == NODE_TYPE_DEFINITION) {
+			// definition("pub", definition)
 			visibility = SYMBOL_VISIBILITY_PUBLIC;
-			next_node = object->nodes + current_node->next_index;
-			current_node = object->nodes + current_node->child_index; // module_definition
+			current_node = object->nodes + current_node->child_index; // "pub"
+			current_node = object->nodes + current_node->next_index; // definition
 		}
 
 		// Handle module definitions.
@@ -54,7 +53,7 @@ bool initialize_symbols(struct object *object) {
 			if (module_name) {
 				struct compiler_error error = {
 					.node_index = current_node - object->nodes,
-					.type = COMPILER_ERROR_TYPE_ALREADY_DEFINED
+					.type = COMPILER_ERROR_TYPE_MODULE_ALREADY_DECLEARED
 				};
 				// TODO: Handle false return value.
 				list_push_back(&object->compiler_errors, &error);
@@ -62,7 +61,7 @@ bool initialize_symbols(struct object *object) {
 			} else {
 				// module_definition("module", "a", ".", "b", ";") 
 				// TODO: Handle NULL return vaule.
-				char *module_name = get_module_name(object, current_node);
+				module_name = get_module_name(object, current_node);
 				struct symbol_handle symbol = {
 					.type = SYMBOL_TYPE_MODULE,
 					.visibility = visibility,
@@ -70,17 +69,9 @@ bool initialize_symbols(struct object *object) {
 				// TODO: Handle false return value.
 				map_add(&object->symbols, module_name, &symbol);
 			}
-			next_node = object->nodes + current_node->next_index;
 		// Handle type definitions.
 		} else if (current_node->type == NODE_TYPE_TYPE_DEFINITION) {
-			next_node = object->nodes + current_node->next_index;
 		}
-
-		// Move to the next definition.
-		if (!next_node) {
-			break;
-		}
-		current_node = next_node;
 	}
 	return error_occurred;
 }
