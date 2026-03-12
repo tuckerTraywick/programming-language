@@ -39,13 +39,18 @@ bool initialize_symbols(struct object *object) {
 		struct node *current_node = object->nodes + next_node_index;
 		next_node_index = current_node->next_index;
 
+		if (current_node->type != NODE_TYPE_DEFINITION) {
+			continue;
+		}
+		
+		// "pub"?, definiton
+		current_node = object->nodes + current_node->child_index;
 		// Set the visibility of the definition.
 		enum symbol_visibility visibility = SYMBOL_VISIBILITY_PRIVATE;
-		if (current_node->type == NODE_TYPE_DEFINITION) {
-			// definition("pub", definition)
+		if (current_node->type == NODE_TYPE_TOKEN) {
 			visibility = SYMBOL_VISIBILITY_PUBLIC;
-			current_node = object->nodes + current_node->child_index; // "pub"
-			current_node = object->nodes + current_node->next_index; // definition
+			// definiton
+			current_node = object->nodes + current_node->next_index;
 		}
 
 		// Handle module definitions.
@@ -71,6 +76,7 @@ bool initialize_symbols(struct object *object) {
 			}
 		// Handle type definitions.
 		} else if (current_node->type == NODE_TYPE_TYPE_DEFINITION) {
+			// type_definition("type", "{", "}", ";")
 		}
 	}
 	return error_occurred;

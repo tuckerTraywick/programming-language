@@ -1,3 +1,6 @@
-pub module foo.bar;
-module baz;
-pub module pluh;
+module foo;
+
+pub type Animal {
+	name string;
+	pub age uint32;
+}

@@ -1,21 +1,41 @@
-simple vs complete
-nested vs flat namespaces
-how to handle tuples and anonymous unions?
-how to distinguish structural typing and not structural?
+- Keeping struct vs trait distinction because it lets you easily define a getter and setter at the
+  same time and whether a type is abstract.
+- Keeping tuple vs array vs map and Sum/Product vs struct/cases because it makes syntax neater.
+- No embed vs impl because it makes things simpler and makes succinct definitions easier.
+
+var tuple struct {_ int32, _ string} = {1, "abc"}
+var array = []int32{1, 2, 3}
+var array = [3]{} // An array of 3 elements.
+var dict Map<string, int32> = {"a" = 1, "b" = 2}
+var a = new [10] // An array of 10 elements.
+var a = new {10} // An array of 1 element.
+
+type UserId struct {uint32}
+type IntOrString union {int32, string}
+type File trait {Readable, Writeable}
+type Direction struct {uint32} union {n, s, e, w}
+type MyTuple struct {_ int32, _ string}
+func returnMultipleValues() struct {a int32, b string}
+func maybeInt() optional int32
+func mayFail() union {int32, MyError}
 
 
+var tuple (int32, string) = (1, "a")
+var array [3]int32 = [1, 2, 3]
+var dict <string>int32 = <"a" = 1, "b" = 2>
+var a = new [] // an array of 0 elements
+var a = new [10] // an array of 1 element
+var a = new [] as [10]int32 // an array of 10 elements
 
-
-type UserId = uint32
-type IntOrString = Sum<int32, string>
-type File = Product<Readable, Writeable>
-type Direction = uint32 cases {n, s, e, w}
-type MyTuple {_ int32, _ string}
-func returnMultipleValues() type {a int32, b string}
+struct MyAlias = int32 // Not a distinct type. Resolves to int32.
+struct UserId {embed uint32} // A new distinct subtype of int32.
+struct IntOrString {embed Sum<int32, string>}
+trait File {embed Product<Readable, Writable>}
+struct Direction {embed uint32} cases {n, s, e, w}
+struct MyTuple {embed (int32, string)}
+func returnMultipleValues() (a int32, b string)
 func maybeInt() Optional<int32>
-func mayFail() Result<int32, MyError>
-
-
+func mayFail() Sum<int32, MyError>
 
 
 var heap owned &BlockAllocator = new BlockAllocator(1024)
@@ -45,38 +65,21 @@ func main() {
 
 
 
-type Interface {
-	func &x(&mut this) &mut int32 
-}
-
-type Implementation {
-	embed Interface
-	x int32
-}
-
-func main() {
-	var foo &mut Interface = &Implementation()
-	foo.x = 1 // Works just fine.
-}
-
-
-
-
 pub module animals
 from std.io import printLine
 
-pub type Animal {
+pub trait Animal {
 	pub name string
 	pub age uint32
 	pub func makeNoise(&this)
 }
 
-pub type Dog {
+pub struct Dog {
 	embed Animal
 	pub tag string
 }
 
-pub type Cat {
+pub struct Cat {
 	embed Animal
 	pub breed string
 }
@@ -95,38 +98,26 @@ func main() {
 
 
 
-type Color {
-	r, g, b uint8
-} cases {
-	type Rgb
-	red = (255, 0, 0)
-	green = (0, 255, 0)
-	blue = (0, 0, 255)
-}
-
-
-
-
 pub module physics
 import std.math
 import std.operators
 
-pub type Entity {
+pub struct Entity {
 	pub pos, vel, acc Vector
-	pub func update(a, b &mut This)
+	pub func collide(a, b &mut This)
 } cases {
-	type Circle {
+	struct Circle {
 		pub radius float64
 	}
 
-	type Mesh {
+	struct Mesh {
 		pub vertices owned []Vector
 	}
 }
 
-pub type Vector {
-	embed std.operators.Equality<This>, std.operators.To<string>, .Arithmetic<This>, .Arithmetic<float64>
-	x, y, z float64
+pub struct Vector {
+	embed std.operators.To<string>, .DefaultArithmetic<This>, .DefaultArithmetic<float64>
+	pub x, y, z float64
 }
 
 pub func collide(a, b &mut Circle) {}
@@ -142,3 +133,85 @@ pub func to<string>(vector &Vector) {
 }
 
 
+
+
+module color
+struct Color {
+	r, g, b uint8
+} cases {
+	struct Rgb
+	red = (255, 0, 0)
+	green = (0, 255, 0)
+	blue = (0, 0, 255)
+}
+
+// You can only embed types with cases that are themselves types in a separate module to avoid name
+// collision.
+module cases
+from color import *
+struct MoreCasesLessData {
+	r uint8	
+} cases {
+	embed Color
+	black = 0
+}
+
+module data
+from color import *
+struct MoreDataLessCases {
+	embed Color
+	a uint8
+} cases {
+	red = (255, 0, 0, 255)
+}
+
+
+
+
+struct Shape {
+	color string
+	func area(&this) float64
+} cases {
+	struct Circle {r float64}
+	struct Triangle {base, height float64}
+	struct Rectangle {width, height float64}
+}
+
+func area(circle &Circle) => math.pi*circle.radius*circle.radius
+
+func area(triangle &Triangle) => 0.5*triangle.base*triangle.height
+
+func area(rectangle &Rectangle) => rectangle.width*rectangle.height
+
+func main() {
+	var shapes = [Circle(), Triangle(), Rectangle()]
+	for shape in shapes {
+		printLine(area(&shape))
+	}
+}
+
+
+
+
+from std.arguments import *
+
+func main(arguments []string) ExitCode {
+	var help mut bool
+	var number mut int32
+	var x mut int32
+	var numbers mut [3]int32
+
+	namedArgument(&help, "help")
+	namedArgument(&number, "number")
+	positionalArgument(&x, required=true)
+	namedArgument(&numbers, "numbers")
+	try parseArguments() catch {
+		printErrorMessage()
+		return
+	}
+
+	if help {
+		printHelpMessage()
+	}
+	return .ok
+}

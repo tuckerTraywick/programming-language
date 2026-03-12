@@ -1,0 +1,81 @@
+pub module example;
+
+pub trait Animal {
+	pub string name;
+	pub uint32 age;
+	pub void makeNoise(*this);
+}
+
+pub struct Dog {
+	Animal;
+	pub string tag;
+}
+
+pub struct Cat {
+	Animal;
+	pub string breed;
+}
+
+pub void makeNoise(*Dog dog) {
+	printLine("woof");
+}
+
+pub void makeNoise(*Cat cat) {
+	printLine("meow");
+}
+
+pub void main() {
+	mut *Animal pet = &Dog();
+	makeNoise(pet);
+	pet = &Cat();
+	pet->makeNoise();
+}
+
+
+
+
+struct Color {
+	uint8 r, g, b;
+} cases {
+	struct Rgb;
+	red = (255, 0, 0);
+	green = (0, 255, 0);
+	blue = (0, 0, 255);
+}
+
+
+
+pub module physics;
+import std.math;
+import std.operators;
+
+pub struct Entity {
+	pub Vector position, velocity, acceleration;
+	pub void update(*mut This a, b);
+} cases {
+	struct Circle {pub float64 radius;}
+	struct Mesh {pub owned []Vector vertices;}
+}
+
+pub struct Vector {
+	std.operators.To<string>, .DefaultEquality, .DefaultArithmetic
+	pub float64 x, y, z;
+}
+
+pub void update(*mut Circle a, *mut Circle b) {}
+
+pub void update(*mut Mesh a, *mut Mesh b) {}
+
+pub void update(*mut Circle a, *mut Mesh b) {}
+
+pub void update(*mut Mesh a, *mut Circle b) {}
+
+pub string to<string>(Vector *vector) {
+	return f"({vector.x}, {vector.y})"
+}
+
+pub float64 length(*Vector vector) {
+	return math.sqrt(vector.x*vector.x + vector.y*vector.y)
+}
+
+

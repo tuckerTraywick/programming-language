@@ -1,3 +1,5 @@
+- Make parse_type() accept struct or trait
+- Make grammar for type definitions more consistent and easier to visit
 - Make function to consolidate only the tokens that occur in the object file's stored syntax trees
   into one list of tokens and characters
 - Update lexer to recognize newlines as tokens
