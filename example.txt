@@ -1,6 +1,6 @@
 module foo;
 
-pub type Animal {
+pub struct Animal {
 	name string;
 	pub age uint32;
 }

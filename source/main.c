@@ -81,7 +81,7 @@ static void print_object(struct object *object) {
 		if (map_index_is_full(&object->symbols, i)) {
 			char *name = map_get_key(&object->symbols, object->symbols + i);
 			struct symbol_handle *symbol = map_get(&object->symbols, name);
-			printf("%-5zu%s\n", symbol->offset, name);
+			printf("%-5zu%s\n", symbol->index, name);
 		}
 	}
 }

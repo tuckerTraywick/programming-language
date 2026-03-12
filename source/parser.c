@@ -424,11 +424,10 @@ static bool parse_member_definition(struct object *object, struct parser *parser
 }
 
 static bool parse_type_definition(struct object *object, struct parser *parser) {
-	if (!peek_token(object, parser, TOKEN_TYPE_TYPE)) return false;
 	begin_node(object, parser, NODE_TYPE_TYPE_DEFINITION);
-		parse_token(object, parser, TOKEN_TYPE_TYPE);
+		if (!parse_token(object, parser, TOKEN_TYPE_STRUCT)) parse_token(object, parser, TOKEN_TYPE_TRAIT);
 		if (!parse_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
-		// Parse generic parameters...
+		// TODO: Parse generic parameters.
 		
 		// Parse fields.
 		if (!parse_token(object, parser, TOKEN_TYPE_LEFT_BRACE)) {
@@ -589,7 +588,7 @@ static bool parse_definition_body(struct object *object, struct parser *parser) 
 	if (peek_token(object, parser, TOKEN_TYPE_MODULE)) return parse_module_definition(object, parser);
 	if (peek_token(object, parser, TOKEN_TYPE_VAR)) return parse_variable_definition(object, parser);
 	if (peek_token(object, parser, TOKEN_TYPE_FUNC)) return parse_function_definition(object, parser);
-	if (peek_token(object, parser, TOKEN_TYPE_TYPE)) return parse_type_definition(object, parser);
+	if (peek_token(object, parser, TOKEN_TYPE_STRUCT) || peek_token(object, parser, TOKEN_TYPE_TRAIT)) return parse_type_definition(object, parser);
 	return false;
 }
 

@@ -35,7 +35,7 @@ enum symbol_visibility {
 struct symbol_handle {
 	enum symbol_type type;
 	enum symbol_visibility visibility;
-	size_t offset;
+	size_t index;
 };
 
 struct module_symbol {

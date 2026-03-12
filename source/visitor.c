@@ -43,14 +43,14 @@ bool initialize_symbols(struct object *object) {
 			continue;
 		}
 		
-		// "pub"?, definiton
 		current_node = object->nodes + current_node->child_index;
+		// "pub"?, definiton
 		// Set the visibility of the definition.
 		enum symbol_visibility visibility = SYMBOL_VISIBILITY_PRIVATE;
 		if (current_node->type == NODE_TYPE_TOKEN) {
 			visibility = SYMBOL_VISIBILITY_PUBLIC;
-			// definiton
 			current_node = object->nodes + current_node->next_index;
+			// definiton
 		}
 
 		// Handle module definitions.
@@ -65,18 +65,40 @@ bool initialize_symbols(struct object *object) {
 				error_occurred = true;
 			} else {
 				// module_definition("module", "a", ".", "b", ";") 
+				struct module_symbol symbol = {0};
+				// TODO: Handle false return value.
+				list_push_back(&object->modules, &symbol);
+				size_t symbol_index = list_get_count(&object->modules) - 1;
+				
 				// TODO: Handle NULL return vaule.
 				module_name = get_module_name(object, current_node);
-				struct symbol_handle symbol = {
+				struct symbol_handle handle = {
 					.type = SYMBOL_TYPE_MODULE,
 					.visibility = visibility,
+					.index = symbol_index,
 				};
 				// TODO: Handle false return value.
-				map_add(&object->symbols, module_name, &symbol);
+				map_add(&object->symbols, module_name, &handle);
 			}
 		// Handle type definitions.
 		} else if (current_node->type == NODE_TYPE_TYPE_DEFINITION) {
-			// type_definition("type", "{", "}", ";")
+			// type_definition("type", "{", *member_definition, "}", ";")
+			current_node = object->nodes + current_node->next_index;
+			current_node = object->nodes + current_node->next_index;
+			// *member_definition, "}", ";"
+			while (current_node->type == NODE_TYPE_MEMBER_DEFINITION) {
+				// member_definition(...)
+				struct node *child = object->nodes + current_node->child_index;
+				// Inside of member definition.
+				if (child->type == NODE_TYPE_FIELD_DEFINITION) {
+					// Check if type has no duplicate fields.
+				} else if (child->type == NODE_TYPE_METHOD_DEFINITION) {
+					// Check if no matching methods exist then add method to symbol table.
+				} else {
+					// Check if type has no duplicate fields.
+				}
+				current_node = object->nodes + current_node->next_index;
+			}
 		}
 	}
 	return error_occurred;
