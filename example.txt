@@ -1,6 +1,9 @@
 module foo;
 
 pub struct Animal {
+	embed a;
 	name string;
 	pub age uint32;
+	x int32;
+	func f(x int32) int32;
 }

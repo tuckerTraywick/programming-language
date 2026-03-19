@@ -40,6 +40,8 @@ struct object *object_create(void) {
 	if (!object->variables) goto error5;
 	object->functions = list_create(initial_bucket_capacity, sizeof *object->functions);
 	if (!object->functions) goto error6;
+	object->members = list_create(initial_bucket_capacity, sizeof *object->members);
+	if (!object->members) goto error18;
 	object->type_descriptions = list_create(initial_bucket_capacity, sizeof *object->type_descriptions);
 	if (!object->type_descriptions) goto error7;
 	object->nodes = list_create(initial_bucket_capacity, sizeof *object->nodes);
@@ -84,6 +86,8 @@ struct object *object_create(void) {
 		list_destroy(&object->nodes);
 	error8:
 		list_destroy(&object->type_descriptions);
+	error18:
+		list_destroy(&object->members);
 	error7:
 		list_destroy(object->functions);
 	error6:

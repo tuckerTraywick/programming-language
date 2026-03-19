@@ -401,6 +401,7 @@ static bool parse_function_header(struct object *object, struct parser *parser);
 
 static bool parse_method_definition(struct object *object, struct parser *parser) {
 	begin_node(object, parser, NODE_TYPE_METHOD_DEFINITION);
+		parse_token(object, parser, TOKEN_TYPE_FUNC);
 		if (!parse_function_header(object, parser)) return false;
 		if (!parse_token(object, parser, TOKEN_TYPE_SEMICOLON)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_SEMICOLON);
 	return end_node(object, parser);
@@ -416,16 +417,26 @@ static bool parse_field_definition(struct object *object, struct parser *parser)
 
 static bool parse_member_definition(struct object *object, struct parser *parser) {
 	begin_node(object, parser, NODE_TYPE_MEMBER_DEFINITION);
-		if (peek_token(object, parser, TOKEN_TYPE_EMBED) && !parse_embed_statement(object, parser)) return false;
+		if (peek_token(object, parser, TOKEN_TYPE_EMBED)) {
+			if (parse_embed_statement(object, parser)) return end_node(object, parser);
+			else return false;
+		}
 		parse_token(object, parser, TOKEN_TYPE_PUB);
-		if (peek_token(object, parser, TOKEN_TYPE_IDENTIFIER) && !parse_field_definition(object, parser)) return false;
+		if (peek_token(object, parser, TOKEN_TYPE_IDENTIFIER)) {
+			if (parse_field_definition(object, parser)) return end_node(object, parser);
+			else return false;
+		}
+		if (peek_token(object, parser, TOKEN_TYPE_FUNC)) {
+			if (parse_method_definition(object, parser)) return end_node(object, parser);
+			else return false;
+		}
 		if (peek_token(object, parser, TOKEN_TYPE_FUNC) && !parse_method_definition(object, parser)) return false;
 	return end_node(object, parser);
 }
 
 static bool parse_type_definition(struct object *object, struct parser *parser) {
 	begin_node(object, parser, NODE_TYPE_TYPE_DEFINITION);
-		if (!parse_token(object, parser, TOKEN_TYPE_STRUCT)) parse_token(object, parser, TOKEN_TYPE_TRAIT);
+		parse_token(object, parser, TOKEN_TYPE_STRUCT) || parse_token(object, parser, TOKEN_TYPE_TRAIT);
 		if (!parse_token(object, parser, TOKEN_TYPE_IDENTIFIER)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
 		// TODO: Parse generic parameters.
 		

@@ -91,11 +91,11 @@ bool initialize_symbols(struct object *object) {
 				struct node *child = object->nodes + current_node->child_index;
 				// Inside of member definition.
 				if (child->type == NODE_TYPE_FIELD_DEFINITION) {
-					// Check if type has no duplicate fields.
+					// Check if type has duplicate fields.
 				} else if (child->type == NODE_TYPE_METHOD_DEFINITION) {
 					// Check if no matching methods exist then add method to symbol table.
 				} else {
-					// Check if type has no duplicate fields.
+					// Check if type has duplicate fields.
 				}
 				current_node = object->nodes + current_node->next_index;
 			}

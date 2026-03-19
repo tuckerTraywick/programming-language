@@ -45,21 +45,33 @@ struct module_symbol {
 struct type_symbol {
 	size_t alignment;
 	size_t size;
-	size_t type_description_offset;
+	size_t type_description_index;
+	size_t fields_index;
+	size_t fields_count;
+	size_t methods_index;
+	size_t methods_count;
+	size_t embeded_types_index;
+	size_t embedded_types_count;
 };
 
 struct variable_symbol {
 	size_t value_alignment;
 	size_t value_size;
 	size_t value_offset;
-	size_t type_description_offset;
+	size_t type_description_index;
 };
 
 struct function_symbol {
 	size_t return_value_alignment;
 	size_t return_value_size;
 	size_t code_offset;
-	size_t type_description_offset;
+	size_t signatures_index;
+	size_t signautres_count;
+};
+
+struct member {
+	size_t name_index;
+	size_t name_length;
 };
 
 struct object {
@@ -69,6 +81,7 @@ struct object {
 	struct type_symbol *types;
 	struct variable_symbol *variables;
 	struct function_symbol *functions;
+	struct member *members;
 	struct node *type_descriptions; // Trees representing the types of nodes and symbols.
 	struct node *nodes;
 	struct token *tokens;
