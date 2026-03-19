@@ -1,4 +1,4 @@
-module foo;
+pub module foo;
 
 pub struct Animal {
 	embed a;

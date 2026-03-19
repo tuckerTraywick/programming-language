@@ -608,6 +608,7 @@ static bool parse_definition(struct object *object, struct parser *parser) {
 	if (peek_token(object, parser, TOKEN_TYPE_PUB)) {
 		parse_token(object, parser, TOKEN_TYPE_PUB);
 		if (!parse_definition_body(object, parser)) return emit_error(object, parser, PARSER_ERROR_TYPE_EXPECTED_DEFINITION);
+		return end_node(object, parser);
 	}
 	if (!parse_definition_body(object, parser)) return false;
 	return end_node(object, parser);
