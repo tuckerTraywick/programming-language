@@ -213,5 +213,5 @@ func main(arguments []string) ExitCode {
 	if help {
 		printHelpMessage()
 	}
-	return .ok
+	return _.ok
 }

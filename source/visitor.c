@@ -8,11 +8,13 @@
 #include "list.h"
 #include "map.h"
 
-// The string returned by this function is statically allocated and is modified in-place on
-// successive calls to this function. You must copy it if you want to store it.
-char *get_module_name(struct object *object, struct node *module_definition) {
-	static char name[MAX_SYMBOL_NAME_LENGTH];
-	size_t length = 0;
+// A buffer used to store the name of the current symbol being worked on. Also used to concatenate
+// module names to identifiers. Always null terminated.
+static char symbol_name[MAX_SYMBOL_NAME_LENGTH];
+static size_t symbol_name_length;
+
+void get_module_name(struct object *object, struct node *module_definition) {
+	symbol_name_length = 0;
 	// module_definition("module", "a", ".", "b", ";")
 	struct node *current_node = object->nodes + module_definition->child_index; // "module"
 	current_node = object->nodes + current_node->next_index; // "a"
@@ -22,17 +24,16 @@ char *get_module_name(struct object *object, struct node *module_definition) {
 			break;
 		}
 		char *token_text = object->text + current_token->text_index;
-		strncpy(name + length, token_text, current_token->text_length);
-		length += current_token->text_length; // We are not counting the null terminator.
-		name[length] = '\0';
+		strncpy(symbol_name + symbol_name_length, token_text, current_token->text_length);
+		symbol_name_length += current_token->text_length; // We are not counting the null terminator.
 		current_node = object->nodes + current_node->next_index;
 	}
-	return name;
+	symbol_name[symbol_name_length] = '\0';
 }
 
 bool initialize_symbols(struct object *object) {
-	char *module_name = NULL;
 	size_t next_node_index = object->nodes->child_index;
+	bool module_declared = false;
 	bool error_occurred = false;
 	while (next_node_index) {
 		// Get the current node and get ready to visit the next node.
@@ -44,18 +45,18 @@ bool initialize_symbols(struct object *object) {
 		}
 		
 		current_node = object->nodes + current_node->child_index;
-		// "pub"?, definiton
+		// "pub"?, definiton(...)
 		// Set the visibility of the definition.
 		enum symbol_visibility visibility = SYMBOL_VISIBILITY_PRIVATE;
 		if (current_node->type == NODE_TYPE_TOKEN) {
 			visibility = SYMBOL_VISIBILITY_PUBLIC;
 			current_node = object->nodes + current_node->next_index;
-			// definiton
+			// definiton(...)
 		}
 
 		// Handle module definitions.
 		if (current_node->type == NODE_TYPE_MODULE_DEFINITION) {
-			if (module_name) {
+			if (module_declared) {
 				struct compiler_error error = {
 					.node_index = current_node - object->nodes,
 					.type = COMPILER_ERROR_TYPE_MODULE_ALREADY_DECLEARED
@@ -65,40 +66,60 @@ bool initialize_symbols(struct object *object) {
 				error_occurred = true;
 			} else {
 				// module_definition("module", "a", ".", "b", ";") 
+				module_declared = true;
+				get_module_name(object, current_node);
+
 				struct module_symbol symbol = {0};
 				// TODO: Handle false return value.
 				list_push_back(&object->modules, &symbol);
 				size_t symbol_index = list_get_count(&object->modules) - 1;
-				
-				// TODO: Handle NULL return vaule.
-				module_name = get_module_name(object, current_node);
 				struct symbol_handle handle = {
 					.type = SYMBOL_TYPE_MODULE,
 					.visibility = visibility,
 					.index = symbol_index,
 				};
 				// TODO: Handle false return value.
-				map_add(&object->symbols, module_name, &handle);
+				map_add(&object->symbols, symbol_name, &handle);
 			}
 		// Handle type definitions.
 		} else if (current_node->type == NODE_TYPE_TYPE_DEFINITION) {
-			// type_definition("type", "{", *member_definition, "}", ";")
+			// type_definition("struct/trait", name, "{", *member_definition, "}", ";")
+			current_node = object->nodes + current_node->child_index;
+			// "struct/trait", name, "{", *member_definition, "}", ";"
 			current_node = object->nodes + current_node->next_index;
-			current_node = object->nodes + current_node->next_index;
-			// *member_definition, "}", ";"
-			while (current_node->type == NODE_TYPE_MEMBER_DEFINITION) {
-				// member_definition(...)
-				struct node *child = object->nodes + current_node->child_index;
-				// Inside of member definition.
-				if (child->type == NODE_TYPE_FIELD_DEFINITION) {
-					// Check if type has duplicate fields.
-				} else if (child->type == NODE_TYPE_METHOD_DEFINITION) {
-					// Check if no matching methods exist then add method to symbol table.
-				} else {
-					// Check if type has duplicate fields.
-				}
-				current_node = object->nodes + current_node->next_index;
+			// name, "{", *member_definition, "}", ";"
+
+			// Get the name of the type and check if it already exists.
+			struct token *token = object->tokens + current_node->child_index;
+			char *type_name = object->text + token->text_index;
+			symbol_name[symbol_name_length] = '.';
+			// TODO: Account for name being too long.
+			strncpy(symbol_name + symbol_name_length + 1, type_name, token->text_length);
+			symbol_name[symbol_name_length + 1 + token->text_length] = '\0';
+
+			struct symbol_handle *result = map_get(&object->symbols, symbol_name);
+			if (result) {
+				struct compiler_error error = {
+					.node_index = current_node - object->nodes,
+					.type = COMPILER_ERROR_TYPE_ALREADY_DEFINED,
+				};
+				// TODO: Handle false return value.
+				list_push_back(&object->compiler_errors, &error);
+				error_occurred = true;
+				continue;
 			}
+
+			struct type_symbol symbol = {0};
+			// TODO: Handle false return value.
+			list_push_back(&object->types, &symbol);
+			size_t symbol_index = list_get_count(&object->types) - 1;
+			struct symbol_handle handle = {
+				.type = SYMBOL_TYPE_TYPE,
+				.visibility = visibility,
+				.index = symbol_index,
+			};
+			// TODO: Handle falase return value.
+			map_add(&object->symbols, symbol_name, &handle);
 		}
 	}
 	return error_occurred;
