@@ -49,8 +49,8 @@ struct node {
 	size_t next_index;
 	size_t parent_index;
 	size_t child_index; // Holds the index of a token if `type` is `NODE_TYPE_TOKEN`.
-	enum node_type type;
 	size_t type_description_index; // Index of the type description of the node. Used for type checking.
+	enum node_type type;
 };
 
 enum parser_error_type {

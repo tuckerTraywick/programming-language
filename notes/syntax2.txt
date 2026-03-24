@@ -1,4 +1,5 @@
 pub module example;
+import std.io.{printLine};
 
 pub trait Animal {
 	pub string name;
@@ -38,10 +39,11 @@ struct Color {
 	uint8 r, g, b;
 } cases {
 	struct Rgb;
-	red = (255, 0, 0);
-	green = (0, 255, 0);
-	blue = (0, 0, 255);
+	red = {255, 0, 0};
+	green = {0, 255, 0};
+	blue = {0, 0, 255};
 }
+
 
 
 
@@ -58,7 +60,7 @@ pub struct Entity {
 }
 
 pub struct Vector {
-	std.operators.To<string>, .DefaultEquality, .DefaultArithmetic
+	std.operators.{To<string>, DefaultEquality, DefaultArithmetic};
 	pub float64 x, y, z;
 }
 
@@ -71,11 +73,13 @@ pub void update(*mut Circle a, *mut Mesh b) {}
 pub void update(*mut Mesh a, *mut Circle b) {}
 
 pub string to<string>(Vector *vector) {
-	return f"({vector.x}, {vector.y})"
+	return f"({vector.x}, {vector.y})";
 }
 
 pub float64 length(*Vector vector) {
-	return math.sqrt(vector.x*vector.x + vector.y*vector.y)
+	return math.sqrt(vector.x*vector.x + vector.y*vector.y);
 }
+
+
 
 

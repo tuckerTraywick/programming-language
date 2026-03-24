@@ -147,7 +147,7 @@ bool initialize_symbols(struct object *object) {
 					.index = symbol_index,
 				};
 				// TODO: Handle falase return value.
-				map_add(&object->functions, symbol_name, &handle);
+				map_add(&object->symbols, symbol_name, &handle);
 			}
 		}
 	}

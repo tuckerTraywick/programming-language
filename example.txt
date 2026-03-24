@@ -4,7 +4,12 @@ struct Thing {}
 
 var a int32;
 
+var b int32;
+
 var a int32;
 
+func f(x int32) int32 {}
 
-var b int32;
+func g() int32 {}
+
+pub struct A {}
