@@ -22,7 +22,7 @@ static long get_file_length(FILE *file) {
 
 const char *const compiler_error_messages[] = {
 	[COMPILER_ERROR_TYPE_MODULE_ALREADY_DECLEARED] = "A module has already been declared in this file.",
-	[COMPILER_ERROR_TYPE_ALREADY_DEFINED] = "Symbol has already been defined.",
+	[COMPILER_ERROR_SYMBOL_ALREADY_DEFINED] = "Symbol has already been defined.",
 };
 
 struct object *object_create(void) {

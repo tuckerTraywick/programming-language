@@ -1,3 +1,10 @@
 pub module foo;
 
 struct Thing {}
+
+var a int32;
+
+var a int32;
+
+
+var b int32;
