@@ -1,92 +1,90 @@
-- Keeping struct vs trait distinction because it lets you easily define a getter and setter at the
-  same time and whether a type is abstract.
-- Keeping tuple vs array vs map and Sum/Product vs struct/cases because it makes syntax neater.
-- No embed vs impl because it makes things simpler and makes succinct definitions easier.
-
-var tuple struct {_ int32, _ string} = {1, "abc"}
-var array = []int32{1, 2, 3}
-var array = [3]{} // An array of 3 elements.
-var dict Map<string, int32> = {"a" = 1, "b" = 2}
-var a = new [10] // An array of 10 elements.
-var a = new {10} // An array of 1 element.
-
-type UserId struct {uint32}
-type IntOrString union {int32, string}
-type File trait {Readable, Writeable}
-type Direction struct {uint32} union {n, s, e, w}
-type MyTuple struct {_ int32, _ string}
-func returnMultipleValues() struct {a int32, b string}
-func maybeInt() optional int32
-func mayFail() union {int32, MyError}
+- Using linked lists for fields and methods and arguments because they are not encounterd in order,
+  so you don't know the length of them until you're done parsing.
 
 
-var tuple (int32, string) = (1, "a")
-var array [3]int32 = [1, 2, 3]
-var dict <string>int32 = <"a" = 1, "b" = 2>
-var a = new [] // an array of 0 elements
-var a = new [10] // an array of 1 element
-var a = new [] as [10]int32 // an array of 10 elements
+- No duplicate fields or methods -> no conflicts when implementing traits or embedding structs
+- Unique fields and methods means that in order for two structs to be compatible one must embed the
+  other or name the other as a case. This also means traits can't have fields because to get them
+  you'd have to embed the trait explicitly which would prevent new types from implementing the
+  trait.
+- Struct vs. trait is necessary because a type with private fields and public methods looks like an
+  interface that anyone can implement but actually is not.
+- Fields are by nature inheritance-based and nominal, methods are by nature implementation-based and
+  structural.
+- Methods can be variant on more than one parameter.
+- Methods are defined outside of trait bodies in the module namespace because this makes them
+  identical to functions and reinforces that they don't belong to any type. This also makes it easy
+  to refactor a function into a method and makes it so if you change a struct to a trait or vice
+  versa you don't need to refactor any code that uses it and calls functions on it.
+- This plus properties on traits makes it completely identical to use both.
+- If a function from another module doesn't have the arguments in the right order to implement a new
+  trait you wrote, you can just write a function with the arguments in the right order that calls
+  the old function. This way you never have to decide what type a function "belongs" to in an OO
+  sense.
+- Embedding a type with cases in another type only embeds the value cases. If you want to mirror the
+  names of the type cases you must define them on your own.
+- Embedding a trait in another trait exports the methods that are variant over that trait.
+- You can't define a new method for a trait outside of the module it's defined in.
+- If you want a struct to contain two other structs that have overlapping fields, you have to use
+  composition, you can't embed both.
+- Forcing fields and methods to be unique and making methods and variants in the namespace of the
+  module forces you to make flat apis.
+- Value cases are defined inside of the "cases {}" block, type cases are defined outside. This makes
+  it trivial to switch a type between being opened and closed.
 
-struct MyAlias = int32 // Not a distinct type. Resolves to int32.
-struct UserId {embed uint32} // A new distinct subtype of int32.
-struct IntOrString {embed Sum<int32, string>}
-trait File {embed Product<Readable, Writable>}
-struct Direction {embed uint32} cases {n, s, e, w}
-struct MyTuple {embed (int32, string)}
-func returnMultipleValues() (a int32, b string)
+
+
+
+struct UserId = uint32
+struct MyTuple = (int32, string)
+closed struct IntOrString = Sum<int32, string>
+trait File = Product<Readable, Writeable>
+func returnPair() (a int32, b string)
 func maybeInt() Optional<int32>
-func mayFail() Sum<int32, MyError>
+func couldFail() Sum<int32, MyError>
 
 
-var heap owned &BlockAllocator = new BlockAllocator(1024)
-var a owned &int32 = new 1 in heap
-var b weak &int32 = a
-drop heap
 
-var stack owned &StackAllocator = new StackAllocator(1024)
-var a owned &int32 = new 1 in stack
-drop stack
-
-// You can use the value of drop to move things.
-var a owned &int32 = new 1
-var b owned &int32 = drop a
-// a is no longer valid and set to null so it will segfault if dereferenced.
-
-func foo() {
-	var x = new 1 // Uses implicit allocator parameter.
+closed struct Color {
+	r, g, b uint8
+} cases {
+	red = (255, 0, 0)
+	green = (0, 255, 0)
+	blue = (0, 0, 255)
 }
 
-func main() {
-	var a = new 1 // Uses global allocator.
-	var heap = new BlockAllocator(1024)
-	foo(allocator=heap) // Make foo use a different allocator.
+struct Rgb {
+	Color
 }
 
 
 
 
 pub module animals
-from std.io import printLine
+import std.io.printLine
 
-pub trait Animal {
-	pub name string
-	pub age uint32
-	pub func makeNoise(&this)
-}
+pub trait Animal
+pub method .name(animal &Animal) string
+pub method .age(animal &Animal) uint32
+pub method makeNoise(animal &Animal)
 
 pub struct Dog {
-	embed Animal
+	Animal
 	pub tag string
 }
 
 pub struct Cat {
-	embed Animal
+	Animal
 	pub breed string
 }
 
-pub func makeNoise(dog &Dog) {printLine("woof")}
+pub func makeNoise(dog &Dog) {
+	printLine("woof")
+}
 
-pub func makeNoise(cat &Cat) {printLine("meow")}
+pub func makeNoise(cat &Cat) {
+	printLine("meow")
+}
 
 func main() {
 	var pet mut &Animal = &Dog()
@@ -98,25 +96,58 @@ func main() {
 
 
 
-pub module physics
+pub module shapes
 import std.math
+
+pub closed struct Shape {
+	pub color string
+}
+pub method area(shape &Shape) float64
+
+pub struct Circle {
+	Shape
+	radius float64
+}
+
+pub struct Triangle {
+	Shape
+	pub base, height float64
+}
+
+pub struct Rectangle {
+	Shape
+	pub width, height float64
+}
+
+pub func area(circle &Circle) => math.pi*circle.radius*circle.radius
+
+pub func area(triangle &Triangle) => 0.5*triangle.base*triangle.height
+
+pub func area(rectangle &Rectangle) => rectangle.width*rectangle.height
+
+
+
+
+pub module physics
 import std.operators
 
-pub struct Entity {
-	pub pos, vel, acc Vector
-	pub func collide(a, b &mut This)
-} cases {
-	struct Circle {
-		pub radius float64
-	}
+pub closed struct Entity {
+	pub position, velocity, acceleration Vector
+}
+pub method collide(a, b &mut Entity)
 
-	struct Mesh {
-		pub vertices owned []Vector
-	}
+pub struct Circle {
+	Entity
+	pub radius float64
+}
+
+pub struct Mesh {
+	Entity
+	pub vertices owned []Vector
 }
 
 pub struct Vector {
-	embed std.operators.To<string>, .DefaultArithmetic<This>, .DefaultArithmetic<float64>
+	std.operators.To<string>, .DefaultEquality<This>, .DefaultArithmetic<This>
 	pub x, y, z float64
 }
 
@@ -129,89 +160,16 @@ pub func collide(a &mut Circle, b &mut Mesh) {}
 pub func collide(a &mut Mesh, b &mut Circle) {}
 
 pub func to<string>(vector &Vector) {
-	return f"({vector.x}, {vector.y})"
+	return f"({vector.x}, {.y}, {.z})"
 }
 
 
 
 
-module color
-struct Color {
-	r, g, b uint8
-} cases {
-	struct Rgb
-	red = (255, 0, 0)
-	green = (0, 255, 0)
-	blue = (0, 0, 255)
-}
+// library.h
+pub module library
+pub func foo()
 
-// You can only embed types with cases that are themselves types in a separate module to avoid name
-// collision.
-module cases
-from color import *
-struct MoreCasesLessData {
-	r uint8	
-} cases {
-	embed Color
-	black = 0
-}
+// library
+pub func foo() {printLine("hi")}
 
-module data
-from color import *
-struct MoreDataLessCases {
-	embed Color
-	a uint8
-} cases {
-	red = (255, 0, 0, 255)
-}
-
-
-
-
-struct Shape {
-	color string
-	func area(&this) float64
-} cases {
-	struct Circle {r float64}
-	struct Triangle {base, height float64}
-	struct Rectangle {width, height float64}
-}
-
-func area(circle &Circle) => math.pi*circle.radius*circle.radius
-
-func area(triangle &Triangle) => 0.5*triangle.base*triangle.height
-
-func area(rectangle &Rectangle) => rectangle.width*rectangle.height
-
-func main() {
-	var shapes = [Circle(), Triangle(), Rectangle()]
-	for shape in shapes {
-		printLine(area(&shape))
-	}
-}
-
-
-
-
-from std.arguments import *
-
-func main(arguments []string) ExitCode {
-	var help mut bool
-	var number mut int32
-	var x mut int32
-	var numbers mut [3]int32
-
-	namedArgument(&help, "help")
-	namedArgument(&number, "number")
-	positionalArgument(&x, required=true)
-	namedArgument(&numbers, "numbers")
-	try parseArguments() catch {
-		printErrorMessage()
-		return
-	}
-
-	if help {
-		printHelpMessage()
-	}
-	return _.ok
-}

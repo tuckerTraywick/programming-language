@@ -1,11 +1,25 @@
-pub module example;
-import std.io.{printLine};
-
-pub trait Animal {
-	pub string name;
-	pub uint32 age;
-	pub void makeNoise(*this);
+closed struct Color {
+	uint8 r, g, b;
+} cases {
+	red = {255, 0, 0};
+	green = {0, 255, 0};
+	blue = {0, 0, 255};
 }
+
+struct Rgb {
+	Color;
+}
+
+
+
+
+pub module animals;
+import std.io.printLine;
+
+pub trait Animal;
+pub string .name(*Animal animal);
+pub uint32 .age(*Animal animal);
+pub void makeNoise(*Animal animal);
 
 pub struct Dog {
 	Animal;
@@ -25,61 +39,59 @@ pub void makeNoise(*Cat cat) {
 	printLine("meow");
 }
 
-pub void main() {
-	mut *Animal pet = &Dog();
+void main() {
+	mut *Animal pet = &Dog{};
 	makeNoise(pet);
-	pet = &Cat();
+	pet = &Cat{};
 	pet->makeNoise();
 }
 
 
 
 
-struct Color {
-	uint8 r, g, b;
-} cases {
-	struct Rgb;
-	red = {255, 0, 0};
-	green = {0, 255, 0};
-	blue = {0, 0, 255};
-}
-
-
-
-
 pub module physics;
-import std.math;
 import std.operators;
 
-pub struct Entity {
+pub closed struct Entity {
 	pub Vector position, velocity, acceleration;
-	pub void update(*mut This a, b);
-} cases {
-	struct Circle {pub float64 radius;}
-	struct Mesh {pub owned []Vector vertices;}
+}
+pub void collide(*mut Entity a, b);
+
+pub struct Circle {
+	Entity;
+	pub float64 radius;
+}
+
+pub struct Mesh {
+	Entity;
+	pub owned []Vector vertices;
 }
 
 pub struct Vector {
-	std.operators.{To<string>, DefaultEquality, DefaultArithmetic};
+	std.operators.To<string>, .DefaultEquality, .DefaultArithmetic;
 	pub float64 x, y, z;
 }
 
-pub void update(*mut Circle a, *mut Circle b) {}
+pub void collide(*mut Circle a, b) {}
 
-pub void update(*mut Mesh a, *mut Mesh b) {}
+pub void collide(*mut Mesh a, b) {}
 
-pub void update(*mut Circle a, *mut Mesh b) {}
+pub void collide(*mut Circle a, *mut Mesh b) {}
 
-pub void update(*mut Mesh a, *mut Circle b) {}
+pub void collide(*mut Mesh a, *mut Circle b) {}
 
-pub string to<string>(Vector *vector) {
-	return f"({vector.x}, {vector.y})";
+
+
+
+closed trait Super;
+void foo(*Super super);
+
+trait A {
+	Super;
 }
+void bar(*A a);
 
-pub float64 length(*Vector vector) {
-	return math.sqrt(vector.x*vector.x + vector.y*vector.y);
+trait B {
+	Super;
 }
-
-
-
-
+void baz(*B b);

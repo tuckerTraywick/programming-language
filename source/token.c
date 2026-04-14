@@ -1,4 +1,14 @@
+// #include <strings.h>
+#include <string.h>
+#include <ctype.h>
 #include "token.h"
+#include "list.h"
+
+#define max(a, b) (((a) >= (b)) ? (a) : (b))
+
+static const size_t initial_tokens_capacity = 5000;
+
+static const size_t initial_errors_capacity = 100;
 
 const char *const token_type_names[] = {
 	// Literals
@@ -11,11 +21,10 @@ const char *const token_type_names[] = {
 	[TOKEN_TYPE_IMPORT] = "import",
 	[TOKEN_TYPE_VAR] = "var",
 	[TOKEN_TYPE_FUNC] = "func",
-	[TOKEN_TYPE_TYPE] = "type",
 	[TOKEN_TYPE_STRUCT] = "struct",
 	[TOKEN_TYPE_TRAIT] = "trait",
 	[TOKEN_TYPE_CASES] = "cases",
-	[TOKEN_TYPE_EMBED] = "embed",
+	[TOKEN_TYPE_CLOSED] = "closed",
 	[TOKEN_TYPE_PUB] = "pub",
 	[TOKEN_TYPE_MUT] = "mut",
 	[TOKEN_TYPE_OWNED] = "owned",
@@ -86,8 +95,147 @@ const char *const token_type_names[] = {
 	[TOKEN_TYPE_LEFT_ANGLE_BRACKET] = "< bracket",
 };
 
-const char *const lexer_error_messages[] = {
-	[LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN] = "Unrecognized token.",
-	[LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
-	[LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
+const char *const lexing_error_messages[] = {
+	[LEXING_ERROR_TYPE_UNRECOGNIZED_TOKEN] = "Unrecognized token.",
+	[LEXING_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
+	[LEXING_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
 };
+
+bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
+	*tokens = list_create(initial_tokens_capacity, sizeof **tokens);
+	if (!*tokens) {
+		goto error1;
+	}
+	*errors = list_create(initial_errors_capacity, sizeof **errors);
+	if (!*errors) {
+		goto error2;
+	}
+
+	struct token current_token = {0};
+	while (*text) {
+		// Skip whitespace.
+		if (isspace(*text)) {
+			++text;
+			++current_token.text_index;
+			continue;
+		// Skip line comments.
+		} else if (*text == '/' && *(text + 1) == '/') {
+			do {
+				++text;
+				++current_token.text_index;
+			} while (*text && *text != '\n');
+			continue;
+		// Lex numbers.
+		} else if (isdigit(*text)) {
+			do {
+				++text;
+				++current_token.text_length;
+			} while (isdigit(*text));
+			current_token.type = TOKEN_TYPE_NUMBER;
+		// Lex characters.
+		} else if (*text == '\'') {
+			do {
+				++text;
+				++current_token.text_length;
+				// TODO: Handle escape characters and check length.
+			} while (*text && *text != '\'' && *text != '\r' && *text != '\n');
+			if (*text != '\'') {
+				struct lexing_error error = {
+					.type = LEXING_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
+					.text_index = current_token.text_index,
+					.text_length = current_token.text_length,
+				};
+				// TODO: Handle null return value.
+				list_push_back(errors, &error);
+				current_token.text_index += error.text_length;
+				current_token.text_length = 0;
+				continue;
+			}
+			++text;
+			++current_token.text_length;
+			current_token.type = TOKEN_TYPE_CHARACTER;
+		// Lex strings.
+		} else if (*text == '"') {
+			do {
+				++text;
+				++current_token.text_length;
+				// TODO: Handle escape characters and check length.
+			} while (*text && *text != '"' && *text != '\r' && *text != '\n');
+			if (*text != '"') {
+				struct lexing_error error = {
+					.type = LEXING_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
+					.text_index = current_token.text_index,
+					.text_length = current_token.text_length,
+				};
+				// TODO: Handle null return value.
+				list_push_back(errors, &error);
+				current_token.text_index += error.text_length;
+				current_token.text_length = 0;
+				continue;
+			}
+			++text;
+			++current_token.text_length;
+			current_token.type = TOKEN_TYPE_STRING;
+		// Lex identifiers and keywords.
+		} else if (isalpha(*text) || *text == '_') {
+			do {
+				++text;
+				++current_token.text_length;
+			} while (isalnum(*text) || *text == '_');
+			current_token.type = TOKEN_TYPE_IDENTIFIER;
+			for (size_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
+				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
+				if (strncmp(token_type_names[i], text - current_token.text_length, max(strlen(token_type_names[i]), current_token.text_length)) == 0) {
+					current_token.type = i;
+					break;
+				}
+			}
+		// Lex operators.
+		} else {
+			bool found_operator = false;
+			for (size_t i = TOKEN_TYPE_DOT; i < TOKEN_TYPE_LEFT_ANGLE_BRACKET; ++i) {
+				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
+				if (strncmp(token_type_names[i], text, strlen(token_type_names[i])) == 0) {
+					current_token.type = i;
+					current_token.text_length = strlen(token_type_names[i]);
+					text += current_token.text_length;
+					found_operator = true;
+					break;
+				}
+			}
+
+			if (!found_operator) {
+				struct lexing_error error = {
+					.type = LEXING_ERROR_TYPE_UNRECOGNIZED_TOKEN,
+					.text_index = current_token.text_index,
+					.text_length = 0,
+				};
+				// Keep consuming characters until the next whitespace to recover from the error.
+				while (*text && !isspace(*text)) {
+					++text;
+					++error.text_length;
+				}
+				// TODO: Handle null return value.
+				list_push_back(errors, &error);
+				current_token.text_index += error.text_length;
+				current_token.text_length = 0;
+				continue;
+			}
+
+			// Distinguish between less than operator and generic brackets.
+			if (current_token.type == TOKEN_TYPE_LESS && current_token.text_index > 0 && *(text - 2) != ' ') {
+				current_token.type = TOKEN_TYPE_LEFT_ANGLE_BRACKET;
+			}
+		}
+		// TODO: Handle null return value.
+		list_push_back(tokens, &current_token);
+		current_token.text_index += current_token.text_length;
+		current_token.text_length = 0;
+	}
+	return true;
+
+error2:
+	list_destroy(tokens);
+error1:
+	return false;
+}

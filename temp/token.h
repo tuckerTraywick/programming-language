@@ -1,8 +1,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <stddef.h>
 
 enum token_type {
 	// Literals
@@ -15,11 +14,11 @@ enum token_type {
 	TOKEN_TYPE_IMPORT,
 	TOKEN_TYPE_VAR,
 	TOKEN_TYPE_FUNC,
-	// TOKEN_TYPE_TYPE,
+	TOKEN_TYPE_TYPE,
 	TOKEN_TYPE_STRUCT,
 	TOKEN_TYPE_TRAIT,
 	TOKEN_TYPE_CASES,
-	TOKEN_TYPE_CLOSED,
+	TOKEN_TYPE_EMBED,
 	TOKEN_TYPE_PUB,
 	TOKEN_TYPE_MUT,
 	TOKEN_TYPE_OWNED,
@@ -92,30 +91,28 @@ enum token_type {
 };
 
 struct token {
+	size_t text_index;
+	size_t text_length;
 	enum token_type type;
-	uint32_t text_index;
-	uint32_t text_length;
 };
 
-enum lexing_error_type {
-	LEXING_ERROR_TYPE_UNRECOGNIZED_TOKEN,
-	LEXING_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
-	LEXING_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
-	LEXING_ERROR_TYPE_COUNT,
+enum lexer_error_type {
+	LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN,
+	LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
+	LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
+	LEXER_ERROR_TYPE_COUNT,
 };
 
-struct lexing_error {
-	enum lexing_error_type type;
-	uint32_t text_index;
-	uint32_t text_length;
+struct lexer_error {
+	size_t text_index;
+	size_t text_length;
+	enum lexer_error_type type;
 };
 
 // A map of token types to their names.
 extern const char *const token_type_names[];
 
 // A map from lexer error types to error messages.
-extern const char *const lexing_error_messages[];
-
-bool lex(char *text, struct token **tokens, struct lexing_error **errors);
+extern const char *const lexer_error_messages[];
 
 #endif // TOKEN_H

@@ -91,7 +91,7 @@ static struct token *current_token(struct object *object, struct parser *parser)
 	return object->tokens + parser->current_token_index;
 }
 
-static struct node *current_node(struct object *object, struct parser *parser) {
+static struct node_handle *current_node(struct object *object, struct parser *parser) {
 	return object->nodes + parser->current_node_index;
 }
 
@@ -100,22 +100,22 @@ static size_t last_node_index(struct object *object, struct parser *parser) {
 }
 
 // Appends a node to the list of nodes without modifying the current parent index.
-static struct node *add_node(struct object *object, struct parser *parser, enum node_type type) {
-	struct node new_node = {
+static struct node_handle *add_node(struct object *object, struct parser *parser, enum node_type type) {
+	struct node_handle new_node = {
 		.type = type,
 	};
 	// TODO: Handle null return value.
 	list_push_back(&object->nodes, &new_node);
 	if (parser->current_node_is_parent) {
 		current_node(object, parser)->child_index = last_node_index(object, parser);
-		((struct node*)list_get_back(&object->nodes))->parent_index = parser->current_node_index;
+		((struct node_handle*)list_get_back(&object->nodes))->parent_index = parser->current_node_index;
 		parser->current_node_is_parent = false;
 	} else {
 		current_node(object, parser)->next_index = last_node_index(object, parser);
-		((struct node*)list_get_back(&object->nodes))->parent_index = current_node(object, parser)->parent_index;
+		((struct node_handle*)list_get_back(&object->nodes))->parent_index = current_node(object, parser)->parent_index;
 	}
 	parser->current_node_index = last_node_index(object, parser);
-	return (struct node*)list_get_back(&object->nodes);
+	return (struct node_handle*)list_get_back(&object->nodes);
 }
 
 static void begin_node(struct object *object, struct parser *parser, enum node_type type) {
@@ -149,7 +149,7 @@ static bool parse_token(struct object *object, struct parser *parser, enum token
 	if (!peek_token(object, parser, type)) {
 		return false;
 	}
-	struct node *new_node = add_node(object, parser, NODE_TYPE_TOKEN);
+	struct node_handle *new_node = add_node(object, parser, NODE_TYPE_TOKEN);
 	new_node->child_index = parser->current_token_index;
 	++parser->current_token_index;
 	return true;
@@ -633,7 +633,7 @@ static bool parse_program(struct object *object, struct parser *parser) {
 
 bool parse(struct object *object) {
 	struct parser parser = {0};
-	struct node node = {
+	struct node_handle node = {
 		.type = NODE_TYPE_PROGRAM,
 	};
 	// TODO: Handle false return value.

@@ -1,18 +1,43 @@
-name -> symbol
-symbol -> name
-qualified name -> name
-name -> qualified name
-
-object file format:
-map of module names to maps of symbol names to symbols
-
-the symbol table must be nested
-you can't easily deserialize a newsted symbol table because the data is stored inline with the header
+	   source --> compiler --> header, object
+	   header -'
+	   header -'
+static object -'
 
 
-modules
-variables
-functions
-strings
-data
-code
+header, object --> linker --> header, object
+header, object -'
+
+
+combine symbol tables or just resolve names?
+include private symbols in symbol table? - debug/release
+include symbol definition or just stub? - static/dynamic linking
+
+
+
+
+COMPILING
+create output object
+
+for each source:
+	text -> lex() -> tokens
+	tokens -> parse() -> nodes
+	output object + nodes -> initialize_symbols_for_definitions()
+
+for each header file:
+	output object + header -> object_combine()
+
+output object -> create_scopes()
+output object -> check_names()
+output object -> check_types()
+output object -> lower_variables()
+output object -> lower_functions()
+
+
+
+
+LINKING
+create output object + header
+
+for each object file + header being linked:
+	output object + object + header -> link_static() or link_dynamic()
+
