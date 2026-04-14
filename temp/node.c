@@ -41,7 +41,7 @@ const char *const node_type_names[] = {
 	[NODE_TYPE_INFIX_EXPRESSION] = "infix expression",
 };
 
-const char *const parser_error_messages[] = {
+const char *const parsing_error_messages[] = {
 	[PARSER_ERROR_TYPE_INVALID_SYNTAX] = "Invalid syntax.",
 	[PARSER_ERROR_TYPE_EXPECTED_DEFINITION] = "Expected a definition.",
 	[PARSER_ERROR_TYPE_EXPECTED_MODULE_NAME] = "Expected a module name.",

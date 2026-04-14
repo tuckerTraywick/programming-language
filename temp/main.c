@@ -60,7 +60,7 @@ static void print_node(struct object *object, struct node_handle *node, size_t d
 }
 
 static void print_parser_error(struct object *object, struct parser_error *error) {
-	printf("%s [Token %zu: ", parser_error_messages[error->type], error->token_index - 1);
+	printf("%s [Token %zu: ", parsing_error_messages[error->type], error->token_index - 1);
 	print_token(object, object->tokens + error->token_index - 1);
 	printf("]");
 }

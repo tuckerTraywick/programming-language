@@ -87,6 +87,6 @@ struct parser_error {
 extern const char *const node_type_names[];
 
 // A map of parser error types to error messages.
-extern const char *const parser_error_messages[];
+extern const char *const parsing_error_messages[];
 
 #endif // NODE_H
