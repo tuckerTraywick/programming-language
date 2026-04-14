@@ -1,7 +1,6 @@
-// #include <strings.h>
 #include <string.h>
 #include <ctype.h>
-#include "token.h"
+#include "lexer.h"
 #include "list.h"
 
 #define max(a, b) (((a) >= (b)) ? (a) : (b))
@@ -239,3 +238,5 @@ error2:
 error1:
 	return false;
 }
+
+#undef max

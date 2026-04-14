@@ -1,12 +1,13 @@
-#ifndef NODE_H
-#define NODE_H
+#ifndef PARSER_H
+#define PARSER_H
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "token.h"
+#include "lexer.h"
 
 enum node_type {
 	NODE_TYPE_TOKEN,
+	NODE_TYPE_PROGRAM,
 	NODE_TYPE_COUNT,
 };
 
@@ -34,4 +35,4 @@ extern const char *const parsing_error_messages[];
 
 bool parse(char *text, struct token *tokens, struct node **nodes, struct parsing_error **errors);
 
-#endif // NODE_H
+#endif // PARSER_H

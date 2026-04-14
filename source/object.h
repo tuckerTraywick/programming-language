@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "symbol.h"
+#include "symbol_table.h"
 
 struct object {
 	struct symbol_table public_symbols;

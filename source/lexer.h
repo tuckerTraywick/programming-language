@@ -1,5 +1,5 @@
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef LEXER_H
+#define LEXER_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -118,4 +118,4 @@ extern const char *const lexing_error_messages[];
 
 bool lex(char *text, struct token **tokens, struct lexing_error **errors);
 
-#endif // TOKEN_H
+#endif // LEXER_H

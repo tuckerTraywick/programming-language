@@ -2,14 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "object.h"
-#include "token.h"
-#include "node.h"
+#include "lexer.h"
+#include "parser.h"
 #include "list.h"
 #include "map.h"
-// #include "lexer.h"
-// #include "parser.h"
-#include "visitor.h"
 
 static void print_token(char *text, struct token *token) {
 	printf("%s `%.*s`", token_type_names[token->type], (int)token->text_length, text + token->text_index);

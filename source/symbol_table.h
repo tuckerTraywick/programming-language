@@ -1,9 +1,8 @@
-#ifndef SYMBOL_H
-#define SYMBOL_H
+#ifndef SYMBOL_TABLE_H
+#define SYMBOL_TABLE_H
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "node.h"
 
 enum visibility {
 	VISIBILITY_PRIVATE,
@@ -138,4 +137,4 @@ struct symbol_table symbol_table_create(void);
 
 void symbol_table_destroy(struct symbol_table *symbol_table);
 
-#endif // SYMBOL_H
+#endif // SYMBOL_TABLE_H
