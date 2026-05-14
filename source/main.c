@@ -8,7 +8,11 @@
 #include "map.h"
 
 static void print_token(char *text, struct token *token) {
-	printf("%s `%.*s`", token_type_names[token->type], (int)token->text_length, text + token->text_index);
+	if (token->type == TOKE_TYPE_NEWLINE) {
+		printf("%s", token_type_names[token->type]);
+	} else {
+		printf("%s `%.*s`", token_type_names[token->type], (int)token->text_length, text + token->text_index);
+	}
 }
 
 static void print_tokens(char *text, struct token *tokens) {
