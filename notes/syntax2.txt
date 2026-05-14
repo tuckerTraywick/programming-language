@@ -1,34 +1,19 @@
-closed struct Color {
-	uint8 r, g, b;
-} cases {
-	red = {255, 0, 0};
-	green = {0, 255, 0};
-	blue = {0, 0, 255};
-}
+pub namespace animals;
+using std.io.{printLine};
 
-struct Rgb {
-	Color;
-}
-
-
-
-
-pub module animals;
-import std.io.printLine;
-
-pub trait Animal;
-pub string .name(*Animal animal);
-pub uint32 .age(*Animal animal);
-pub void makeNoise(*Animal animal);
+pub trait Noisy;
+pub []char8 .name(*Noisy noisy);
+pub uint32 .age(*Noisy noisy);
+pub void makeNoise(*Noisy noisy);
 
 pub struct Dog {
-	Animal;
-	pub string tag;
+	Noisy;
+	pub []char8 tag;
 }
 
 pub struct Cat {
-	Animal;
-	pub string breed;
+	Noisy;
+	pub []char8 breed;
 }
 
 pub void makeNoise(*Dog dog) {
@@ -40,22 +25,24 @@ pub void makeNoise(*Cat cat) {
 }
 
 void main() {
-	mut *Animal pet = &Dog{};
+	mut *Noisy pet = &Dog();
 	makeNoise(pet);
-	pet = &Cat{};
+	pet = &Cat();
 	pet->makeNoise();
 }
 
 
 
 
-pub module physics;
-import std.operators;
+pub namespace physics;
+using std.operators;
 
-pub closed struct Entity {
-	pub Vector position, velocity, acceleration;
+pub struct Entity {
+	Vector position, velocity, acceleration;
+} cases {
+	Circle, Mesh,
 }
-pub void collide(*mut Entity a, b);
+pub void update(*mut Entity entity);
 
 pub struct Circle {
 	Entity;
@@ -68,30 +55,13 @@ pub struct Mesh {
 }
 
 pub struct Vector {
-	std.operators.To<string>, .DefaultEquality, .DefaultArithmetic;
-	pub float64 x, y, z;
+	std.operators.{To<[]char8>, DefaultArithmetic};
+	float64 x, y, z;
 }
 
-pub void collide(*mut Circle a, b) {}
+pub void update(*mut Circle circle) {}
 
-pub void collide(*mut Mesh a, b) {}
+pub void update(*mut Mesh mesh) {}
 
-pub void collide(*mut Circle a, *mut Mesh b) {}
+pub []char8 to<[]char8>(*Vector vector) {}
 
-pub void collide(*mut Mesh a, *mut Circle b) {}
-
-
-
-
-closed trait Super;
-void foo(*Super super);
-
-trait A {
-	Super;
-}
-void bar(*A a);
-
-trait B {
-	Super;
-}
-void baz(*B b);

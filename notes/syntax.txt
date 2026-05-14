@@ -1,12 +1,13 @@
 - Using linked lists for fields and methods and arguments because they are not encounterd in order,
   so you don't know the length of them until you're done parsing.
 
-
+- Explicit naming of cases so you can name types from other peoples' code.
 - No duplicate fields or methods -> no conflicts when implementing traits or embedding structs
 - Unique fields and methods means that in order for two structs to be compatible one must embed the
   other or name the other as a case. This also means traits can't have fields because to get them
   you'd have to embed the trait explicitly which would prevent new types from implementing the
   trait.
+- Struct vs. trait because is a type with no fields and all concrete cases abstract or concrete?
 - Struct vs. trait is necessary because a type with private fields and public methods looks like an
   interface that anyone can implement but actually is not.
 - Fields are by nature inheritance-based and nominal, methods are by nature implementation-based and
@@ -35,19 +36,176 @@
 
 
 
+var a int32 = 1
+
+func foo(x int32) int32
+do
+	return x + 1
+end
+
+func myGeneric<T type>(x T)
+where
+	T < MyTrait
+do
+	return foo(x)
+end
+
+type Color
+struct
+	r, g, b uint8
+cases
+	Rgb
+	red = (255, 0, 0)
+	green = (0, 255, 0)
+	blue = (0, 255, 0)
+end
+
+type Rgb
+struct
+	Color
+end
+
+type List<T type>
+where
+	T embeds &
+struct
+	elements T
+	count usize
+end
+
+
+
+
+var x: int32 = 1;
+var x: int32;
+var x = 1;
+
+func foo(x: int32) -> int32 {
+	return x + 1;
+}
+func foo(x: int32) -> int32;
+func alias(x: int32) -> int32 = foo;
+var fn: &func(int32) -> int32 = &foo;
+
+struct Color {
+	r, g, b: uint8;
+} cases {
+	Rgb;
+	red = (255, 0, 0);
+	green = (0, 255, 0);
+	blue = (0, 0, 255);
+}
+
+struct Rgb {
+	Color;
+}
+
+
+pub module animals;
+import std.io.{printLine};
+
+pub trait Animal;
+pub func .name(:&Animal) -> []char8;
+pub func .age(:&Animal) -> uint32;
+pub func makeNoise(:&Animal);
+
+pub struct Dog {
+	Animal;
+	pub tag: []char8;
+}
+
+pub struct Cat {
+	Animal;
+	pub breed: []char8;
+}
+
+pub func makeNoise(dog: &Dog) {
+	printLine("woof");
+}
+
+pub func makeNoise(cat: &Cat) {
+	printLine("meow");
+}
+
+
+
+
+
+x int32 = 1;
+x auto = 1;
+x int32;
+
+foo(x int32) int32 {
+	return x + 1;
+}
+foo(x int32) int32;
+foo(x int32) {
+	return x + 1;
+}
+
+struct Color {
+	r, g, b uint8;
+} cases {
+	Rgb;
+	red = (255, 0, 0);
+	green = (0, 255, 0);
+	blue = (0, 0, 255);
+}
+
+struct Rgb {
+	Color;
+}
+
+
+pub module animals;
+import std.io.printLine;
+
+pub trait Animal;
+pub .name(&Animal) []char8;
+pub .age(&Animal) uint32;
+pub makeNoise(&Animal);
+
+pub struct Dog {
+	Animal;
+	pub tag []char8;
+}
+
+pub struct Cat {
+	Animal;
+	pub breed []char8;
+}
+
+pub makeNoise(dog &Dog) {
+	printLine("woof");
+}
+
+pub makeNoise(cat &Cat) {
+	printLine("meow");
+}
+
+
+
+
+
+
+
+
+
+
+
 struct UserId = uint32
-struct MyTuple = (int32, string)
-closed struct IntOrString = Sum<int32, string>
-trait File = Product<Readable, Writeable>
-func returnPair() (a int32, b string)
+struct MyTuple = (a int32, b string)
+struct IntOrString = Sum<int32, string>
+trait File = Product<Read, Write>
 func maybeInt() Optional<int32>
-func couldFail() Sum<int32, MyError>
+func namedReturn() (ret int32)
+func multiReturn() (a int32, b string)
 
 
-
-closed struct Color {
+struct Color {
 	r, g, b uint8
 } cases {
+	Rgb
 	red = (255, 0, 0)
 	green = (0, 255, 0)
 	blue = (0, 0, 255)
@@ -58,24 +216,22 @@ struct Rgb {
 }
 
 
-
-
 pub module animals
 import std.io.printLine
 
 pub trait Animal
-pub method .name(animal &Animal) string
-pub method .age(animal &Animal) uint32
-pub method makeNoise(animal &Animal)
+pub method .name(&Animal) []char8
+pub method .age(&Animal) uint32
+pub method makeNoise(&Animal)
 
 pub struct Dog {
 	Animal
-	pub tag string
+	pub tag []char8
 }
 
 pub struct Cat {
 	Animal
-	pub breed string
+	pub breed []char8
 }
 
 pub func makeNoise(dog &Dog) {
@@ -86,55 +242,16 @@ pub func makeNoise(cat &Cat) {
 	printLine("meow")
 }
 
-func main() {
-	var pet mut &Animal = &Dog()
-	makeNoise(pet)
-	pet = &Cat()
-	pet->makeNoise()
-}
-
-
-
-
-pub module shapes
-import std.math
-
-pub closed struct Shape {
-	pub color string
-}
-pub method area(shape &Shape) float64
-
-pub struct Circle {
-	Shape
-	radius float64
-}
-
-pub struct Triangle {
-	Shape
-	pub base, height float64
-}
-
-pub struct Rectangle {
-	Shape
-	pub width, height float64
-}
-
-pub func area(circle &Circle) => math.pi*circle.radius*circle.radius
-
-pub func area(triangle &Triangle) => 0.5*triangle.base*triangle.height
-
-pub func area(rectangle &Rectangle) => rectangle.width*rectangle.height
-
-
-
 
 pub module physics
 import std.operators
 
-pub closed struct Entity {
+pub struct Entity {
 	pub position, velocity, acceleration Vector
+} cases {
+	Circle, Mesh
 }
-pub method collide(a, b &mut Entity)
+pub method update(&mut Entity)
 
 pub struct Circle {
 	Entity
@@ -147,29 +264,52 @@ pub struct Mesh {
 }
 
 pub struct Vector {
-	std.operators.To<string>, .DefaultEquality<This>, .DefaultArithmetic<This>
+	std.operators.To<[]char8>
 	pub x, y, z float64
 }
 
-pub func collide(a, b &mut Circle) {}
+pub func update(circle &mut Circle) {}
 
-pub func collide(a, b &mut Mesh) {}
+pub func update(mesh &mut Mesh) {}
 
-pub func collide(a &mut Circle, b &mut Mesh) {}
+pub func to<[]char8>(vector &Vector) []char8 {}
 
-pub func collide(a &mut Mesh, b &mut Circle) {}
 
-pub func to<string>(vector &Vector) {
-	return f"({vector.x}, {.y}, {.z})"
+
+
+var heap = BlockAllocator(1024)
+var a &int32 = allocate(&heap, &1)
+free(&heap, a)
+destroy(&heap)
+
+
+struct Foo {
+	data owned &int32
 }
 
+func initialize(foo &mut Foo, a &Allocator) {
+	foo.data = allocate(a, &1)
+}
+
+func destroy(foo &Foo, a &Allocator) {
+	free(allocator, foo.data)
+}
+
+var heap = BlockAllocator(1024)
+var f = Foo(&heap)
+destroy(&f, &heap) // You must call destroy() manually because it requires an extra argument.
 
 
 
-// library.h
-pub module library
-pub func foo()
 
-// library
-pub func foo() {printLine("hi")}
+generic<T type> where {
+	T < &
+}
+pub struct Allocation {
+	allocator &Allocator
+	data T
+}
 
+var heap = BlockAllocator(1024)
+var a Allocation<owned &int32> = allocate(&heap, &1)
+destroy(&heap) // Don't need to destroy a.
