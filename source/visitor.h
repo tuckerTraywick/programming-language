@@ -2,6 +2,8 @@
 #define VISITOR_H
 
 #include <stdbool.h>
+#include "lexer.h"
+#include "parser.h"
 #include "object.h"
 
 // Makes a symbol for each definition and makes sure there are no duplicate definitions.
