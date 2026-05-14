@@ -20,11 +20,12 @@ const char *const token_type_names[] = {
 	[TOKEN_TYPE_IMPORT] = "import",
 	[TOKEN_TYPE_VAR] = "var",
 	[TOKEN_TYPE_FUNC] = "func",
+	[TOKEN_TYPE_METHOD] = "method",
 	[TOKEN_TYPE_STRUCT] = "struct",
 	[TOKEN_TYPE_TRAIT] = "trait",
 	[TOKEN_TYPE_CASES] = "cases",
-	[TOKEN_TYPE_CLOSED] = "closed",
 	[TOKEN_TYPE_PUB] = "pub",
+	[TOKEN_TYPE_PRIV] = "priv",
 	[TOKEN_TYPE_MUT] = "mut",
 	[TOKEN_TYPE_OWNED] = "owned",
 	[TOKEN_TYPE_WEAK] = "weak",
@@ -92,6 +93,7 @@ const char *const token_type_names[] = {
 	[TOKEN_TYPE_LESS_EQUAL] = "<=",
 	[TOKEN_TYPE_LESS] = "<",
 	[TOKEN_TYPE_LEFT_ANGLE_BRACKET] = "< bracket",
+	[TOKE_TYPE_NEWLINE] = "newline",
 };
 
 const char *const lexing_error_messages[] = {
@@ -103,17 +105,27 @@ const char *const lexing_error_messages[] = {
 bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
 	*tokens = list_create(initial_tokens_capacity, sizeof **tokens);
 	if (!*tokens) {
-		goto error1;
+		return false;
 	}
 	*errors = list_create(initial_errors_capacity, sizeof **errors);
 	if (!*errors) {
-		goto error2;
+		list_destroy(&tokens);
+		return false;
 	}
 
 	struct token current_token = {0};
 	while (*text) {
+		// Lex newlines.
+		if (*text == '\n') {
+			if (current_token.type == TOKE_TYPE_NEWLINE) {
+				++text;
+				++current_token.text_index;
+				continue;
+			}
+			current_token.text_length = 1;
+			current_token.type = TOKE_TYPE_NEWLINE;
 		// Skip whitespace.
-		if (isspace(*text)) {
+		} else if (isspace(*text)) {
 			++text;
 			++current_token.text_index;
 			continue;
@@ -232,11 +244,6 @@ bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
 		current_token.text_length = 0;
 	}
 	return true;
-
-error2:
-	list_destroy(tokens);
-error1:
-	return false;
 }
 
 #undef max

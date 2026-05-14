@@ -15,12 +15,12 @@ enum token_type {
 	TOKEN_TYPE_IMPORT,
 	TOKEN_TYPE_VAR,
 	TOKEN_TYPE_FUNC,
-	// TOKEN_TYPE_TYPE,
+	TOKEN_TYPE_METHOD,
 	TOKEN_TYPE_STRUCT,
 	TOKEN_TYPE_TRAIT,
 	TOKEN_TYPE_CASES,
-	TOKEN_TYPE_CLOSED,
 	TOKEN_TYPE_PUB,
+	TOKEN_TYPE_PRIV,
 	TOKEN_TYPE_MUT,
 	TOKEN_TYPE_OWNED,
 	TOKEN_TYPE_WEAK,
@@ -88,6 +88,7 @@ enum token_type {
 	TOKEN_TYPE_LESS_EQUAL,
 	TOKEN_TYPE_LESS,
 	TOKEN_TYPE_LEFT_ANGLE_BRACKET,
+	TOKE_TYPE_NEWLINE,
 	TOKEN_TYPE_COUNT,
 };
 
@@ -116,6 +117,7 @@ extern const char *const token_type_names[];
 // A map from lexer error types to error messages.
 extern const char *const lexing_error_messages[];
 
+// Returns true if no errors were emitted.
 bool lex(char *text, struct token **tokens, struct lexing_error **errors);
 
 #endif // LEXER_H
