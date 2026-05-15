@@ -19,8 +19,8 @@ struct node {
 	enum node_type type;
 	uint32_t parent_index;
 	uint32_t child_index;
-	uint32_t next_index;
 	uint32_t previous_index;
+	uint32_t next_index;
 };
 
 enum parsing_error_type {

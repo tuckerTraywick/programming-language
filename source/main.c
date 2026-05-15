@@ -8,7 +8,7 @@
 #include "map.h"
 
 static void print_token(char *text, struct token *token) {
-	if (token->type == TOKE_TYPE_NEWLINE) {
+	if (token->type == TOKEN_TYPE_NEWLINE) {
 		printf("%s", token_type_names[token->type]);
 	} else {
 		printf("%s `%.*s`", token_type_names[token->type], (int)token->text_length, text + token->text_index);
@@ -44,13 +44,13 @@ static void print_node(char *text, struct token *tokens, struct node *nodes, uin
 	if (node->type == NODE_TYPE_TOKEN) {
 		struct token *token = tokens + node->child_index;
 		print_token(text, token);
-		printf(" previous=%u, next=%u, parent=%u, child=%u\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
+		printf("  previous=%u, next=%u, parent=%u, child=%u\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
 		// printf("\n");
 		return;
 	}
 
 	printf("%s", node_type_names[node->type]);
-	printf(" previous=%u, next=%u, parent=%u, child=%u\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
+	printf("  previous=%u, next=%u, parent=%u, child=%u\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
 	if (node->child_index == NODE_NONE) {
 		return;
 	}
@@ -109,12 +109,13 @@ int main(void) {
 	// object_read_text_from_file(object, file);
 	// fclose(file);
 	
-	char *text = "1 a 2 var 3\n";
+	char *text = "module a 1";
 	struct token *tokens = NULL;
 	struct lexing_error *lexing_errors = NULL;
 	lex(text, &tokens, &lexing_errors);
 	if (!tokens || !lexing_errors) {
 		printf("Memory error.\n");
+		// TODO: Cleanup.
 		return 1;
 	}
 	printf("TOKENS:\n");
