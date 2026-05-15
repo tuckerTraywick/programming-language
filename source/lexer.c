@@ -122,6 +122,7 @@ bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
 				++current_token.text_index;
 				continue;
 			}
+			++text;
 			current_token.text_length = 1;
 			current_token.type = TOKEN_TYPE_NEWLINE;
 		// Skip whitespace.
