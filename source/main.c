@@ -34,8 +34,9 @@ static void print_lexing_errors(char *text, struct lexing_error *errors) {
 	}
 }
 
-static void print_node(char *text, struct token *tokens, struct node *nodes, struct node *node, size_t depth) {
-	printf("%-5zu", node - nodes);
+static void print_node(char *text, struct token *tokens, struct node *nodes, uint32_t first_node_index, size_t depth) {
+	struct node *node = nodes + first_node_index;
+	printf("%-5u", first_node_index);
 	for (size_t i = 0; i < depth; ++i) {
 		printf("| ");
 	}
@@ -43,20 +44,22 @@ static void print_node(char *text, struct token *tokens, struct node *nodes, str
 	if (node->type == NODE_TYPE_TOKEN) {
 		struct token *token = tokens + node->child_index;
 		print_token(text, token);
-		printf("\n");
+		printf(" previous=%u, next=%u, parent=%u, child=%u\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
+		// printf("\n");
 		return;
 	}
 
-	printf("%s\n", node_type_names[node->type]);
-	if (node->child_index == 0) {
+	printf("%s", node_type_names[node->type]);
+	printf(" previous=%u, next=%u, parent=%u, child=%u\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
+	if (node->child_index == NODE_NONE) {
 		return;
 	}
 
 	size_t node_index = node->child_index;
 	do {
-		print_node(text, tokens, nodes, nodes + node_index, depth + 1);
+		print_node(text, tokens, nodes, node_index, depth + 1);
 		node_index = nodes[node_index].next_index;
-	} while (node_index);
+	} while (node_index != NODE_NONE);
 }
 
 static void print_parsing_error(char *text, struct token *tokens, struct parsing_error *error) {
@@ -106,7 +109,7 @@ int main(void) {
 	// object_read_text_from_file(object, file);
 	// fclose(file);
 	
-	char *text = "hello 123' var\na + b";
+	char *text = "hello 123\n";
 	struct token *tokens = NULL;
 	struct lexing_error *lexing_errors = NULL;
 	lex(text, &tokens, &lexing_errors);
@@ -115,25 +118,30 @@ int main(void) {
 		return 1;
 	}
 	printf("TOKENS:\n");
+	printf("tokens count = %zu\n", list_get_count(&tokens));
 	print_tokens(text, tokens);
 	printf("\nLEXER ERRORS:\n");
 	print_lexing_errors(text, lexing_errors);
 	printf("\n");
 	
-	// struct node *nodes = NULL;
-	// struct parsing_error *parsing_errors = NULL;
-	// if (!parse(object)) {
-	// 	printf("FAILED PARSING\n");
-	// 	object_destroy(object);
-	// 	return 1;
-	// }
-	// printf("NODES:\n");
-	// print_node(object, object->nodes, 0);
-	// printf("\nPARSER ERRORS:\n");
-	// print_parser_errors(object);
-	// printf("\n");
+	struct node *nodes = NULL;
+	uint32_t first_node_index = 0;
+	struct parsing_error *parsing_errors = NULL;
+	if (!parse(tokens, &nodes, &first_node_index, &parsing_errors)) {
+		printf("FAILED PARSING\n");
+		// TODO: Cleanup.
+		return 1;
+	}
+	printf("NODES:\n");
+	printf("nodes count = %zu\n", list_get_count(&nodes));
+	print_node(text, tokens, nodes, first_node_index, 0);
+	printf("\nPARSER ERRORS:\n");
+	print_parsing_errors(text, tokens, parsing_errors);
+	printf("\n");
 
 	list_destroy(&tokens);
 	list_destroy(&lexing_errors);
+	list_destroy(&nodes);
+	list_destroy(&parsing_errors);
 	return 0;
 }
