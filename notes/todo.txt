@@ -1,3 +1,5 @@
+- Make parser methods update first node index.
+- Make parser methods handle memory errors.
 - Refactor and make convenience methods for index-based data structures
 - Make parse_type() accept struct or trait
 - Make grammar for type definitions more consistent and easier to visit
