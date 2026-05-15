@@ -126,16 +126,15 @@ int main(void) {
 	printf("\n");
 	
 	struct node *nodes = NULL;
-	uint32_t first_node_index = 0;
 	struct parsing_error *parsing_errors = NULL;
-	if (!parse(tokens, &nodes, &first_node_index, &parsing_errors)) {
+	if (!parse(tokens, &nodes, &parsing_errors)) {
 		printf("FAILED PARSING\n");
 		// TODO: Cleanup.
 		return 1;
 	}
 	printf("NODES:\n");
 	printf("nodes count = %zu\n", list_get_count(&nodes));
-	print_node(text, tokens, nodes, first_node_index, 0);
+	print_node(text, tokens, nodes, 0, 0);
 	printf("\nPARSER ERRORS:\n");
 	print_parsing_errors(text, tokens, parsing_errors);
 	printf("\n");

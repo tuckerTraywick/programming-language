@@ -43,6 +43,6 @@ extern const char *const node_type_names[];
 extern const char *const parsing_error_messages[];
 
 // Returns true if no errors were emitted.
-bool parse(struct token *tokens, struct node **nodes, uint32_t *first_node_index, struct parsing_error **errors);
+bool parse(struct token *tokens, struct node **nodes, struct parsing_error **errors);
 
 #endif // PARSER_H
