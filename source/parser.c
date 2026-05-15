@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -29,7 +31,7 @@ static bool parser_add_sibling(struct parser *parser, uint32_t token_index) {
 		return false;
 	}
 
-	if (parser->last_node_index == NODE_NONE) {
+	if (parser->first_node_index == NODE_NONE) {
 		*new_node = (struct node){
 			.type = NODE_TYPE_TOKEN,
 			.parent_index = NODE_NONE,
@@ -43,10 +45,10 @@ static bool parser_add_sibling(struct parser *parser, uint32_t token_index) {
 	}
 
 	struct node *last_node = parser->nodes + parser->last_node_index;
-	last_node->next_index = last_node - parser->nodes;
+	last_node->next_index = new_node - parser->nodes;
 	*new_node = (struct node){
 		.type = NODE_TYPE_TOKEN,
-		.parent_index = last_node->parent_index,
+		.parent_index = NODE_NONE,
 		.child_index = token_index,
 		.previous_index = parser->last_node_index,
 		.next_index = NODE_NONE,
@@ -69,19 +71,25 @@ static bool parser_end_node(struct parser *parser, enum node_type type) {
 	if (!new_node) {
 		return false;
 	}
-
+	
 	assert(list_get_count(&parser->nodes));
 	struct node *first_child = parser->nodes + parser_pop_first_child_index(parser);
+	printf("last node = %u, first child = %zu\n", parser->last_node_index, first_child - parser->nodes);
 
 	*new_node = (struct node){
 		.type = type,
 		.parent_index = first_child->parent_index,
 		.child_index = first_child - parser->nodes,
 		.previous_index = first_child->previous_index,
-		.next_index = first_child->next_index,
+		.next_index = NODE_NONE,
 	};
 	first_child->parent_index = new_node - parser->nodes;
 	parser->last_node_index = new_node - parser->nodes;
+
+	if (first_child->previous_index != NODE_NONE) {
+		struct node *previous = parser->nodes + first_child->previous_index;
+		previous->next_index = new_node - parser->nodes;
+	}
 
 	if (parser->first_node_index == first_child - parser->nodes) {
 		parser->first_node_index = new_node - parser->nodes;
@@ -147,8 +155,15 @@ static bool parser_emit_error_and_recover(struct parser *parser, enum parsing_er
 // }
 
 static bool parse_program(struct parser *parser) {
-	if (!parser_consume_token_and_begin_node(parser, TOKEN_TYPE_IDENTIFIER)) return false;
-	return parser_end_node(parser, NODE_TYPE_PROGRAM);
+	parser_consume_token_and_begin_node(parser, TOKEN_TYPE_NUMBER);
+	// if (!parser_consume_token_and_begin_node(parser, TOKEN_TYPE_IDENTIFIER)) return false;
+	parser_consume_token(parser, TOKEN_TYPE_IDENTIFIER);
+	parser_consume_token_and_begin_node(parser, TOKEN_TYPE_NUMBER);
+	parser_consume_token(parser, TOKEN_TYPE_VAR);
+	parser_end_node(parser, NODE_TYPE_MODULE_DEFINITION);
+	parser_consume_token(parser, TOKEN_TYPE_NUMBER);
+	parser_end_node(parser, NODE_TYPE_PROGRAM);
+	return true;
 }
 
 const char *const node_type_names[NODE_TYPE_COUNT] = {

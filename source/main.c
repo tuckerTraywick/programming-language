@@ -109,7 +109,7 @@ int main(void) {
 	// object_read_text_from_file(object, file);
 	// fclose(file);
 	
-	char *text = "hello 123\n";
+	char *text = "1 a 2 var 3\n";
 	struct token *tokens = NULL;
 	struct lexing_error *lexing_errors = NULL;
 	lex(text, &tokens, &lexing_errors);
