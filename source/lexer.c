@@ -93,7 +93,7 @@ const char *const token_type_names[] = {
 	[TOKEN_TYPE_LESS_EQUAL] = "<=",
 	[TOKEN_TYPE_LESS] = "<",
 	[TOKEN_TYPE_LEFT_ANGLE_BRACKET] = "< bracket",
-	[TOKE_TYPE_NEWLINE] = "newline",
+	[TOKEN_TYPE_NEWLINE] = "newline",
 };
 
 const char *const lexing_error_messages[] = {
@@ -117,13 +117,13 @@ bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
 	while (*text) {
 		// Lex newlines.
 		if (*text == '\n') {
-			if (current_token.type == TOKE_TYPE_NEWLINE) {
+			if (current_token.type == TOKEN_TYPE_NEWLINE) {
 				++text;
 				++current_token.text_index;
 				continue;
 			}
 			current_token.text_length = 1;
-			current_token.type = TOKE_TYPE_NEWLINE;
+			current_token.type = TOKEN_TYPE_NEWLINE;
 		// Skip whitespace.
 		} else if (isspace(*text)) {
 			++text;
