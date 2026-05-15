@@ -28,14 +28,6 @@ static struct token *parser_get_current_token(struct parser *parser) {
 	return NULL;
 }
 
-// static uint32_t parser_get_parent_node_index(struct parser *parser) {
-// 	uint32_t *back = list_get_back(&parser->parent_node_index_stack);
-// 	if (!back) {
-// 		return NODE_NONE;
-// 	}
-// 	return *back;
-// }
-
 static bool parser_add_node(struct parser *parser, struct node *node) {
 	struct node *new_node = list_push_back_uninitialized(&parser->nodes);
 	if (!new_node) {
@@ -44,7 +36,6 @@ static bool parser_add_node(struct parser *parser, struct node *node) {
 	*new_node = *node;
 
 	if (parser->last_node_index == NODE_NONE) {
-		// parser->first_node_index = new_node - parser->nodes;
 		parser->last_node_index = new_node - parser->nodes;
 		return true;
 	}
@@ -77,7 +68,6 @@ static bool parser_begin_node(struct parser *parser, enum node_type type) {
 		return false;
 	}
 	parser->next_node_is_child = true;
-	// return list_push_back(&parser->parent_node_index_stack, &parser->last_node_index);
 	return true;
 }
 
