@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include "lexer.h"
 
+// Sentinel value to indicate a node link is empty.
+#define NODE_NONE UINT32_MAX
+
 enum node_type {
 	NODE_TYPE_TOKEN,
 	NODE_TYPE_PROGRAM,
@@ -14,8 +17,10 @@ enum node_type {
 
 struct node {
 	enum node_type type;
+	uint32_t parent_index;
 	uint32_t child_index;
 	uint32_t next_index;
+	uint32_t previous_index;
 };
 
 enum parsing_error_type {
@@ -38,6 +43,6 @@ extern const char *const node_type_names[];
 extern const char *const parsing_error_messages[];
 
 // Returns true if no errors were emitted.
-bool parse(struct token *tokens, struct node **nodes, struct parsing_error **errors);
+bool parse(struct token *tokens, struct node **nodes, uint32_t *first_node_index, struct parsing_error **errors);
 
 #endif // PARSER_H
