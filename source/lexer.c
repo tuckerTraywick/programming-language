@@ -25,7 +25,6 @@ const char *const token_type_names[] = {
 	[TOKEN_TYPE_TRAIT] = "trait",
 	[TOKEN_TYPE_CASES] = "cases",
 	[TOKEN_TYPE_PUB] = "pub",
-	[TOKEN_TYPE_PRIV] = "priv",
 	[TOKEN_TYPE_MUT] = "mut",
 	[TOKEN_TYPE_OWNED] = "owned",
 	[TOKEN_TYPE_WEAK] = "weak",

@@ -109,7 +109,7 @@ int main(void) {
 	// object_read_text_from_file(object, file);
 	// fclose(file);
 	
-	char *text = "module a 1";
+	char *text = "module a \nmodule b.c\n";
 	struct token *tokens = NULL;
 	struct lexing_error *lexing_errors = NULL;
 	lex(text, &tokens, &lexing_errors);
