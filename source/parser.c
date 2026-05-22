@@ -1,8 +1,8 @@
 #include <stdio.h>
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include "parser.h"
 #include "lexer.h"
 #include "list.h"
@@ -10,9 +10,9 @@
 // State shared between all of the parsing rules.
 struct parser {
 	struct token *tokens; // Points to a list.
-	uint32_t current_token_index;
+	size_t current_token_index;
 	struct node *nodes; // Points to a list.
-	uint32_t last_node_index;
+	size_t last_node_index;
 	bool next_node_is_child;
 	struct parsing_error *errors; // Points to a list.
 };

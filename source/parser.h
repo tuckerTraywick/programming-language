@@ -1,12 +1,13 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "lexer.h"
 
 // Sentinel value to indicate a node link is empty.
-#define NODE_NONE UINT32_MAX
+#define NODE_NONE SIZE_MAX
 
 enum node_type {
 	NODE_TYPE_TOKEN,
@@ -17,11 +18,11 @@ enum node_type {
 };
 
 struct node {
+	size_t parent_index;
+	size_t child_index;
+	size_t previous_index;
+	size_t next_index;
 	enum node_type type;
-	uint32_t parent_index;
-	uint32_t child_index;
-	uint32_t previous_index;
-	uint32_t next_index;
 };
 
 enum parsing_error_type {
@@ -34,9 +35,9 @@ enum parsing_error_type {
 };
 
 struct parsing_error {
+	size_t tokens_index;
+	size_t tokens_count;
 	enum parsing_error_type type;
-	uint32_t tokens_index;
-	uint32_t tokens_count;
 };
 
 // A map of node types to names.

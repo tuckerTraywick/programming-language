@@ -24,7 +24,7 @@ static void print_tokens(char *text, struct token *tokens) {
 }
 
 static void print_lexing_error(char *text, struct lexing_error *error) {
-	printf("%s [Character %u `%.*s`]", lexing_error_messages[error->type], error->text_index, (int)error->text_length, text + error->text_index);
+	printf("%s [Character %zu `%.*s`]", lexing_error_messages[error->type], error->text_index, (int)error->text_length, text + error->text_index);
 }
 
 static void print_lexing_errors(char *text, struct lexing_error *errors) {
@@ -34,9 +34,9 @@ static void print_lexing_errors(char *text, struct lexing_error *errors) {
 	}
 }
 
-static void print_node(char *text, struct token *tokens, struct node *nodes, uint32_t first_node_index, size_t depth) {
+static void print_node(char *text, struct token *tokens, struct node *nodes, size_t first_node_index, size_t depth) {
 	struct node *node = nodes + first_node_index;
-	printf("%-5u", first_node_index);
+	printf("%-5zu", first_node_index);
 	for (size_t i = 0; i < depth; ++i) {
 		printf("| ");
 	}
@@ -44,13 +44,13 @@ static void print_node(char *text, struct token *tokens, struct node *nodes, uin
 	if (node->type == NODE_TYPE_TOKEN) {
 		struct token *token = tokens + node->child_index;
 		print_token(text, token);
-		printf("  previous=%u, next=%u, parent=%u, child=%u\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
+		printf("  previous=%zu, next=%zu, parent=%zu, child=%zu\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
 		// printf("\n");
 		return;
 	}
 
 	printf("%s", node_type_names[node->type]);
-	printf("  previous=%u, next=%u, parent=%u, child=%u\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
+	printf("  previous=%zu, next=%zu, parent=%zu, child=%zu\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
 	if (node->child_index == NODE_NONE) {
 		return;
 	}
@@ -63,7 +63,7 @@ static void print_node(char *text, struct token *tokens, struct node *nodes, uin
 }
 
 static void print_parsing_error(char *text, struct token *tokens, struct parsing_error *error) {
-	printf("%s [Token %u: ", parsing_error_messages[error->type], error->tokens_index - 1);
+	printf("%s [Token %zu: ", parsing_error_messages[error->type], error->tokens_index - 1);
 	print_token(text, tokens + error->tokens_index - 1);
 	printf("]");
 }
@@ -90,25 +90,11 @@ static void print_parsing_errors(char *text, struct token *tokens, struct parsin
 // 	for (size_t i = 0; i < list_get_count(&object->compiler_errors); ++i) {
 // 		struct compiler_error *error = object->compiler_errors + i;
 // 		struct node_handle *node = object->nodes + error->node_index;
-// 		printf("%s [Node %u: %s]\n", compiler_error_messages[error->type], error->node_index, node_type_names[node->type]);
+// 		printf("%s [Node %zu: %s]\n", compiler_error_messages[error->type], error->node_index, node_type_names[node->type]);
 // 	}
 // }
 
 int main(void) {
-	// struct object *object = object_create();
-	// if (!object) {
-	// 	printf("FAILED TO CREATE OBJECT\n");
-	// 	return 1;
-	// }
-	// FILE *file = fopen("example.txt", "r");
-	// if (!file) {
-	// 	printf("FAILED TO OPEN FILE\n");
-	// 	object_destroy(object);
-	// 	return 1;
-	// }
-	// object_read_text_from_file(object, file);
-	// fclose(file);
-	
 	char *text = "module a \nmodule b.c\n";
 	struct token *tokens = NULL;
 	struct lexing_error *lexing_errors = NULL;

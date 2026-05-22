@@ -1,8 +1,8 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#include <stddef.h>
 #include <stdbool.h>
-#include <stdint.h>
 
 enum token_type {
 	// Literals
@@ -92,9 +92,9 @@ enum token_type {
 };
 
 struct token {
+	size_t text_index;
+	size_t text_length;
 	enum token_type type;
-	uint32_t text_index;
-	uint32_t text_length;
 };
 
 enum lexing_error_type {
@@ -105,9 +105,9 @@ enum lexing_error_type {
 };
 
 struct lexing_error {
+	size_t text_index;
+	size_t text_length;
 	enum lexing_error_type type;
-	uint32_t text_index;
-	uint32_t text_length;
 };
 
 // A map of token types to their names.

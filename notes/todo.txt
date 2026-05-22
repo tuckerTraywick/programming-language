@@ -1,11 +1,6 @@
-- Make parser methods update first node index.
-- Make parser methods handle memory errors.
-- Refactor and make convenience methods for index-based data structures
-- Make parse_type() accept struct or trait
-- Make grammar for type definitions more consistent and easier to visit
+- Make symbol table and object, make first visitor function
 - Make function to consolidate only the tokens that occur in the object file's stored syntax trees
   into one list of tokens and characters
-- Update lexer to recognize newlines as tokens
 - Handle false return values from list functions in lexer and parser
 - Make lexer recognize open <
 - Create interpreter instruction set
@@ -15,6 +10,7 @@
 - Extend for loop syntax with matching
 - Fix bug where function parameter parser tries to keep parsing even if a parameter fails to parse
 
+X Update lexer to recognize newlines as tokens
 X Start making AST visitor
 X Update parser to handle new grammar
 X Reformat code to use new list implementation
