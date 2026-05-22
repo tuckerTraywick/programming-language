@@ -1,8 +1,8 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#include <stddef.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include "symbol_table.h"
 
@@ -28,13 +28,11 @@ struct compiling_error {
 	enum compiling_error_type type;
 };
 
-struct object object_create(void);
+struct object *object_create(void);
 
-struct object object_read_from_file(FILE *file);
+struct object *object_read_from_file(FILE *file);
 
 void object_destroy(struct object *object);
-
-bool object_is_valid(struct object *object);
 
 bool object_write_to_file(struct object *object, FILE *file);
 

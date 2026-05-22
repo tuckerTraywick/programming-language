@@ -2,7 +2,7 @@
 #define SYMBOL_TABLE_H
 
 #include <stdbool.h>
-#include <stdint.h>
+#include <stddef.h>
 
 enum visibility {
 	VISIBILITY_PRIVATE,
@@ -22,7 +22,7 @@ enum symbol_type {
 struct symbol_handle {
 	enum symbol_type type;
 	enum visibility visibility;
-	uint32_t index;
+	size_t index;
 };
 
 struct module_symbol {
@@ -31,89 +31,89 @@ struct module_symbol {
 
 struct struct_symbol {
 	uint64_t size;
-	uint32_t alignment;
+	size_t alignment;
+	size_t fields_index;
+	size_t fields_count;
+	size_t methods_index;
+	size_t methods_count;
+	size_t embedded_types_index;
+	size_t embedded_types_count;
+	size_t cases_index;
+	size_t cases_count;
+	size_t generic_parameters_index;
+	size_t generic_parameters_count;
 	bool isClosed;
-	uint32_t fields_index;
-	uint32_t fields_count;
-	uint32_t methods_index;
-	uint32_t methods_count;
-	uint32_t embedded_types_index;
-	uint32_t embedded_types_count;
-	uint32_t cases_index;
-	uint32_t cases_count;
-	uint32_t generic_parameters_index;
-	uint32_t generic_parameters_count;
 };
 
 struct trait_symbol {
 	uint64_t size;
-	uint32_t alignment;
+	size_t alignment;
+	size_t methods_index;
+	size_t methods_count;
+	size_t embedded_types_index;
+	size_t embedded_types_count;
+	size_t cases_index;
+	size_t cases_count;
+	size_t generic_parameters_index;
+	size_t generic_parameters_count;
 	bool isClosed;
-	uint32_t methods_index;
-	uint32_t methods_count;
-	uint32_t embedded_types_index;
-	uint32_t embedded_types_count;
-	uint32_t cases_index;
-	uint32_t cases_count;
-	uint32_t generic_parameters_index;
-	uint32_t generic_parameters_count;
 };
 
 struct variable_symbol {
-	uint32_t type_index;
+	size_t type_index;
 	bool is_mutable;
 	uint64_t value_offset;
 };
 
 struct function_symbol {
-	uint32_t return_type_index;
-	uint32_t parameters_index;
-	uint32_t parameters_count;
-	uint32_t generic_parameters_index;
-	uint32_t generic_parameters_count;
+	size_t return_type_index;
+	size_t parameters_index;
+	size_t parameters_count;
+	size_t generic_parameters_index;
+	size_t generic_parameters_count;
 	uint64_t code_offset;
 };
 
 struct field_symbol {
 	enum visibility visibility;
-	uint32_t name_index;
-	uint32_t name_length;
-	uint32_t type_index;
+	size_t name_index;
+	size_t name_length;
+	size_t type_index;
 };
 
 struct method_symbol {
 	enum visibility visibility;
-	uint32_t name_index;
-	uint32_t name_length;
-	uint32_t return_type_index;
-	uint32_t parameters_index;
-	uint32_t parameters_count;
-	uint32_t generic_parameters_index;
-	uint32_t generic_parameters_count;
+	size_t name_index;
+	size_t name_length;
+	size_t return_type_index;
+	size_t parameters_index;
+	size_t parameters_count;
+	size_t generic_parameters_index;
+	size_t generic_parameters_count;
 };
 
 struct embedded_type_symbol {
-	uint32_t name_index;
-	uint32_t name_length;
-	uint32_t type_index;
+	size_t name_index;
+	size_t name_length;
+	size_t type_index;
 };
 
 struct case_symbol {
-	uint32_t type_index;
+	size_t type_index;
 	uint64_t value_offset;
 };
 
 struct function_parameter_symbol {
-	uint32_t name_index;
-	uint32_t name_length;
-	uint32_t type_index;
+	size_t name_index;
+	size_t name_length;
+	size_t type_index;
 	uint64_t default_value_offset;
 };
 
 struct generic_parameter_symbol {
-	uint32_t name_index;
-	uint32_t name_length;
-	uint32_t type_index;
+	size_t name_index;
+	size_t name_length;
+	size_t type_index;
 	uint64_t default_value_offset;
 };
 
