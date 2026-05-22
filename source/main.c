@@ -45,7 +45,6 @@ static void print_node(char *text, struct token *tokens, struct node *nodes, siz
 		struct token *token = tokens + node->child_index;
 		print_token(text, token);
 		printf("  previous=%zu, next=%zu, parent=%zu, child=%zu\n", node->previous_index, node->next_index, node->parent_index, node->child_index);
-		// printf("\n");
 		return;
 	}
 
