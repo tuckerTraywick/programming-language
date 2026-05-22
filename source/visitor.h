@@ -45,8 +45,8 @@ enum compiler_error_type {
 };
 
 struct compiler_error {
-	enum compiler_error_type type;
 	size_t node_index;
+	enum compiler_error_type type;
 };
 
 // Makes a symbol for each definition and makes sure there are no duplicate definitions.
