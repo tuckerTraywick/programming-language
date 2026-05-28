@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include <stddef.h>
-#include <inttypes.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +16,7 @@ struct map_header {
 	size_t buckets_capacity;
 	size_t buckets_count;
 	size_t bucket_size;
-	size_t *key_indices; // Same capacity as `buckets`.
+	size_t *key_indices; // Same capacity and count as `buckets`.
 	char buckets[];
 };
 
