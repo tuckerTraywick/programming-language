@@ -145,12 +145,24 @@ destroy(&f, &heap) // You must call destroy() manually because it requires an ex
 
 
 
-generic<T type> where T < &
+generic<T type> where T embeds &
 pub struct Allocation {
 	allocator &Allocator
 	data T
 }
 
 var heap = BlockAllocator(1024)
-var a Allocation<owned &int32> = allocate(&heap, &1)
+var a Allocation<owned &int32> = allocate(&heap, 1)
 destroy(&heap) // Don't need to destroy a.
+
+
+
+
+generic<T type> where T impls Sized
+pub inline func allocate(allocator &Allocator, inline value T) Sum<owned &T, AllocationError> {
+	var allocation owned &T = try allocateUninitialized(allocator, sizeof(T))
+	*allocation = value
+	return allocation
+}
+
+var a = allocate(heap, MyConstructor(1)) // Does copy elision.

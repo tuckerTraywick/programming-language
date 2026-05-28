@@ -1,4 +1,40 @@
-pub namespace 
+pub namespace animals;
+using std.io.printLine;
+
+pub trait Animal;
+pub .name(*Animal);
+pub .age(*Animal) uint32;
+pub makeNoise(*Animal);
+
+pub struct Dog {
+	Animal;
+	pub tag []char8;
+}
+
+pub struct Cat {
+	Animal;
+	pub breed []char8;
+}
+
+pub makeNoise(dog *Dog) {
+	printLine("woof");
+}
+
+pub makeNoise(cat *Cat) {
+	printLine("meow");
+}
+
+main() {
+	pet mut *Animal = &Dog();
+	makeNoise(pet);
+	pet = &Cat();
+	pet->makeNoise();
+}
+
+
+
+
+
 
 
 

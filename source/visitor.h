@@ -36,7 +36,7 @@ struct symbol_table {
 struct object {
 	struct symbol_table public_symbols; // Points to a map.
 	struct symbol_table private_symbols; // Points to a map.
-	char *symbol_stubs; // Points to a list. Symbols that are to be linked later.
+	// char *symbol_stubs; // Points to a list. Symbols that are to be linked later.
 	struct symbol_table scopes; // Points to a map. Symbols defined in functions.
 };
 
@@ -54,7 +54,8 @@ struct symbol_table symbol_table_create(size_t buckets_capacity, size_t keys_cap
 
 void symbol_table_destroy(struct symbol_table *table);
 
-struct object *object_create(size_t buckets_capacity, size_t keys_capacity);
+// Returns a completely zeroed struct if a memory error occurred.
+struct object object_create(size_t buckets_capacity, size_t keys_capacity);
 
 void object_destroy(struct object *object);
 

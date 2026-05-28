@@ -33,3 +33,35 @@ void symbol_table_destroy(struct symbol_table *table) {
 	map_destroy(&table->variables);
 	*table = (struct symbol_table){0};
 }
+
+struct object object_create(size_t buckets_capacity, size_t keys_capacity) {
+	struct object object = {
+		.public_symbols = symbol_table_create(buckets_capacity, keys_capacity),
+	};
+	if (!object.public_symbols.handles) {
+		goto error1;
+	}
+	object.private_symbols = symbol_table_create(buckets_capacity, keys_capacity);
+	if (!object.private_symbols.handles) {
+		goto error2;
+	}
+	object.scopes = symbol_table_create(buckets_capacity, keys_capacity);
+	if (!object.scopes.handles) {
+		goto error3;
+	}
+	return object;
+
+error3:
+	symbol_table_destroy(&object.private_symbols);
+error2:
+	symbol_table_destroy(&object.public_symbols);
+error1:
+	return (struct object){0};
+}
+
+void object_destroy(struct object *object) {
+	symbol_table_destroy(&object->public_symbols);
+	symbol_table_destroy(&object->private_symbols);
+	symbol_table_destroy(&object->scopes);
+	*object = (struct object){0};
+}
