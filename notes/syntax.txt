@@ -13,7 +13,7 @@
 - Fields are by nature inheritance-based and nominal, methods are by nature implementation-based and
   structural.
 - Methods can be variant on more than one parameter.
-- Methods are defined outside of trait bodies in the namespace namespace because this makes them
+- Methods are defined outside of trait bodies in the namespace because this makes them
   identical to functions and reinforces that they don't belong to any type. This also makes it easy
   to refactor a function into a method and makes it so if you change a struct to a trait or vice
   versa you don't need to refactor any code that uses it and calls functions on it.
@@ -60,7 +60,7 @@ struct Rgb {
 
 
 pub namespace animals
-import std.io.printLine
+using std.io.printLine
 
 pub trait Animal
 pub method .name(&Animal) []char8
@@ -87,7 +87,7 @@ pub func makeNoise(cat &Cat) {
 
 
 pub namespace physics
-import std.operators
+using std.operators
 
 pub struct Entity {
 	pub position, velocity, acceleration Vector

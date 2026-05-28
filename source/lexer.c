@@ -19,7 +19,7 @@ const char *const token_type_names[] = {
 	[TOKEN_TYPE_IDENTIFIER] = "identifier",
 	// Keywords
 	[TOKEN_TYPE_NAMESPACE] = "namespace",
-	[TOKEN_TYPE_IMPORT] = "import",
+	[TOKEN_TYPE_USING] = "using",
 	[TOKEN_TYPE_VAR] = "var",
 	[TOKEN_TYPE_FUNC] = "func",
 	[TOKEN_TYPE_METHOD] = "method",
