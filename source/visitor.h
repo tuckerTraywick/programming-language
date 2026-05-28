@@ -36,8 +36,8 @@ struct symbol_table {
 struct object {
 	struct symbol_table public_symbols; // Points to a map.
 	struct symbol_table private_symbols; // Points to a map.
+	struct symbol_table symbol_stubs; // Points to a map. Symbols to be linked later.
 	struct symbol_table scopes; // Points to a map. Symbols defined in functions.
-	struct symbol_table undefined_symbols; // Points to a map. Symbols that the compiler can't find a definition for.
 };
 
 enum compiler_error_type {
@@ -49,7 +49,16 @@ struct compiler_error {
 	enum compiler_error_type type;
 };
 
+// Returns a completely zeroed struct if a memory error occurred.
+struct symbol_table symbol_table_create(size_t buckets_capacity, size_t keys_capacity);
+
+void symbol_table_destroy(struct symbol_table *table);
+
+struct object *object_create(size_t buckets_capacity, size_t keys_capacity);
+
+void object_destroy(struct object *object);
+
 // Makes a symbol for each definition and makes sure there are no duplicate definitions.
-bool initialize_symbols_for_definitions(char *text, struct token *tokens, struct node *nodes, struct object *object, struct compiler_error **errors);
+bool initialize_symbols(char *text, struct token *tokens, struct node *nodes, struct object *object, struct compiler_error **errors);
 
 #endif // VISITOR_H
