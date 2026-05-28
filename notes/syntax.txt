@@ -13,23 +13,23 @@
 - Fields are by nature inheritance-based and nominal, methods are by nature implementation-based and
   structural.
 - Methods can be variant on more than one parameter.
-- Methods are defined outside of trait bodies in the module namespace because this makes them
+- Methods are defined outside of trait bodies in the namespace namespace because this makes them
   identical to functions and reinforces that they don't belong to any type. This also makes it easy
   to refactor a function into a method and makes it so if you change a struct to a trait or vice
   versa you don't need to refactor any code that uses it and calls functions on it.
 - This plus properties on traits makes it completely identical to use both.
-- If a function from another module doesn't have the arguments in the right order to implement a new
+- If a function from another namespace doesn't have the arguments in the right order to implement a new
   trait you wrote, you can just write a function with the arguments in the right order that calls
   the old function. This way you never have to decide what type a function "belongs" to in an OO
   sense.
 - Embedding a type with cases in another type only embeds the value cases. If you want to mirror the
   names of the type cases you must define them on your own.
 - Embedding a trait in another trait exports the methods that are variant over that trait.
-- You can't define a new method for a trait outside of the module it's defined in.
+- You can't define a new method for a trait outside of the namespace it's defined in.
 - If you want a struct to contain two other structs that have overlapping fields, you have to use
   composition, you can't embed both.
 - Forcing fields and methods to be unique and making methods and variants in the namespace of the
-  module forces you to make flat apis.
+  namespace forces you to make flat apis.
 - Value cases are defined inside of the "cases {}" block, type cases are defined outside. This makes
   it trivial to switch a type between being opened and closed.
 
@@ -59,7 +59,7 @@ struct Rgb {
 }
 
 
-pub module animals
+pub namespace animals
 import std.io.printLine
 
 pub trait Animal
@@ -86,7 +86,7 @@ pub func makeNoise(cat &Cat) {
 }
 
 
-pub module physics
+pub namespace physics
 import std.operators
 
 pub struct Entity {
@@ -145,9 +145,7 @@ destroy(&f, &heap) // You must call destroy() manually because it requires an ex
 
 
 
-generic<T type> where {
-	T < &
-}
+generic<T type> where T < &
 pub struct Allocation {
 	allocator &Allocator
 	data T

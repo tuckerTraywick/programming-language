@@ -94,39 +94,39 @@ static void print_parsing_errors(char *text, struct token *tokens, struct parsin
 // }
 
 int main(void) {
-	char *text = "module a \nmodule b.c\n";
-	struct token *tokens = NULL;
-	struct lexing_error *lexing_errors = NULL;
-	lex(text, &tokens, &lexing_errors);
-	if (!tokens || !lexing_errors) {
-		printf("Memory error.\n");
-		// TODO: Cleanup.
-		return 1;
-	}
-	printf("TOKENS:\n");
-	printf("tokens count = %zu\n", list_get_count(&tokens));
-	print_tokens(text, tokens);
-	printf("\nLEXER ERRORS:\n");
-	print_lexing_errors(text, lexing_errors);
-	printf("\n");
+// 	char *text = "namespace a \nnamespace b.c\n";
+// 	struct token *tokens = NULL;
+// 	struct lexing_error *lexing_errors = NULL;
+// 	lex(text, &tokens, &lexing_errors);
+// 	if (!tokens || !lexing_errors) {
+// 		printf("Memory error.\n");
+// 		// TODO: Cleanup.
+// 		return 1;
+// 	}
+// 	printf("TOKENS:\n");
+// 	printf("tokens count = %zu\n", list_get_count(&tokens));
+// 	print_tokens(text, tokens);
+// 	printf("\nLEXER ERRORS:\n");
+// 	print_lexing_errors(text, lexing_errors);
+// 	printf("\n");
 	
-	struct node *nodes = NULL;
-	struct parsing_error *parsing_errors = NULL;
-	if (!parse(tokens, &nodes, &parsing_errors)) {
-		printf("FAILED PARSING\n");
-		// TODO: Cleanup.
-		return 1;
-	}
-	printf("NODES:\n");
-	printf("nodes count = %zu\n", list_get_count(&nodes));
-	print_node(text, tokens, nodes, 0, 0);
-	printf("\nPARSER ERRORS:\n");
-	print_parsing_errors(text, tokens, parsing_errors);
-	printf("\n");
+// 	struct node *nodes = NULL;
+// 	struct parsing_error *parsing_errors = NULL;
+// 	if (!parse(tokens, &nodes, &parsing_errors)) {
+// 		printf("FAILED PARSING\n");
+// 		// TODO: Cleanup.
+// 		return 1;
+// 	}
+// 	printf("NODES:\n");
+// 	printf("nodes count = %zu\n", list_get_count(&nodes));
+// 	print_node(text, tokens, nodes, 0, 0);
+// 	printf("\nPARSER ERRORS:\n");
+// 	print_parsing_errors(text, tokens, parsing_errors);
+// 	printf("\n");
 
-	list_destroy(&tokens);
-	list_destroy(&lexing_errors);
-	list_destroy(&nodes);
-	list_destroy(&parsing_errors);
+// 	list_destroy(&tokens);
+// 	list_destroy(&lexing_errors);
+// 	list_destroy(&nodes);
+// 	list_destroy(&parsing_errors);
 	return 0;
 }

@@ -1,4 +1,4 @@
-pub module foo;
+pub namespace foo;
 
 struct Thing {}
 

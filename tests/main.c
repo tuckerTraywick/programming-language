@@ -5,6 +5,9 @@
 void test_symbol_table_create_and_destroy(void) {
 	struct symbol_table table = symbol_table_create(10, 10);
 	assert(table.handles);
+	if (!table.handles) {
+		return;
+	}
 	symbol_table_destroy(&table);
 	assert(!table.handles);
 }

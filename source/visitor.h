@@ -7,7 +7,7 @@
 #include "parser.h"
 
 enum symbol_type {
-	SYMBOL_TYPE_MODULE,
+	SYMBOL_TYPE_NAMESPACE,
 	SYMBOL_TYPE_VARIABLE,
 	SYMBOL_TYPE_COUNT,
 };
@@ -17,7 +17,7 @@ struct symbol_handle {
 	enum symbol_type type;
 };
 
-struct module_symbol {
+struct namespace_symbol {
 
 };
 
@@ -29,14 +29,14 @@ struct variable_symbol {
 
 struct symbol_table {
 	struct symbol_handle *handles; // Points to a map.
-	struct module_symbol *modules; // Points to a list.
+	struct namespace_symbol *namespaces; // Points to a list.
 	struct variable_symbol *variables; // Points to a list.
 };
 
 struct object {
 	struct symbol_table public_symbols; // Points to a map.
 	struct symbol_table private_symbols; // Points to a map.
-	struct symbol_table symbol_stubs; // Points to a map. Symbols to be linked later.
+	char *symbol_stubs; // Points to a list. Symbols that are to be linked later.
 	struct symbol_table scopes; // Points to a map. Symbols defined in functions.
 };
 

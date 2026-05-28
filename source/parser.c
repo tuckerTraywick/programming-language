@@ -122,10 +122,10 @@ static bool parser_emit_error(struct parser *parser, enum parsing_error_type typ
 	return parser_end_node(parser);
 }
 
-static bool parse_module_definition(struct parser *parser) {
-	if (!parser_peek_token(parser, TOKEN_TYPE_MODULE)) return false;
-	parser_begin_node(parser, NODE_TYPE_MODULE_DEFINITION);
-		parser_consume_token(parser, TOKEN_TYPE_MODULE);
+static bool parse_namespace_definition(struct parser *parser) {
+	if (!parser_peek_token(parser, TOKEN_TYPE_NAMESPACE)) return false;
+	parser_begin_node(parser, NODE_TYPE_NAMESPACE_DEFINITION);
+		parser_consume_token(parser, TOKEN_TYPE_NAMESPACE);
 		if (!parser_consume_token(parser, TOKEN_TYPE_IDENTIFIER)) return parser_emit_error(parser, PARSING_ERROR_TYPE_EXPECTED_IDENTIFIER);
 		while (parser_consume_token(parser, TOKEN_TYPE_DOT)) {
 			if (parser_consume_token(parser, TOKEN_TYPE_TIMES)) break;
@@ -138,7 +138,7 @@ static bool parse_module_definition(struct parser *parser) {
 static bool parse_definition(struct parser *parser) {
 	parser_begin_node(parser, NODE_TYPE_DEFINITION);
 		parser_consume_token(parser, TOKEN_TYPE_PUB);
-		if (parse_module_definition(parser)) return parser_end_node(parser);
+		if (parse_namespace_definition(parser)) return parser_end_node(parser);
 	return parser_emit_error(parser, PARSING_ERROR_TYPE_EXPECTED_DEFINITION);
 }
 
@@ -159,7 +159,7 @@ const char *const node_type_names[NODE_TYPE_COUNT] = {
 	[NODE_TYPE_TOKEN] = "token",
 	[NODE_TYPE_PROGRAM] = "program",
 	[NODE_TYPE_DEFINITION] = "definition",
-	[NODE_TYPE_MODULE_DEFINITION] = "module definition",
+	[NODE_TYPE_NAMESPACE_DEFINITION] = "namespace definition",
 };
 
 const char *const parsing_error_messages[PARSING_ERROR_TYPE_COUNT] = {

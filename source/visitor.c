@@ -9,8 +9,8 @@ struct symbol_table symbol_table_create(size_t buckets_capacity, size_t keys_cap
 	if (!table.handles) {
 		goto error1;
 	}
-	table.modules = map_create(buckets_capacity, sizeof *table.modules, keys_capacity);
-	if (!table.modules) {
+	table.namespaces = map_create(buckets_capacity, sizeof *table.namespaces, keys_capacity);
+	if (!table.namespaces) {
 		goto error2;
 	}
 	table.variables = map_create(buckets_capacity, sizeof *table.variables, keys_capacity);
@@ -20,7 +20,7 @@ struct symbol_table symbol_table_create(size_t buckets_capacity, size_t keys_cap
 	return table;
 
 error3:
-	map_destroy(&table.modules);
+	map_destroy(&table.namespaces);
 error2:
 	map_destroy(&table.handles);
 error1:
@@ -29,7 +29,7 @@ error1:
 
 void symbol_table_destroy(struct symbol_table *table) {
 	map_destroy(&table->handles);
-	map_destroy(&table->modules);
+	map_destroy(&table->namespaces);
 	map_destroy(&table->variables);
 	*table = (struct symbol_table){0};
 }

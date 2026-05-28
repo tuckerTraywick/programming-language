@@ -18,7 +18,7 @@ const char *const token_type_names[] = {
 	[TOKEN_TYPE_STRING] = "string",
 	[TOKEN_TYPE_IDENTIFIER] = "identifier",
 	// Keywords
-	[TOKEN_TYPE_MODULE] = "module",
+	[TOKEN_TYPE_NAMESPACE] = "namespace",
 	[TOKEN_TYPE_IMPORT] = "import",
 	[TOKEN_TYPE_VAR] = "var",
 	[TOKEN_TYPE_FUNC] = "func",
@@ -196,7 +196,7 @@ bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
 				++current_token.text_length;
 			} while (isalnum(*text) || *text == '_');
 			current_token.type = TOKEN_TYPE_IDENTIFIER;
-			for (size_t i = TOKEN_TYPE_MODULE; i < TOKEN_TYPE_DOT; ++i) {
+			for (size_t i = TOKEN_TYPE_NAMESPACE; i < TOKEN_TYPE_DOT; ++i) {
 				// TODO: Store the lengths of the reserved words somewhere to avoid `strlen()`.
 				if (strncmp(token_type_names[i], text - current_token.text_length, max(strlen(token_type_names[i]), current_token.text_length)) == 0) {
 					current_token.type = i;
