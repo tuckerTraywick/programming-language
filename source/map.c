@@ -1,8 +1,6 @@
 #include <stdio.h>
 
 #include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include "map.h"
@@ -16,7 +14,7 @@ struct map_header {
 	size_t buckets_capacity;
 	size_t buckets_count;
 	size_t bucket_size;
-	size_t *key_indices; // Same capacity and count as `buckets`.
+	size_t *key_indices; // Same capacity as `buckets`.
 	char buckets[];
 };
 
@@ -25,14 +23,13 @@ enum probe_result {
 	PROBE_RESULT_KEY_FOUND,
 	PROBE_RESULT_MAP_NOT_FULL,
 	PROBE_RESULT_MAP_FULL,
-	PROBE_RESULT_COUNT,
 };
-
-static const size_t initial_keys_capacity = 1024;
 
 const size_t buckets_growth_factor = 2;
 
 const size_t keys_growth_factor = 2;
+
+const size_t initial_keys_capacity = 1024;
 
 static struct map_header *get_header(void **map) {
 	return (struct map_header*)*map - 1;
@@ -208,6 +205,11 @@ bool map_is_empty_impl(void **map) {
 	return header->buckets_count == 0;
 }
 
+bool map_is_not_empty_impl(void **map) {
+	struct map_header *header = get_header(map);
+	return header->buckets_count != 0;
+}
+
 void *map_get_impl(void **map, char *key) {
 	struct map_header *header = get_header(map);
 	size_t bucket_index = 0;
@@ -280,11 +282,6 @@ char *map_get_key_impl(void **map, void *bucket) {
 		return NULL;
 	}
 	return header->keys + key_index - 1; // Subtracting 1 because key indices are offset by +1.
-}
-
-bool map_index_is_full_impl(void **map, size_t bucket_index) {
-	struct map_header *header = get_header(map);
-	return bucket_index < header->buckets_capacity && header->key_indices[bucket_index];
 }
 
 #undef max
