@@ -25,6 +25,7 @@ enum probe_result {
 	PROBE_RESULT_KEY_FOUND,
 	PROBE_RESULT_MAP_NOT_FULL,
 	PROBE_RESULT_MAP_FULL,
+	PROBE_RESULT_COUNT,
 };
 
 static const size_t initial_keys_capacity = 1024;
