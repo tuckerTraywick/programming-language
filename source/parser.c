@@ -14,7 +14,7 @@ struct parser {
 	struct node *nodes; // Points to a list.
 	size_t last_node_index;
 	bool next_node_is_child;
-	struct parsing_error *errors; // Points to a list.
+	struct parser_error *errors; // Points to a list.
 };
 
 static const size_t initial_nodes_capacity = 1000;
@@ -100,13 +100,13 @@ static bool parser_consume_token(struct parser *parser, enum token_type type) {
 	return true;
 }
 
-static bool parser_emit_error(struct parser *parser, enum parsing_error_type type) {
-	struct parsing_error *error = NULL;
+static bool parser_emit_error(struct parser *parser, enum parser_error_type type) {
+	struct parser_error *error = NULL;
 	error = list_push_back_uninitialized(&parser->errors);
 	if (!error) {
 		return false;
 	}
-	*error = (struct parsing_error){
+	*error = (struct parser_error){
 		.type = type,
 		.tokens_index = parser->current_token_index,
 		// TODO: Set `tokens_count`.
@@ -126,12 +126,12 @@ static bool parse_namespace_definition(struct parser *parser) {
 	if (!parser_peek_token(parser, TOKEN_TYPE_NAMESPACE)) return false;
 	parser_begin_node(parser, NODE_TYPE_NAMESPACE_DEFINITION);
 		parser_consume_token(parser, TOKEN_TYPE_NAMESPACE);
-		if (!parser_consume_token(parser, TOKEN_TYPE_IDENTIFIER)) return parser_emit_error(parser, PARSING_ERROR_TYPE_EXPECTED_IDENTIFIER);
+		if (!parser_consume_token(parser, TOKEN_TYPE_IDENTIFIER)) return parser_emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER);
 		while (parser_consume_token(parser, TOKEN_TYPE_DOT)) {
 			if (parser_consume_token(parser, TOKEN_TYPE_TIMES)) break;
-			if (!parser_consume_token(parser, TOKEN_TYPE_IDENTIFIER)) return parser_emit_error(parser, PARSING_ERROR_TYPE_EXPECTED_IDENTIFIER_OR_STAR);
+			if (!parser_consume_token(parser, TOKEN_TYPE_IDENTIFIER)) return parser_emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER_OR_STAR);
 		}
-		if (!parser_consume_token(parser, TOKEN_TYPE_NEWLINE)) return parser_emit_error(parser, PARSING_ERROR_TYPE_EXPECTED_LINE_END);
+		if (!parser_consume_token(parser, TOKEN_TYPE_NEWLINE)) return parser_emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_LINE_END);
 	return parser_end_node(parser);
 }
 
@@ -139,7 +139,7 @@ static bool parse_definition(struct parser *parser) {
 	parser_begin_node(parser, NODE_TYPE_DEFINITION);
 		parser_consume_token(parser, TOKEN_TYPE_PUB);
 		if (parse_namespace_definition(parser)) return parser_end_node(parser);
-	return parser_emit_error(parser, PARSING_ERROR_TYPE_EXPECTED_DEFINITION);
+	return parser_emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_DEFINITION);
 }
 
 static bool parse_program_statement(struct parser *parser) {
@@ -150,7 +150,7 @@ static bool parse_program_statement(struct parser *parser) {
 static bool parse_program(struct parser *parser) {
 	parser_begin_node(parser, NODE_TYPE_PROGRAM);
 		while (parser->current_token_index < list_get_count(&parser->tokens)) {
-			if (!parse_program_statement(parser)) return parser_emit_error(parser, PARSING_ERROR_TYPE_EXPECTED_STATEMENT);
+			if (!parse_program_statement(parser)) return parser_emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_STATEMENT);
 		}
 	return parser_end_node(parser);
 }
@@ -162,15 +162,15 @@ const char *const node_type_names[NODE_TYPE_COUNT] = {
 	[NODE_TYPE_NAMESPACE_DEFINITION] = "namespace definition",
 };
 
-const char *const parsing_error_messages[PARSING_ERROR_TYPE_COUNT] = {
-	[PARSING_ERROR_TYPE_EXPECTED_LINE_END] = "Expected end of line.",
-	[PARSING_ERROR_TYPE_EXPECTED_IDENTIFIER] = "Expected an identifier.",
-	[PARSING_ERROR_TYPE_EXPECTED_IDENTIFIER_OR_STAR] = "Expected an identifier or a `*`.",
-	[PARSING_ERROR_TYPE_EXPECTED_DEFINITION] = "Expected a definition.",
-	[PARSING_ERROR_TYPE_EXPECTED_STATEMENT] = "Expected a satatement.",
+const char *const parser_error_messages[PARSER_ERROR_TYPE_COUNT] = {
+	[PARSER_ERROR_TYPE_EXPECTED_LINE_END] = "Expected end of line.",
+	[PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER] = "Expected an identifier.",
+	[PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER_OR_STAR] = "Expected an identifier or a `*`.",
+	[PARSER_ERROR_TYPE_EXPECTED_DEFINITION] = "Expected a definition.",
+	[PARSER_ERROR_TYPE_EXPECTED_STATEMENT] = "Expected a satatement.",
 };
 
-bool parse(struct token *tokens, struct node **nodes, struct parsing_error **errors) {
+bool parse(struct token *tokens, struct node **nodes, struct parser_error **errors) {
 	struct parser parser = {
 		.tokens = tokens,
 		.nodes = list_create(initial_nodes_capacity, sizeof *parser.nodes),

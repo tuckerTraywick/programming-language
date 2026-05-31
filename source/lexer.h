@@ -97,26 +97,26 @@ struct token {
 	enum token_type type;
 };
 
-enum lexing_error_type {
-	LEXING_ERROR_TYPE_UNRECOGNIZED_TOKEN,
-	LEXING_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
-	LEXING_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
-	LEXING_ERROR_TYPE_COUNT,
+enum lexer_error_type {
+	LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN,
+	LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
+	LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
+	LEXER_ERROR_TYPE_COUNT,
 };
 
-struct lexing_error {
+struct lexer_error {
 	size_t text_index;
 	size_t text_length;
-	enum lexing_error_type type;
+	enum lexer_error_type type;
 };
 
 // A map of token types to their names.
 extern const char *const token_type_names[];
 
 // A map from lexer error types to error messages.
-extern const char *const lexing_error_messages[];
+extern const char *const lexer_error_messages[];
 
 // Returns true if no errors were emitted.
-bool lex(char *text, struct token **tokens, struct lexing_error **errors);
+bool lex(char *text, struct token **tokens, struct lexer_error **errors);
 
 #endif // LEXER_H

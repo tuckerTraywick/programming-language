@@ -25,28 +25,28 @@ struct node {
 	enum node_type type;
 };
 
-enum parsing_error_type {
-	PARSING_ERROR_TYPE_EXPECTED_LINE_END,
-	PARSING_ERROR_TYPE_EXPECTED_IDENTIFIER,
-	PARSING_ERROR_TYPE_EXPECTED_IDENTIFIER_OR_STAR,
-	PARSING_ERROR_TYPE_EXPECTED_DEFINITION,
-	PARSING_ERROR_TYPE_EXPECTED_STATEMENT,
-	PARSING_ERROR_TYPE_COUNT,
+enum parser_error_type {
+	PARSER_ERROR_TYPE_EXPECTED_LINE_END,
+	PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER,
+	PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER_OR_STAR,
+	PARSER_ERROR_TYPE_EXPECTED_DEFINITION,
+	PARSER_ERROR_TYPE_EXPECTED_STATEMENT,
+	PARSER_ERROR_TYPE_COUNT,
 };
 
-struct parsing_error {
+struct parser_error {
 	size_t tokens_index;
 	size_t tokens_count;
-	enum parsing_error_type type;
+	enum parser_error_type type;
 };
 
 // A map of node types to names.
 extern const char *const node_type_names[];
 
 // A map of parser error types to error messages.
-extern const char *const parsing_error_messages[];
+extern const char *const parser_error_messages[];
 
 // Returns true if no errors were emitted.
-bool parse(struct token *tokens, struct node **nodes, struct parsing_error **errors);
+bool parse(struct token *tokens, struct node **nodes, struct parser_error **errors);
 
 #endif // PARSER_H

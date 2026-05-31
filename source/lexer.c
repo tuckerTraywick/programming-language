@@ -97,13 +97,13 @@ const char *const token_type_names[] = {
 	[TOKEN_TYPE_NEWLINE] = "newline",
 };
 
-const char *const lexing_error_messages[] = {
-	[LEXING_ERROR_TYPE_UNRECOGNIZED_TOKEN] = "Unrecognized token.",
-	[LEXING_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
-	[LEXING_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
+const char *const lexer_error_messages[] = {
+	[LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN] = "Unrecognized token.",
+	[LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE] = "Unclosed single quote.",
+	[LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE] = "Unclosed double quote.",
 };
 
-bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
+bool lex(char *text, struct token **tokens, struct lexer_error **errors) {
 	*tokens = list_create(initial_tokens_capacity, sizeof **tokens);
 	if (!*tokens) {
 		return false;
@@ -153,8 +153,8 @@ bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
 				// TODO: Handle escape characters and check length.
 			} while (*text && *text != '\'' && *text != '\r' && *text != '\n');
 			if (*text != '\'') {
-				struct lexing_error error = {
-					.type = LEXING_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
+				struct lexer_error error = {
+					.type = LEXER_ERROR_TYPE_UNCLOSED_SINGLE_QUOTE,
 					.text_index = current_token.text_index,
 					.text_length = current_token.text_length,
 				};
@@ -175,8 +175,8 @@ bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
 				// TODO: Handle escape characters and check length.
 			} while (*text && *text != '"' && *text != '\r' && *text != '\n');
 			if (*text != '"') {
-				struct lexing_error error = {
-					.type = LEXING_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
+				struct lexer_error error = {
+					.type = LEXER_ERROR_TYPE_UNCLOSED_DOUBLE_QUOTE,
 					.text_index = current_token.text_index,
 					.text_length = current_token.text_length,
 				};
@@ -218,8 +218,8 @@ bool lex(char *text, struct token **tokens, struct lexing_error **errors) {
 			}
 
 			if (!found_operator) {
-				struct lexing_error error = {
-					.type = LEXING_ERROR_TYPE_UNRECOGNIZED_TOKEN,
+				struct lexer_error error = {
+					.type = LEXER_ERROR_TYPE_UNRECOGNIZED_TOKEN,
 					.text_index = current_token.text_index,
 					.text_length = 0,
 				};

@@ -41,6 +41,7 @@ struct object {
 };
 
 enum compiler_error_type {
+	COMPILER_ERROR_TYPE_MULTIPLE_NAMESPACE_DEFINITIONS,
 	COMPILER_ERROR_TYPE_COUNT,
 };
 
@@ -49,10 +50,24 @@ struct compiler_error {
 	enum compiler_error_type type;
 };
 
+extern const char *const compiler_error_messages[];
+
 // Returns a completely zeroed struct if a memory error occurred.
 struct symbol_table symbol_table_create(size_t buckets_capacity, size_t keys_capacity);
 
 void symbol_table_destroy(struct symbol_table *table);
+
+// Returns null if no symbol is found.
+struct symbol_handle *symbol_table_get_symbol_handle(struct symbol_table *table, char *name);
+
+// Returns true if no memory errors occurred.
+// bool symbol_table_add_symbol_handle(struct symbol_table *table, char *name, struct symbol_handle *handle);
+
+// Returns true if no memory errors occurred.
+bool symbol_table_add_namespace_symbol(struct symbol_table *table, char *name, struct namespace_symbol *symbol);
+
+// Returns true if no memory errors occurred.
+bool symbol_table_add_variable_symbol(struct symbol_table *table, char *name, struct variable_symbol *symbol);
 
 // Returns a completely zeroed struct if a memory error occurred.
 struct object object_create(size_t buckets_capacity, size_t keys_capacity);

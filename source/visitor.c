@@ -1,5 +1,9 @@
 #include <stddef.h>
+#include <stdbool.h>
 #include "visitor.h"
+#include "lexer.h"
+#include "parser.h"
+#include "list.h"
 #include "map.h"
 
 struct symbol_table symbol_table_create(size_t buckets_capacity, size_t keys_capacity) {
@@ -64,4 +68,20 @@ void object_destroy(struct object *object) {
 	symbol_table_destroy(&object->private_symbols);
 	symbol_table_destroy(&object->scopes);
 	*object = (struct object){0};
+}
+
+bool initialize_symbols(char *text, struct token *tokens, struct node *nodes, struct object *object, struct compiler_error **errors) {
+	struct node *current_node = nodes;
+	char *namespace_name = NULL;
+	while (true) {
+		if (current_node->type == NODE_TYPE_NAMESPACE_DEFINITION) {
+			if (namespace_name) {
+				struct compiler_error error = {
+					.type = COMPILER_ERROR_TYPE_MULTIPLE_NAMESPACE_DEFINITIONS,
+					.node_index = current_node - nodes,
+				};
+				list_push_back(errors, &error);
+			}
+		}
+	}
 }
