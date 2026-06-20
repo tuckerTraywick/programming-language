@@ -1,10 +1,10 @@
-- Make symbol table and object, make first visitor function
+- Make symbol table and object
+- Make first visitor function
 - Make function to consolidate only the tokens that occur in the object file's stored syntax trees
   into one list of tokens and characters
 - Handle false return values from list functions in lexer and parser
 - Make lexer recognize open <
 - Create interpreter instruction set
-- Implement symbol table
 - Figure out object file format
 - Fix precedence of "as" operator
 - Extend for loop syntax with matching
