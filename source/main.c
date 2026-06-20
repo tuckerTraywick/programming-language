@@ -4,6 +4,7 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include "visitor.h"
 #include "list.h"
 #include "map.h"
 
@@ -85,16 +86,18 @@ static void print_parser_errors(char *text, struct token *tokens, struct parser_
 // 	}
 // }
 
-// static void print_compiler_errors(struct object *object) {
-// 	for (size_t i = 0; i < list_get_count(&object->compiler_errors); ++i) {
-// 		struct compiler_error *error = object->compiler_errors + i;
-// 		struct node_handle *node = object->nodes + error->node_index;
-// 		printf("%s [Node %zu: %s]\n", compiler_error_messages[error->type], error->node_index, node_type_names[node->type]);
-// 	}
-// }
+static void print_compiler_errors(struct node *nodes, struct compiler_error *errors) {
+	for (size_t i = 0; i < list_get_count(&errors); ++i) {
+		struct compiler_error *error = errors + i;
+		struct node *node = nodes + error->node_index;
+		printf("%s [Node %zu: %s]\n", compiler_error_messages[error->type], error->node_index, node_type_names[node->type]);
+	}
+}
 
 int main(void) {
-	char *text = "namespace a \nnamespace b.c\n";
+	char *text = "namespace ab .c\npub namespace b";
+	printf("TEXT:\n%s\n", text);
+
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
 	lex(text, &tokens, &lexer_errors);
@@ -124,9 +127,21 @@ int main(void) {
 	print_parser_errors(text, tokens, parser_errors);
 	printf("\n");
 
+	struct compiler_error *compiler_errors = list_create(10, sizeof *compiler_errors);
+	if (!compiler_errors) {
+		// TODO: Cleanup.
+		fprintf(stderr, "Memory error.\n");
+		return 1;
+	}
+	initialize_symbols(text, tokens, nodes, NULL, &compiler_errors);
+
+	printf("COMPILER ERRORS:\n");
+	print_compiler_errors(nodes, compiler_errors);
+
 	list_destroy(&tokens);
 	list_destroy(&lexer_errors);
 	list_destroy(&nodes);
 	list_destroy(&parser_errors);
+	list_destroy(&compiler_errors);
 	return 0;
 }
