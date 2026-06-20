@@ -95,7 +95,6 @@ bool initialize_symbols(char *text, struct token *tokens, struct node *nodes, st
 		if (current_node->type == NODE_TYPE_NAMESPACE_DEFINITION) {
 			// Emit an error if a namespace has already been defined.
 			if (namespace_name[0]) {
-				printf("namespace already = %s\n", namespace_name);
 				struct compiler_error error = {
 					.type = COMPILER_ERROR_TYPE_MULTIPLE_NAMESPACE_DEFINITIONS,
 					.node_index = current_node - nodes,
@@ -123,7 +122,6 @@ bool initialize_symbols(char *text, struct token *tokens, struct node *nodes, st
 				namespace_name[name_index] = text[i];
 				++name_index;
 			}
-			printf("namespace = `%s`\n", namespace_name);
 
 			// Traverse back up to the definition node.
 			current_node = nodes + current_node->parent_index; // current_node = namespace node
