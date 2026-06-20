@@ -74,7 +74,8 @@ struct object object_create(size_t buckets_capacity, size_t keys_capacity);
 
 void object_destroy(struct object *object);
 
-// Makes a symbol for each definition and makes sure there are no duplicate definitions.
+// Makes a symbol for each definition and makes sure there are no duplicate definitions. Returns
+// true if no memory errors or compiler errors occurred.
 bool initialize_symbols(char *text, struct token *tokens, struct node *nodes, struct object *object, struct compiler_error **errors);
 
 #endif // VISITOR_H

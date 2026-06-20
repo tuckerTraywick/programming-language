@@ -1,10 +1,17 @@
+#include <stdio.h>
+
 #include <stddef.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "visitor.h"
 #include "lexer.h"
 #include "parser.h"
 #include "list.h"
 #include "map.h"
+
+const char *const compiler_error_messages[] = {
+	[COMPILER_ERROR_TYPE_MULTIPLE_NAMESPACE_DEFINITIONS] = "Can't declare multiple namespaces in one file.",
+};
 
 struct symbol_table symbol_table_create(size_t buckets_capacity, size_t keys_capacity) {
 	struct symbol_table table = {
@@ -71,17 +78,61 @@ void object_destroy(struct object *object) {
 }
 
 bool initialize_symbols(char *text, struct token *tokens, struct node *nodes, struct object *object, struct compiler_error **errors) {
+	static char namespace_name[5*1024];
 	struct node *current_node = nodes;
-	char *namespace_name = NULL;
+	// Traverse to the program's statements.
+	current_node = nodes + current_node->child_index; // current_node = first child of program node
 	while (true) {
+		if (current_node->type == NODE_TYPE_DEFINITION) {
+			current_node = nodes + current_node->child_index; // current_node = first child of definition
+			// Skip the `pub` if needed.
+			if (current_node->type == NODE_TYPE_TOKEN) {
+				current_node = nodes + current_node->next_index; // current node = inner definition
+			}
+			continue;
+		}
+
 		if (current_node->type == NODE_TYPE_NAMESPACE_DEFINITION) {
-			if (namespace_name) {
+			// Emit an error if a namespace has already been defined.
+			if (namespace_name[0]) {
+				printf("namespace already = %s\n", namespace_name);
 				struct compiler_error error = {
 					.type = COMPILER_ERROR_TYPE_MULTIPLE_NAMESPACE_DEFINITIONS,
 					.node_index = current_node - nodes,
 				};
 				list_push_back(errors, &error);
+				return false;
 			}
+			
+			// Traverse to the namespace name and find the index of its first character.
+			current_node = nodes + current_node->child_index; // current_node = token namespace
+			current_node = nodes + current_node->next_index; // current_node = token identifier
+			struct token *first_token = tokens + current_node->child_index;
+			size_t start_index = first_token->text_index;
+			
+			// Copy the characters of the name to a temporary buffer.
+			// TODO: Check that the name isn't too big.
+			size_t name_index = 0;
+			for (size_t i = start_index; i < list_get_count(&text); ++i) {
+				if (text[i] == '\n') {
+					break;
+				}
+				if (isspace(text[i])) {
+					continue;
+				}
+				namespace_name[name_index] = text[i];
+				++name_index;
+			}
+			printf("namespace = `%s`\n", namespace_name);
+
+			// Traverse back up to the definition node.
+			current_node = nodes + current_node->parent_index; // current_node = namespace node
+			current_node = nodes + current_node->parent_index; // current_node = definition node
 		}
+
+		if (current_node->next_index == NODE_NONE) {
+			return true;
+		}
+		current_node = nodes + current_node->next_index;
 	}
 }

@@ -122,6 +122,10 @@ static bool parser_emit_error(struct parser *parser, enum parser_error_type type
 	return parser_end_node(parser);
 }
 
+static bool parse_line_end(struct parser *parser) {
+	return parser_consume_token(parser, TOKEN_TYPE_NEWLINE) || !parser_get_current_token(parser);
+}
+
 static bool parse_namespace_definition(struct parser *parser) {
 	if (!parser_peek_token(parser, TOKEN_TYPE_NAMESPACE)) return false;
 	parser_begin_node(parser, NODE_TYPE_NAMESPACE_DEFINITION);
@@ -131,7 +135,7 @@ static bool parse_namespace_definition(struct parser *parser) {
 			if (parser_consume_token(parser, TOKEN_TYPE_TIMES)) break;
 			if (!parser_consume_token(parser, TOKEN_TYPE_IDENTIFIER)) return parser_emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_IDENTIFIER_OR_STAR);
 		}
-		if (!parser_consume_token(parser, TOKEN_TYPE_NEWLINE)) return parser_emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_LINE_END);
+		if (!parse_line_end(parser)) return parser_emit_error(parser, PARSER_ERROR_TYPE_EXPECTED_LINE_END);
 	return parser_end_node(parser);
 }
 
