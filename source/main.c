@@ -96,7 +96,7 @@ static void print_compiler_errors(struct node *nodes, struct compiler_error *err
 
 int main(void) {
 	char *text = "namespace ab .c\npub namespace b";
-	printf("TEXT:\n%s\n", text);
+	printf("TEXT:\n%s\n\n", text);
 
 	struct token *tokens = NULL;
 	struct lexer_error *lexer_errors = NULL;
